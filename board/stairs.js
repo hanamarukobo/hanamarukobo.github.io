@@ -66,8 +66,7 @@
     var bubbles = box.querySelectorAll(".sm-bubble");
     // 見る はんい: 右は「?」の 段まで、左は いちばん 古い 段まで
     // 1段目は 下に つけず 少し 上から（吹き出しが 下に 切れない よう、段が すくなくても 地図の まんなかに 寄る）
-    // まだ 段が ない（0こ）ときは、はなまるが 1段目（「?」）の 手前の 地面で まつ（左に 1段 ぶん あける）。空の カードは「できる ことを ふやそう！」
-    var maxX = N ? 24 : W + 40, minX = Math.min(SW - (N + 1.6) * W, maxX), ground0 = Math.min(SH - 22 - BH - 30, SH * 0.62);
+    var maxX = 24, minX = Math.min(SW - (N + 1.6) * W, 24), ground0 = Math.min(SH - 22 - BH - 30, SH * 0.62);
     var picked = -1, tx = minX, anim = null;
 
     function showCard(i) {
@@ -110,8 +109,12 @@
       climber.classList.add("done");
     }
 
+    // まだ 段が ない（0こ）ときは、のぼる はなまるを 出さず、空の カードに「できる ことを ふやそう！」
     if (N) showCard(opt.pick >= 0 && opt.pick < N ? opt.pick : N - 1);
-    else card.innerHTML = '<div class="sm-card-name" style="font-size:' + (phone ? 22 : 28) + 'px"><img src="' + HANAMARU + '" alt=""><span>' + esc(T.empty) + '</span></div>';
+    else {
+      climber.style.display = "none";
+      card.innerHTML = '<div class="sm-card-name" style="font-size:' + (phone ? 22 : 28) + 'px"><img src="' + HANAMARU + '" alt=""><span>' + esc(T.empty) + '</span></div>';
+    }
     var still = !opt.animate || document.body.classList.contains("lowpower") ||
       (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
     if (still || N < 2) {
