@@ -108,7 +108,7 @@ h2 { margin: 0; font-size: 21px; font-weight: 700; color: var(--orange); white-s
 }
 .today { position: relative; }
 .gear-btn {
-  position: absolute; top: 6px; right: 6px; z-index: 1;
+  position: absolute; top: 6px; left: 6px; z-index: 1;
   width: 36px; height: 36px; padding: 6px; border: 0; border-radius: 50%;
   background: transparent; color: var(--muted); opacity: .45; cursor: pointer;
 }
@@ -506,10 +506,20 @@ body.night .advice .tile.need { background: #4a2f44; }
 .kv-list .go { flex: none; margin-left: auto; border: none; border-radius: 999px; padding: 5px 12px; background: var(--kid); color: #fff; font: inherit; font-size: 15px; font-weight: 700; white-space: nowrap; box-shadow: 0 3px 0 rgba(0, 0, 0, 0.12); }
 .kv-list .go:active { transform: translateY(2px); box-shadow: none; }
 .kv-list .go + .money { margin-left: 0; }
-.kv-list li.started:not(.done) .box { border-style: dashed; animation: go-pulse 1.4s ease-in-out infinite; }
+/* 押したあと（まだ できて いない あいだ）: 丸と 火が 心ぞうの ように「ドクン、ドクン」と 大きく。名前は ゆらさず 同じ 拍子で 太く なる
+   （字は Medium と Bold しか ないので、太さは 字の まわりの 影で ふやす）。丸は 1.35倍まで（行の すきま 8px に おさまる） */
+.kv-list li.started:not(.done) .box { border-style: dashed; animation: go-pulse 1.2s ease-in-out infinite; }
+.kv-list li.started:not(.done) .box .ico { animation: go-flame 1.2s ease-in-out infinite; }
+.kv-list li.started:not(.done) .name { animation: go-bold 1.2s ease-in-out infinite; }
 .kv-list li.started .box .ico { width: 28px; height: 28px; }
 .kv-list .self .ico { width: 22px; height: 22px; margin-left: 6px; vertical-align: -3px; }
-@keyframes go-pulse { 50% { transform: scale(1.12); } }
+@keyframes go-pulse { 0%, 70%, 100% { transform: scale(1); } 14% { transform: scale(1.35); } 28% { transform: scale(1.06); } 42% { transform: scale(1.26); } }
+@keyframes go-flame { 0%, 70%, 100% { transform: scale(1) rotate(0); } 14% { transform: scale(1.3) rotate(-8deg); } 28% { transform: scale(1.05) rotate(6deg); } 42% { transform: scale(1.22) rotate(-4deg); } }
+@keyframes go-bold {
+  0%, 70%, 100% { text-shadow: 0 0 0 transparent, 0 0 0 transparent, 0 0 0 transparent, 0 0 0 transparent; }
+  14%, 42% { text-shadow: 0.7px 0 0 currentColor, -0.7px 0 0 currentColor, 0 0.5px 0 currentColor, 0 -0.5px 0 currentColor; }
+  28% { text-shadow: 0.2px 0 0 currentColor, -0.2px 0 0 currentColor, 0 0.1px 0 currentColor, 0 -0.1px 0 currentColor; }
+}
 .kv-go { position: absolute; inset: 0; pointer-events: none; overflow: hidden; z-index: 5; }
 .kv-go .go-flash { position: absolute; left: 50%; top: 50%; width: 140vmax; height: 140vmax; margin: -70vmax 0 0 -70vmax; border-radius: 50%;
   background: radial-gradient(circle, var(--kid-soft, #fff3b0) 0%, rgba(255, 255, 255, 0) 60%); animation: go-flash 1.6s ease-out forwards; }
@@ -1471,25 +1481,12 @@ body.night .tu-preview { border-color: rgba(255, 255, 255, 0.18); background: rg
 }
 body.portrait .settings .s-qr-row { align-items: stretch; } body.portrait .settings .s-qr { align-self: center; }
 
-/* おうちの人むけの ページの 見本: 横では 文の 右に ならべる。説明の 場所に しるし */
+/* おうちの人むけの ページの 見本: 文の 下に 出す（文が 短く なったので 横も 縦と おなじ 上下に。2026-11-05）。説明の 場所に しるし */
 .tu-board.for-parent .tu-preview::before { content: "画面の例"; }
-body:not(.portrait) .tu-board.for-parent.has-preview {
-  display: grid;
-  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
-  grid-template-rows: auto minmax(0, 1fr) auto auto;
-  column-gap: 18px;
-  align-items: stretch;
-  justify-items: stretch;
-}
-body:not(.portrait) .tu-board.for-parent.has-preview .tu-title,
-body:not(.portrait) .tu-board.for-parent.has-preview .tu-dots { grid-column: 1 / -1; justify-self: center; }
-body:not(.portrait) .tu-board.for-parent.has-preview .tu-buttons { grid-column: 1 / -1; }
-body:not(.portrait) .tu-board.for-parent.has-preview .tu-text { grid-column: 1; grid-row: 2; font-size: 16px; }
-body:not(.portrait) .tu-board.for-parent.has-preview .tu-preview { grid-column: 2; grid-row: 2; margin: 0; }
-/* 縦は 文の 下に 見本。見本の ぶん ボードを 高く して、文を できるだけ スクロール させない */
-body.portrait .tu-board.for-parent.has-preview { height: calc(var(--bh, 960px) - 40px); }
-body.portrait .tu-board.for-parent.has-preview .tu-text { flex: 0 1 auto; }
-body.portrait .tu-board.for-parent.has-preview .tu-preview { flex: 1 0 170px; max-height: 260px; }
+/* ボードの 高さは ほかの ページと おなじ。見本が のこりを うめる */
+.tu-board.for-parent.has-preview .tu-text { flex: 0 1 auto; }
+.tu-board.for-parent.has-preview .tu-preview { flex: 1 0 170px; }
+body:not(.portrait) .tu-board.for-parent.has-preview .tu-text { font-size: 18px; }
 /* 文が 入りきらない ときの スクロールバーは 細く うすく */
 .tu-text { scrollbar-width: thin; scrollbar-color: rgba(128, 128, 128, 0.45) transparent; }
 .tu-text::-webkit-scrollbar { width: 6px; }
@@ -2003,3 +2000,6 @@ body.portrait .settings .pro-features { grid-template-columns: minmax(0, 1fr); }
 .settings .pro-cmt-date { font-size: 14px; color: var(--muted); }
 .settings .pro-cmt textarea { display: block; box-sizing: border-box; width: 100%; margin-top: 4px; font: inherit; font-size: 16px; padding: 6px 10px; border-radius: 12px; border: 2px solid #f0dcd4; background: var(--card); color: var(--text); resize: vertical; }
 .settings .pro-cmt-saved { font-size: 14px; color: var(--muted); }
+/* かんたん設定の 毎日の お知らせ（スマホの アプリだけ。setup.js） */
+.su-check { display: flex; align-items: center; gap: 10px; margin: 12px 0 0; font-size: 16px; line-height: 1.5; }
+.su-check input { width: 22px; height: 22px; flex: none; }

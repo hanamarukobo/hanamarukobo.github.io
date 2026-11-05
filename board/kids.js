@@ -327,7 +327,7 @@
     var gs = gradsOf(gradKid);
     $("grv-hello").hidden = true;
     $("grv-title").innerHTML = W("gradTitle", { name: name });
-    $("grv-count").textContent = W("gradSteps", { n: gs.length });
+    $("grv-count").textContent = gs.length ? W("gradSteps", { n: gs.length }) : "";   // 0こ のときは 地図の 空の カードに「できる ことを ふやそう！」
     var fresh = hello ? gs.map(function (g) { return g.id; }).indexOf(hello.id) : -1;
     if (gradMap) gradMap.stop();
     gradMap = null;
@@ -345,7 +345,7 @@
         return { date: W("gradDate", { m: +g.date.slice(5, 7), d: +g.date.slice(8, 10) }), name: gradName(g), comment: g.comment || "" };
       }),
       pick: fresh, fresh: fresh, animate: animate,
-      text: { recent: W("gradRecent"), fresh: W("gradFresh"), from: W("gradFrom") },
+      text: { recent: W("gradRecent"), fresh: W("gradFresh"), from: W("gradFrom"), empty: W("gradEmpty") },
     });
   }
   // 階段: いちばん 新しい ものが 右上。古い ものほど 左下
@@ -356,7 +356,7 @@
     $("grv-hello").hidden = !hello;
     if (hello) $("grv-hello").innerHTML = '<b>' + W("gradCongrats") + '</b>' + W("gradNew", { task: esc(gradName(hello)) });
     $("grv-title").innerHTML = W("gradTitle", { name: name });
-    $("grv-count").textContent = W("gradSteps", { n: gs.length });
+    $("grv-count").textContent = gs.length ? W("gradSteps", { n: gs.length }) : W("gradEmpty");
     $("grv-steps").innerHTML = gs.map(function (g, i) {
       return '<li style="--i:' + Math.max(0, top - i) + '"' + (hello && g.id === hello.id ? ' class="new"' : '') + '>' +
         '<span class="st-date">' + W("gradDate", { m: +g.date.slice(5, 7), d: +g.date.slice(8, 10) }) + '</span>' +
@@ -495,8 +495,8 @@
       ? '<span class="hot">' + W("streak", { n: s }) + '</span>' + (next ? W("streakNext", { k: next - s, m: next }) : '')
       : W("streakStart");
     var gs = gradsOf(kid);
-    $("kv-grad").hidden = !gs.length;
-    $("kv-grad").innerHTML = STAIRS + W("gradBtn", { n: gs.length });
+    $("kv-grad").hidden = false;   // 0この ときも かいだんだけ 出す
+    $("kv-grad").innerHTML = STAIRS + (gs.length ? W("gradBtn", { n: gs.length }) : "");
     $("kv-grad").classList.toggle("badge", !isPro());
     $("kv-grad").tabIndex = isPro() ? 0 : -1;
 

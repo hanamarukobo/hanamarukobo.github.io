@@ -107,6 +107,8 @@
     gradBtn: { kinder: "{n}", lower: "{n}", upper: "{n}" },
     gradTitle: { kinder: "{name}が できるように なったこと", lower: "{name}が できるように なったこと", upper: "{name}が できるようになったこと" },
     gradSteps: { kinder: "{n}だん のぼったよ！", lower: "{n}だん のぼったよ！", upper: "{n}だん のぼったよ！" },
+    // まだ 0この とき（ホームと 子どもの 画面に かいだんの しるしだけ 出して、押すと これ）
+    gradEmpty: { kinder: "できる ことを ふやそう！", lower: "できる ことを ふやそう！", upper: "できることを ふやそう！" },
     gradCongrats: { kinder: "もう だいじょうぶ！", lower: "もう だいじょうぶ！", upper: "もう だいじょうぶ！" },
     gradNew: { kinder: "{task}が じぶんで できるように なったね", lower: "{task}が じぶんで できるように なったね", upper: "{task}が 自分で できるようになったね" },
     gradDate: { kinder: "{m}がつ{date:d}", lower: "{m}がつ{date:d}", upper: "{m}月{date:d}" },
@@ -192,6 +194,9 @@
   // おうちの人 向けの 文（設定・かんたん設定・がんばり管理）。ふつうの 漢字かなで、だんかいは ない。Words.adult(key) で よむ
   //   2か所 いじょうで 使う 文から ここに 寄せる（1か所だけの 文は その ファイルに あってよい）
   var ADULT = {
+    // 毎日の お知らせ（通知。device.js の setNotice が アプリに わたす）
+    noticeTitle: "はなまるボード",
+    noticeBody: "今日の予定とやること、いっしょに見てみませんか",
     // 使い方の カード（usage-cards.js）。ブラウザでは 2台の 使い方を 隠さず、理由・手順を 出す
     usageAppOnly: "ブラウザでは使えません。Android のアプリで使えます。",
     usageQrHowto: "置いてある端末の QR コードを読み取ってつなぎます。",

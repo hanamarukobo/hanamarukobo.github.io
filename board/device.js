@@ -39,6 +39,15 @@
     canJoin: function () { return has("findBoards") && local(); },
     // 声で やることを 足す
     canVoice: function () { return has("startVoice"); },
+    // 毎日の お知らせ（通知。DailyNotice.java）。{ on, set（一度でも 決めたか）, minutes（0:00 から 何分。既定 420＝7:00）, permitted }
+    canNotice: function () { return has("setNotice"); },
+    notice: function () {
+      try { return JSON.parse(eb().getNotice()); } catch (e) { return { on: false, set: false, minutes: 420, permitted: true }; }
+    },
+    // 入れる・止める。文は words.js（Words.adult の noticeTitle・noticeBody）。ON で 許可が なければ 端末が 聞く
+    setNotice: function (on, minutes) {
+      eb().setNotice(!!on, minutes, window.Words.adult("noticeTitle"), window.Words.adult("noticeBody"));
+    },
     // リンクを ひらけるか（ブラウザ・ブラウザの ある 端末。ふるい アプリは スマホなら ある ものと する）
     canOpenLink: function () {
       if (!window.Capacitor) return true;
