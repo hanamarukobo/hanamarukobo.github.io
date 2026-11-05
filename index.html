@@ -33,6 +33,19 @@
   .devices thead th { background: var(--line); }
   .devices td.ok { white-space: nowrap; }
   .note { color: var(--muted); font-size: 0.95em; }
+  .devices td.tbd { color: var(--muted); }
+  .diagram { margin: 12px 0 16px; }
+  .diagram svg { display: block; width: 100%; max-width: 640px; height: auto; margin: 0 auto; }
+  .diagram svg.narrow { display: none; max-width: 360px; }
+  @media (max-width: 600px) { .diagram svg.wide { display: none; } .diagram svg.narrow { display: block; } }
+  .d-room { fill: var(--card); stroke: var(--line); stroke-width: 3; }
+  .d-device { fill: #4a3e3e; }
+  .d-screen { fill: #fff7ee; }
+  .d-accent-fill { fill: var(--accent); }
+  .d-label { fill: var(--fg); font-size: 21px; font-weight: 700; }
+  .d-muted { fill: var(--muted); font-size: 19px; }
+  .d-badge { fill: #ffffff; font-size: 19px; font-weight: 700; }
+  .d-arrow { fill: none; stroke: var(--accent); stroke-width: 4; stroke-dasharray: 10 8; }
   @media (max-width: 600px) { .shots { grid-template-columns: 1fr; } h1 { font-size: 1.5em; } .devices { font-size: 0.85em; } .devices th, .devices td { padding: 6px; } }
 </style>
 </head>
@@ -70,21 +83,75 @@
   </ul>
 
   <h2>使える端末</h2>
-  <ul>
-    <li><b>置いておく端末（ボード）</b>: Android のタブレットかスマホに、アプリ（Google Play）を入れます。iPhone・iPad のアプリは検討中です。iPhone・iPad をボードにするためのブラウザ版を準備しています。</li>
-    <li><b>おうちの人のスマホ</b>: Android でも iPhone でも使えます。同じ Wi-Fi から、ボードに出る QR コードを読み取ると、ブラウザで開けます。アプリを入れる必要はありません。</li>
-  </ul>
+  <p>記録はリビングなどに置いた端末の中にあります。おうちの人のスマホは、同じ Wi-Fi から置いた端末につないで、「みました」や設定をします。</p>
+  <figure class="diagram">
+    <svg class="wide" viewBox="0 0 640 360" role="img" aria-label="リビングに置いた端末に記録があり、Android のスマホはアプリで、iPhone や PC はブラウザで、同じ Wi-Fi からつなぐ図">
+      <defs>
+        <marker id="arw" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" class="d-accent-fill"/></marker>
+      </defs>
+      <rect x="12" y="14" width="350" height="332" rx="22" class="d-room"/>
+      <text x="34" y="50" class="d-label">リビング（家の Wi-Fi）</text>
+      <!-- 置いた端末 -->
+      <rect x="92" y="120" width="190" height="132" rx="14" class="d-device"/>
+      <rect x="102" y="130" width="170" height="112" rx="8" class="d-screen"/>
+      <rect x="114" y="142" width="66" height="40" rx="6" fill="#ff8fab"/>
+      <rect x="192" y="142" width="68" height="40" rx="6" fill="#ffad6b"/>
+      <circle cx="132" cy="210" r="14" fill="#f5c33b"/><circle cx="170" cy="210" r="14" fill="#5aa9f0"/><circle cx="208" cy="210" r="14" fill="#ff8fab"/>
+      <path d="M170 252 L150 272 L224 272 L204 252 z" class="d-device"/>
+      <rect x="60" y="272" width="254" height="14" rx="5" fill="#d9b48a"/>
+      <text x="187" y="318" text-anchor="middle" class="d-label">置いた端末（Android アプリ）</text>
+      <!-- 記録はここ -->
+      <rect x="196" y="80" width="138" height="34" rx="17" class="d-accent-fill"/>
+      <text x="265" y="104" text-anchor="middle" class="d-badge">記録はここ</text>
+      <!-- つなぐ 端末 -->
+      <rect x="470" y="30" width="62" height="108" rx="12" class="d-device"/>
+      <rect x="476" y="40" width="50" height="86" rx="6" class="d-screen"/>
+      <text x="501" y="162" text-anchor="middle" class="d-label">Android のスマホ</text>
+      <text x="501" y="186" text-anchor="middle" class="d-muted">アプリでつなぐ</text>
+      <rect x="470" y="208" width="62" height="108" rx="12" class="d-device"/>
+      <rect x="476" y="218" width="50" height="86" rx="6" class="d-screen"/>
+      <text x="501" y="340" text-anchor="middle" class="d-label">iPhone・PC など</text>
+      <path d="M462 92 C 400 100, 340 140, 292 170" class="d-arrow" marker-end="url(#arw)"/>
+      <path d="M462 262 C 400 252, 340 214, 292 200" class="d-arrow" marker-end="url(#arw)"/>
+      <text x="400" y="292" text-anchor="middle" class="d-muted">QR を読んで</text>
+      <text x="400" y="314" text-anchor="middle" class="d-muted">ブラウザで</text>
+    </svg>
+    <svg class="narrow" viewBox="0 0 360 560" role="img" aria-label="リビングに置いた端末に記録があり、Android のスマホはアプリで、iPhone や PC はブラウザで、同じ Wi-Fi からつなぐ図">
+      <rect x="8" y="8" width="344" height="300" rx="22" class="d-room"/>
+      <text x="28" y="44" class="d-label">リビング（家の Wi-Fi）</text>
+      <rect x="196" y="58" width="138" height="34" rx="17" class="d-accent-fill"/>
+      <text x="265" y="82" text-anchor="middle" class="d-badge">記録はここ</text>
+      <rect x="85" y="100" width="190" height="132" rx="14" class="d-device"/>
+      <rect x="95" y="110" width="170" height="112" rx="8" class="d-screen"/>
+      <rect x="107" y="122" width="66" height="40" rx="6" fill="#ff8fab"/>
+      <rect x="185" y="122" width="68" height="40" rx="6" fill="#ffad6b"/>
+      <circle cx="125" cy="190" r="14" fill="#f5c33b"/><circle cx="163" cy="190" r="14" fill="#5aa9f0"/><circle cx="201" cy="190" r="14" fill="#ff8fab"/>
+      <path d="M163 232 L143 252 L217 252 L197 232 z" class="d-device"/>
+      <rect x="53" y="252" width="254" height="12" rx="5" fill="#d9b48a"/>
+      <text x="180" y="292" text-anchor="middle" class="d-label">置いた端末（Android アプリ）</text>
+      <rect x="62" y="398" width="56" height="96" rx="11" class="d-device"/>
+      <rect x="68" y="407" width="44" height="76" rx="5" class="d-screen"/>
+      <text x="90" y="522" text-anchor="middle" class="d-label">Android のスマホ</text>
+      <text x="90" y="548" text-anchor="middle" class="d-muted">アプリでつなぐ</text>
+      <rect x="242" y="398" width="56" height="96" rx="11" class="d-device"/>
+      <rect x="248" y="407" width="44" height="76" rx="5" class="d-screen"/>
+      <text x="270" y="522" text-anchor="middle" class="d-label">iPhone・PC など</text>
+      <text x="270" y="548" text-anchor="middle" class="d-muted">QR を読んでブラウザで</text>
+      <path d="M90 390 C 92 362, 112 338, 128 318" class="d-arrow" marker-end="url(#arw)"/>
+      <path d="M270 390 C 268 362, 248 338, 232 318" class="d-arrow" marker-end="url(#arw)"/>
+    </svg>
+  </figure>
   <table class="devices">
-    <thead><tr><th></th><th>Android アプリ</th><th>ブラウザ版<br>（準備中）</th></tr></thead>
+    <thead><tr><th></th><th>Android アプリ</th><th>ブラウザ版<br>（準備中）</th><th>iOS アプリ</th></tr></thead>
     <tbody>
-      <tr><th>置く端末</th><td>Android のタブレット・スマホ</td><td>iPad・iPhone など</td></tr>
+      <tr><th>置く端末（記録を持つ）</th><td>Android のタブレット・スマホ</td><td>iPad・iPhone・PC など（その端末のブラウザに記録）</td><td class="tbd" rowspan="5">検討中</td></tr>
+      <tr><th>同じ Wi-Fi の別の端末から「みました」</th><td class="ok">できる</td><td>できない（1台で使う）</td></tr>
       <tr><th>決まった時間に画面をつける・ボードを前に出す</th><td class="ok">できる</td><td>できない（自分で開く）</td></tr>
-      <tr><th>お知らせ（通知）</th><td class="ok">これから</td><td>できない</td></tr>
-      <tr><th>同じ Wi-Fi のスマホから「みました」</th><td class="ok">できる（無料）</td><td>準備中</td></tr>
+      <tr><th>毎日のお知らせ（通知）</th><td>準備中</td><td>できない</td></tr>
       <tr><th>家の外から見る・応援する</th><td>準備中</td><td>準備中</td></tr>
     </tbody>
   </table>
-  <p class="note">記録はボードの端末の中に保存されます。端末を替えるときは、設定の「データの書き出し・読み込み」で移せます。</p>
+  <p class="note">端末を替えるときは、設定の「データの書き出し・読み込み」で記録を移せます。</p>
 
   <footer>
     <p><a class="btn" href="https://forms.gle/N1bPRj8BhCanZp8CA">要望・お問い合わせ（フォーム）</a></p>

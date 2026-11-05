@@ -1,0 +1,9 @@
+{
+  "name": "はなまるボード",
+  "short_name": "はなまるボード",
+  "start_url": "./",
+  "display": "fullscreen",
+  "background_color": "#FF9A52",
+  "theme_color": "#FF9A52",
+  "icons": [{ "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }]
+}
