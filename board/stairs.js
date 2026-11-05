@@ -23,7 +23,7 @@
   // box: 地図を かく 枠（大きさは 枠に あわせる）
   // opt.items: 古い じゅん [{ date: 日づけの HTML, name, comment: おうちの人の コメント }]
   // opt.pick: さいしょに 空に 出す 段（なければ いちばん 新しい もの）
-  // opt.text: { recent, picked, fresh, from }（words.js の ことば）
+  // opt.text: { recent, picked, fresh, from, empty }（words.js の ことば。empty は 段が 0この ときの 空の カード）
   // opt.animate: のぼる うごきを 見せるか
   function render(box, opt) {
     var items = opt.items, N = items.length, T = opt.text;
@@ -66,7 +66,8 @@
     var bubbles = box.querySelectorAll(".sm-bubble");
     // 見る はんい: 右は「?」の 段まで、左は いちばん 古い 段まで
     // 1段目は 下に つけず 少し 上から（吹き出しが 下に 切れない よう、段が すくなくても 地図の まんなかに 寄る）
-    var maxX = 24, minX = Math.min(SW - (N + 1.6) * W, 24), ground0 = Math.min(SH - 22 - BH - 30, SH * 0.62);
+    // まだ 段が ない（0こ）ときは、はなまるが 1段目（「?」）の 手前の 地面で まつ（左に 1段 ぶん あける）。空の カードは「できる ことを ふやそう！」
+    var maxX = N ? 24 : W + 40, minX = Math.min(SW - (N + 1.6) * W, maxX), ground0 = Math.min(SH - 22 - BH - 30, SH * 0.62);
     var picked = -1, tx = minX, anim = null;
 
     function showCard(i) {
@@ -90,7 +91,8 @@
       // 横: 空の カード（左上）の 下に 来る 段は、カードより 下に（段が すくない ときに「?」が カードに かくれない）
       var ic = Math.min(Math.floor((card.offsetLeft + card.offsetWidth - tx) / W), N);
       var belowCard = ic >= 0 ? card.offsetTop + card.offsetHeight + 40 + (ic + 1) * H : 0;
-      var ty = tall ? under + 30 : Math.max(ground0 + (iL + 1) * H, under, belowCard);
+      // 縦で 段が 0この ときは 地面を 下げて、空の 下に 山の ふもとが ある 絵に（柱ばかりに ならない）
+      var ty = tall ? Math.max(under + 30, N ? 0 : SH * 0.62) : Math.max(ground0 + (iL + 1) * H, under, belowCard);
       world.style.transform = "translate(" + tx + "px," + ty + "px)";
       hint.style.display = tx < 0 ? "" : "none";
     }
@@ -108,7 +110,8 @@
       climber.classList.add("done");
     }
 
-    showCard(opt.pick >= 0 && opt.pick < N ? opt.pick : N - 1);
+    if (N) showCard(opt.pick >= 0 && opt.pick < N ? opt.pick : N - 1);
+    else card.innerHTML = '<div class="sm-card-name" style="font-size:' + (phone ? 22 : 28) + 'px"><img src="' + HANAMARU + '" alt=""><span>' + esc(T.empty) + '</span></div>';
     var still = !opt.animate || document.body.classList.contains("lowpower") ||
       (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
     if (still || N < 2) {

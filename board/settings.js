@@ -49,6 +49,14 @@
     $("s-front-group").hidden = !Device.canFront();
     if (Device.canFront()) $("s-front").checked = window.EchoBoard.getFront();
     renderFront();
+    // 毎日の お知らせ（アプリだけ。この端末の 設定。保存は 下の saveBoard）
+    $("s-notice-group").hidden = !Device.canNotice();
+    if (Device.canNotice()) {
+      var nt = Device.notice();
+      $("s-notice").checked = !!nt.on;
+      $("s-notice-time").value = B.pad(Math.floor(nt.minutes / 60)) + ":" + B.pad(nt.minutes % 60);
+    }
+    renderNotice();
     $("s-cal-help").hidden = true;
     // 画面の向きは この端末だけの せってい（アプリのときだけ だす）
     $("s-orient-row").hidden = !Device.canOrient();
@@ -90,12 +98,22 @@
     $("s-front-allow").hidden = ok;
   }
   $("s-front").addEventListener("change", renderFront);
+  // 毎日の お知らせ: オンの ときだけ 時刻を 出す。端末の 設定で 通知が 止まって いれば その ことを 書く
+  function renderNotice() {
+    if (!Device.canNotice()) return;
+    $("s-notice-row").hidden = !$("s-notice").checked;
+    var nt = Device.notice();
+    $("s-notice-off").hidden = !(nt.on && $("s-notice").checked && !nt.permitted);
+  }
+  $("s-notice").addEventListener("change", renderNotice);
+  // 通知の 許可を 聞いた 結果（MainActivity が 知らせる）
+  window.addEventListener("board:notice", function () { if (!$("settings").hidden) renderNotice(); });
   $("s-front-allow").addEventListener("click", function () {
     window.EchoBoard.requestOverlay();
   });
   // 許可の画面から もどってきたら 表示を なおす
   document.addEventListener("visibilitychange", function () {
-    if (!document.hidden && !$("settings").hidden) { renderBrightness(); renderFront(); }
+    if (!document.hidden && !$("settings").hidden) { renderBrightness(); renderFront(); renderNotice(); }
   });
 
   function calTypeChanged() {
@@ -531,6 +549,11 @@
       var pw = document.querySelector("input[name=s-power]:checked");
       if (pw) storageSet(B.POWER_KEY, pw.value);
       if (Device.canFront()) window.EchoBoard.setFront($("s-front").checked);
+      if (Device.canNotice()) {
+        var tm = $("s-notice-time").value || "07:00";
+        Device.setNotice($("s-notice").checked, +tm.slice(0, 2) * 60 + +tm.slice(3, 5));
+        renderNotice();
+      }
       B.applySettings(next);
       window.dispatchEvent(new Event("board:reload")); // カレンダーの週の始まり などを かきなおす
       setText("s-error", "");

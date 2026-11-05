@@ -12,6 +12,8 @@
 <meta name="apple-mobile-web-app-title" content="はなまるボード">
 <link rel="apple-touch-icon" href="icon-512.png">
 <link rel="stylesheet" href="style.css">
+<script>window.goatcounter = { path: function () { return /[?&]pair=/.test(location.search) ? null : location.pathname || "/"; } };</script>
+<script data-goatcounter="https://hanamaru-board.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 </head>
 <body>
 <main class="board">
@@ -386,6 +388,16 @@
           </div>
         </div>
         </div>
+        <!-- 毎日の お知らせ（アプリだけ。この端末の 設定。settings.js・device.js・DailyNotice.java） -->
+        <div class="s-group" id="s-notice-group" hidden>
+          <h3>毎日のお知らせ</h3>
+          <label><input type="checkbox" id="s-notice"> 毎日、今日の予定とやることをお知らせする</label>
+          <div class="row" id="s-notice-row">
+            <span class="label">時刻</span>
+            <input type="time" id="s-notice-time" value="07:00">
+          </div>
+          <p class="note" id="s-notice-off" hidden>端末の設定で、このアプリの通知が止まっています。端末の「設定」→「アプリ」→「はなまるボード」→「通知」で許可してください。</p>
+        </div>
         <div class="s-group" id="s-battery-group" hidden>
           <h3>電池と安全</h3>
           <p class="note" id="s-battery-status"></p>
@@ -403,7 +415,7 @@
             <label><input type="radio" name="s-orient" value="auto"> 自動</label>
           </div>
         </div>
-        <p class="note">画面オフの方法・ボードを前に出す・画面の向きは、この端末だけの設定です。</p>
+        <p class="note">画面オフの方法・ボードを前に出す・毎日のお知らせ・画面の向きは、この端末だけの設定です。</p>
       </section>
 
       <!-- Pro（pro.js）。無料版は 一覧を 鍵の 見た目で 出すだけ -->
@@ -494,6 +506,8 @@
               <p>子どもの画面のカレンダーでその日をタップすると、直したり「みました」を押したりできます（子どもが直せるのは先月1日から）。設定の「がんばりチェック」なら、いつの日でも直せます。「みました」のあとに子どもの画面でチェックを変えると、「みました」は取り消しになります。</p></details>
             <details><summary>はなまるはいつつく？</summary>
               <p>「みました」を押した日に、やることが1つでもできていれば、はなまる（<img class="ico" src="img/hanamaru.svg" alt="">）がつきます。</p></details>
+            <details><summary>毎日のお知らせ（通知）を止めたい・時刻を変えたい</summary>
+              <p>Android のアプリでは、設定の「使い方」の「毎日のお知らせ」で、オン・オフと時刻を変えられます。スマホでは、かんたん設定でオンにできます（はじめは毎朝7時）。お知らせが届かないときは、端末の設定でこのアプリの通知が許可されているか確かめてください。</p></details>
             <details><summary>「いまから やる」ってなに？</summary>
               <p>子どもの画面のやることの横にあるボタンです。やり始めるときに子どもが自分で押すと、画面がにぎやかに応援します。ポイントは変わりません。押してからできたやることは「自分から始めた」として、「がんばりチェック」とふりかえり（Pro）に出ます。</p></details>
             <details><summary>「もう できる」（できるようになったこと）ってなに？</summary>
@@ -642,7 +656,9 @@
       </div>
       <!-- ブラウザで「つなぐ」を 押したときの 手順（setup.js。QR を 読みとると 置いてある 端末の ページが ひらく） -->
       <p class="su-guide" id="su-qr-guide" hidden></p>
-      <p class="su-note">くわしい設定は、あとから設定（日付の右上の歯車）で変えられます。</p>
+      <!-- スマホ（アプリ）では 毎日の お知らせを 聞く（既定は オン。setup.js） -->
+      <label class="su-check" id="su-notice-row" hidden><input type="checkbox" id="su-notice" checked> <span id="su-notice-text">毎朝7時に、今日の予定とやることをお知らせする</span></label>
+      <p class="su-note">くわしい設定は、あとから設定（画面の左上の歯車）で変えられます。</p>
     </section>
     <section class="su-step" data-step="screen" hidden>
       <h2>画面オフ</h2>

@@ -230,6 +230,14 @@
         $("su-board2").hidden = $("su-connect").hidden = false;
         window.UsageCards.markBrowser($("su-board2"), $("su-connect"));
       }
+      // 毎日の お知らせ: スマホ（アプリ）だけ 聞く。まだ 決めて いなければ オン、決めて いれば いまの まま（2026-11-05）
+      var noticeAsk = Device.phone() && Device.canNotice();
+      $("su-notice-row").hidden = !noticeAsk;
+      if (noticeAsk) {
+        var nt = Device.notice(), h = Math.floor(nt.minutes / 60), mi = nt.minutes % 60;
+        $("su-notice").checked = !nt.set || !!nt.on;
+        $("su-notice-text").textContent = "毎朝" + h + "時" + (mi ? mi + "分" : "") + "に、今日の予定とやることをお知らせする";
+      }
       // 1枚目: スマホなら「スマホだけ」の 絵と 文。タブレットなどは「置いて 1台で」
       var ph = Device.phone(), solo = $("su-solo");
       solo.querySelector("img").src = ph ? "img/usage-phone.webp" : "img/usage-board.webp";
@@ -267,9 +275,15 @@
   $("su-connect").addEventListener("click", function () {
     // ブラウザ: アプリの「さがして つなぐ」は できないので、QR で つなぐ 手順を 出す
     if (!Device.app()) return window.UsageCards.showQrGuide($("su-qr-guide"), "center");
+    applyNotice();
     $("setup").hidden = true;
     window.Remote.open(function () { $("setup").hidden = false; });
   });
+  // 毎日の お知らせを この端末に 入れる（時刻は いまの まま。はじめは 7:00）。オンで 許可が なければ 端末が 聞く
+  function applyNotice() {
+    if ($("su-notice-row").hidden) return;
+    Device.setNotice($("su-notice").checked, Device.notice().minutes);
+  }
   $("su-close").addEventListener("click", function () { $("setup").hidden = true; });
   $("su-place").addEventListener("click", function (ev) {
     var b = ev.target.closest("button");
@@ -426,6 +440,7 @@
   $("su-next").addEventListener("click", function () {
     var name = steps()[step];
     if (name === "usage" && !place) { $("su-error").textContent = "使い方を選んでください"; return; }
+    if (name === "usage") applyNotice();
     // 府県だけ えらんで 市区町村が まだ だと 天気が 出ないので、ここで しらせる（どちらも 空なら あとで 設定）
     if (name === "area" && $("su-office").value && !window.AreaSelect.value($("su-office"), $("su-area"))) {
       $("su-error").textContent = "市区町村も選んでください"; return;
