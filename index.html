@@ -28,7 +28,12 @@
   li { margin: 4px 0; }
   footer { margin-top: 40px; color: var(--muted); font-size: 0.9em; border-top: 1px solid var(--line); padding-top: 12px; }
   a { color: inherit; }
-  @media (max-width: 600px) { .shots { grid-template-columns: 1fr; } h1 { font-size: 1.5em; } }
+  .devices { width: 100%; border-collapse: collapse; margin: 8px 0; background: var(--card); border-radius: 12px; overflow: hidden; }
+  .devices th, .devices td { border: 1px solid var(--line); padding: 8px 10px; text-align: left; vertical-align: top; }
+  .devices thead th { background: var(--line); }
+  .devices td.ok { white-space: nowrap; }
+  .note { color: var(--muted); font-size: 0.95em; }
+  @media (max-width: 600px) { .shots { grid-template-columns: 1fr; } h1 { font-size: 1.5em; } .devices { font-size: 0.85em; } .devices th, .devices td { padding: 6px; } }
 </style>
 </head>
 <body>
@@ -63,6 +68,23 @@
     <li><b>おうちの人のスマホから</b>: 同じ Wi-Fi のスマホから、記録を見て「みました」を押せます。</li>
     <li><b>データは端末の中だけ</b>: 記録や設定は外に送りません。広告もありません。</li>
   </ul>
+
+  <h2>使える端末</h2>
+  <ul>
+    <li><b>置いておく端末（ボード）</b>: Android のタブレットかスマホに、アプリ（Google Play）を入れます。iPhone・iPad のアプリは検討中です。iPhone・iPad をボードにするためのブラウザ版を準備しています。</li>
+    <li><b>おうちの人のスマホ</b>: Android でも iPhone でも使えます。同じ Wi-Fi から、ボードに出る QR コードを読み取ると、ブラウザで開けます。アプリを入れる必要はありません。</li>
+  </ul>
+  <table class="devices">
+    <thead><tr><th></th><th>Android アプリ</th><th>ブラウザ版<br>（準備中）</th></tr></thead>
+    <tbody>
+      <tr><th>置く端末</th><td>Android のタブレット・スマホ</td><td>iPad・iPhone など</td></tr>
+      <tr><th>決まった時間に画面をつける・ボードを前に出す</th><td class="ok">できる</td><td>できない（自分で開く）</td></tr>
+      <tr><th>お知らせ（通知）</th><td class="ok">これから</td><td>できない</td></tr>
+      <tr><th>同じ Wi-Fi のスマホから「みました」</th><td class="ok">できる（無料）</td><td>準備中</td></tr>
+      <tr><th>家の外から見る・応援する</th><td>準備中</td><td>準備中</td></tr>
+    </tbody>
+  </table>
+  <p class="note">記録はボードの端末の中に保存されます。端末を替えるときは、設定の「データの書き出し・読み込み」で移せます。</p>
 
   <footer>
     <p><a class="btn" href="https://forms.gle/N1bPRj8BhCanZp8CA">要望・お問い合わせ（フォーム）</a></p>
