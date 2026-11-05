@@ -1,0 +1,361 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta name="robots" content="noindex, nofollow">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>がんばり管理</title>
+<style>
+  :root {
+    --bg: #fff6ee; --card: #fff; --text: #4a3f3f; --muted: #9a8a84; --line: #f0e0d8;
+    --orange: #ff9a52; --pink: #ff7fa3; --green: #4cbf8a; --blue: #5aa9f0;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #1d1b26; --card: #2a2735; --text: #ece6f0; --muted: #a39cb0; --line: #3a3648; }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font-family: "Hiragino Maru Gothic ProN", "Zen Maru Gothic", "Yu Gothic", sans-serif;
+    font-size: 16px;
+  }
+  header { padding: 16px; font-size: 20px; font-weight: bold; }
+  main { max-width: 640px; margin: 0 auto; padding: 0 16px 40px; }
+  section { background: var(--card); border-radius: 18px; padding: 16px; margin-bottom: 16px; }
+  h2 { font-size: 17px; margin: 0 0 12px; color: var(--orange); }
+  .row { display: flex; align-items: center; gap: 8px; }
+  /* やることが多くても 保存が 画面の下に 見えるように */
+  .save-row { position: sticky; bottom: 0; z-index: 2; background: var(--card); padding: 8px 0; margin-top: 8px; }
+  .spread { justify-content: space-between; }
+  button, input, select { font: inherit; color: inherit; }
+  button {
+    border: 2px solid var(--orange); background: transparent; border-radius: 999px;
+    padding: 6px 14px; cursor: pointer;
+  }
+  button.primary { background: var(--orange); color: #fff; }
+  button:disabled { opacity: .4; }
+  input[type=text], input[type=number], input[type=date] {
+    border: 2px solid var(--line); border-radius: 10px; padding: 6px 8px; background: transparent;
+  }
+  .kid { border: 2px solid var(--line); border-radius: 14px; padding: 12px; margin-top: 12px; }
+  .kid h3 { margin: 0; font-size: 18px; }
+  .task { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px dashed var(--line); }
+  .task:last-of-type { border-bottom: none; }
+  .task input { width: 22px; height: 22px; }
+  .task .yen { margin-left: auto; color: var(--muted); }
+  .task .self { color: var(--orange); font-weight: bold; white-space: nowrap; }
+  .approve {
+    width: 100%; margin-top: 10px; padding: 12px; font-size: 17px; font-weight: bold;
+    border-color: var(--green); color: var(--green);
+  }
+  .approve.on { background: var(--green); color: #fff; }
+  .muted { color: var(--muted); font-size: 14px; }
+  /* 1行目: 名前 / 2行目: 種類・金額・使う・並び替え */
+  .edit-row {
+    display: flex; flex-wrap: wrap; gap: 6px 8px; align-items: center;
+    padding: 10px 0; border-bottom: 1px dashed var(--line);
+  }
+  .edit-row .name { flex: 1 1 100%; min-width: 0; }
+  .edit-row input[type=number] { width: 56px; color: var(--text); }
+  .edit-row select { border: 2px solid var(--line); border-radius: 10px; padding: 5px 6px; background: var(--card); }
+  .edit-row .moves { margin-left: auto; display: flex; gap: 4px; }
+  .task .cnt { display: inline-flex; align-items: center; gap: 6px; }
+  .task .cnt b { min-width: 22px; text-align: center; }
+  /* 設定の タブの 中では スクロールバーを ボードの 設定と おなじ オレンジに（端末の ものは 細くて 夜は 見えない） */
+  html:has(body.embed)::-webkit-scrollbar { width: 8px; }
+  html:has(body.embed)::-webkit-scrollbar-track { background: rgba(127, 127, 127, 0.15); border-radius: 4px; }
+  html:has(body.embed)::-webkit-scrollbar-thumb { background: var(--orange); border-radius: 4px; }
+  /* がんばりチェックの「もう できる」: ▸ で 中身を ひらき、1つずつ やることに 戻せる */
+  .task.bundle-row { flex-wrap: wrap; }
+  .task.bundle-row label { display: flex; align-items: center; gap: 10px; }
+  .task .b-open { padding: 2px 10px; font-size: 14px; }
+  .b-items { flex-basis: 100%; list-style: none; margin: 4px 0 0; padding: 0 0 0 32px; }
+  .b-items li { display: flex; align-items: center; gap: 8px; padding: 4px 0; }
+  .b-items li button { margin-left: auto; font-size: 14px; padding: 2px 10px; }
+  .set-grid { display: grid; grid-template-columns: auto 1fr; gap: 10px 12px; align-items: center; }
+  input[type=time] { border: 2px solid var(--line); border-radius: 10px; padding: 4px 6px; background: transparent; }
+  input[type=date] { min-width: 0; }
+  .icon-btn { padding: 4px 9px; }
+  .tabs { display: flex; gap: 8px; margin-bottom: 12px; }
+  .tabs button { flex: 1; font-weight: bold; }
+  .tabs button.on { background: var(--orange); color: #fff; }
+  .kid-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 8px 0; border-bottom: 1px dashed var(--line); }
+  .kid-row input[type=text] { flex: 1; min-width: 0; }
+  .kid-row select { border: 2px solid var(--line); border-radius: 10px; padding: 5px 6px; background: var(--card); }
+  .swatch { width: 22px; height: 22px; border-radius: 50%; flex: none; }
+  .goal-row, .reward-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; padding: 8px 0; border-bottom: 1px dashed var(--line); }
+  .goal-row .title, .reward-row .title { flex: 1 1 160px; min-width: 0; }
+  .goal-row input[type=number], .reward-row input[type=number] { width: 80px; }
+  .bal { display: flex; align-items: center; gap: 8px; padding: 8px 0; border-bottom: 1px dashed var(--line); flex-wrap: wrap; }
+  .bal b { margin-right: auto; }
+  .bal select { border: 2px solid var(--line); border-radius: 10px; padding: 5px 6px; background: var(--card); }
+  .history { font-size: 14px; color: var(--muted); margin: 8px 0 0; padding-left: 18px; }
+  .history button { padding: 0 8px; font-size: 13px; margin-left: 6px; }
+  header { display: flex; align-items: center; justify-content: space-between; }
+  .back { font-size: 16px; color: var(--orange); text-decoration: none; border: 2px solid var(--orange); border-radius: 999px; padding: 4px 14px; }
+  .set-grid select { border: 2px solid var(--line); border-radius: 10px; padding: 5px 6px; background: var(--card); max-width: 46%; }
+  .file-btn { border: 2px solid var(--orange); border-radius: 999px; padding: 6px 14px; cursor: pointer; }
+  .file-btn input { display: none; }
+  .toast {
+    position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%);
+    background: var(--text); color: var(--bg); padding: 10px 18px; border-radius: 999px;
+    opacity: 0; transition: opacity .2s; pointer-events: none;
+    z-index: 20;   /* 画面の下に のこす 保存の 行（.save-row）より 前に */
+  }
+  .toast.show { opacity: 1; }
+  /* 見出しを タップして ひらく・とじる */
+  main > section > h2 { cursor: pointer; display: flex; align-items: center; gap: 8px; margin: 0; user-select: none; }
+  main > section > h2::after { content: "▾"; margin-left: auto; color: var(--muted); font-size: 14px; }
+  main > section.closed > h2::after { content: "▸"; }
+  main > section:not(.closed) > h2 { margin-bottom: 12px; }
+  main > section.closed > :not(h2) { display: none !important; }
+  /* やることの設定 */
+  .row.wrap { flex-wrap: wrap; }
+  .tabs { flex-wrap: wrap; }
+  .t-group { margin: 14px 0 4px; font-weight: bold; color: var(--muted); font-size: 14px; }
+  .t-group summary { cursor: pointer; }
+  .t-row { border-bottom: 1px dashed var(--line); }
+  .t-row.off { opacity: .5; }
+  .t-sum { display: flex; align-items: center; gap: 8px; padding: 10px 0; cursor: pointer; }
+  .t-sum .t-name { flex: 1; min-width: 0; }
+  .t-sum .t-name small { display: block; color: var(--muted); font-size: 12px; }
+  .t-sum .t-when { font-size: 13px; color: var(--muted); white-space: nowrap; }
+  .t-sum .t-yen { font-size: 14px; color: var(--muted); white-space: nowrap; }
+  .dots { display: inline-flex; gap: 2px; }
+  .dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
+  .everyone { font-size: 12px; color: var(--muted); }
+  .t-edit { display: grid; grid-template-columns: 76px 1fr; gap: 8px 10px; align-items: center; padding: 4px 0 14px; }
+  .t-edit > span:nth-child(odd) { font-size: 14px; color: var(--muted); }
+  .t-edit input[type=text] { width: 100%; }
+  .t-edit input[type=number] { width: 70px; }
+  .chips { display: inline-flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .chips button { padding: 3px 12px; font-size: 14px; border-color: var(--chip, var(--orange)); }
+  .chips button.on { background: var(--chip, var(--orange)); color: #fff; }
+  .chips button.soft { opacity: .55; }
+  .by-kid { display: flex; flex-wrap: wrap; gap: 6px 12px; margin-top: 6px; font-size: 14px; }
+  .t-actions { grid-column: 1 / -1; display: flex; gap: 8px; align-items: center; }
+  .t-actions .moves { margin-left: auto; display: flex; gap: 4px; }
+  .once-add, .preview { margin-top: 16px; padding-top: 12px; border-top: 2px solid var(--line); }
+  .once-add h3 { font-size: 15px; margin: 0 0 8px; }
+  #once-name { flex: 1 1 200px; min-width: 0; }
+  #once-yen { width: 70px; }
+  .preview .row { margin-bottom: 6px; }
+  .pv-kid { margin: 6px 0; font-size: 14px; }
+  .pv-kid b { margin-right: 6px; }
+  /* できるようになったこと（「もう できる」に まとめる） */
+  .grad-lead { margin: 0 0 4px; }
+  .g-row { padding: 10px 0; border-bottom: 1px dashed var(--line); }
+  .g-row:last-child { border-bottom: none; }
+  .g-sum { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .g-sum .g-name { flex: 1 1 140px; min-width: 0; }
+  .g-tag { font-size: 13px; font-weight: bold; color: var(--muted); white-space: nowrap; padding: 1px 10px; border-radius: 99px; border: 2px solid var(--line); }
+  .g-row.ready .g-tag { color: var(--green); border-color: var(--green); }
+  .g-sum button { padding: 3px 12px; font-size: 14px; }
+  .g-form { margin-top: 10px; padding: 10px 12px; border: 2px solid var(--green); border-radius: 12px; }
+  .g-form .row { margin-top: 8px; justify-content: flex-end; }
+  .g-form button.primary { background: var(--green); border-color: var(--green); }
+  .g-done { margin-top: 10px; padding-top: 8px; border-top: 2px solid var(--line); }
+  .g-done h4 { margin: 0 0 4px; font-size: 14px; color: var(--muted); }
+  .g-item { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 6px 0; font-size: 15px; }
+  .g-item .g-name { flex: 1 1 140px; min-width: 0; }
+  .g-item small { display: block; color: var(--muted); font-size: 13px; }
+  .g-item .g-btns { display: flex; gap: 6px; margin-left: auto; }
+  .g-item button { padding: 2px 10px; font-size: 13px; white-space: nowrap; }
+  /* アプリの中で開いたときは、ボードの設定画面と重なる項目を出さない（スマホのブラウザから開くときは全部出す） */
+  body.in-app .dup { display: none !important; }
+  /* ボードの 設定画面の「がんばり項目」タブの 中に 出すとき（?embed=1）は 見出しを 出さない */
+  body.embed header { display: none; }
+  body.embed main { padding-top: 4px; max-width: none; }
+  /* 設定画面と おなじ 見た目（色は 設定画面から もらう。背景は 設定画面の 地の色が 見えるように 透明） */
+  @font-face { font-family: "ZenMaru"; src: url("fonts/ZenMaruGothic-Medium.ttf") format("truetype"); font-weight: 500; }
+  @font-face { font-family: "ZenMaru"; src: url("fonts/ZenMaruGothic-Bold.ttf") format("truetype"); font-weight: 700; }
+  /* ボードと おなじ 絵（words.js の Words.icon） */
+  img.ico { display: inline-block; width: 1.2em; height: 1.2em; vertical-align: -0.25em; object-fit: contain; }
+  /* 設定画面の 中では、設定画面と おなじ 色（夜の 画面で 黒く うかない・下に のこす 保存の 行と そろう） */
+  body.embed { background: var(--card); font-family: "ZenMaru", "Hiragino Maru Gothic ProN", "Yu Gothic", sans-serif; font-weight: 500; }
+  body.embed main > section { background: transparent; border: 2px solid var(--line); border-radius: 16px; }
+  body.embed h2 { font-size: 18px; font-weight: 700; }
+  /* がんばりチェックだけ（ボードの 設定の「がんばりチェック」タブ）／それ以外（「がんばり項目」タブ） */
+  body.only-day main > section:not([data-sec="day"]) { display: none !important; }
+  body.only-day main > section[data-sec="day"] { border: 0; padding: 0; }
+  body.only-day main > section[data-sec="day"] > h2 { display: none; }
+  body.no-day main > section[data-sec="day"] { display: none !important; }
+</style>
+</head>
+<body>
+<script>
+  // ボードの 設定画面の タブの 中（?embed=1）では、絵の 形を さきに きめ、できあがるまで 見せない
+  // （読みこみ途中の 全体が 一瞬 見えて、「がんばりチェック」で 前の タブが 出たように 見えた）
+  (function () {
+    var q = location.search, b = document.body;
+    b.classList.toggle("embed", /[?&]embed=1/.test(q));
+    b.classList.toggle("only-day", /[?&]only=day/.test(q));
+    b.classList.toggle("no-day", /[?&]hide=day/.test(q));
+    if (!b.classList.contains("embed")) return;
+    b.style.visibility = "hidden";
+    window.showEmbed = function () {
+      // 字（ZenMaru）が そろってから（字の ない 枠が 一瞬 見えない ように）
+      var show = function () { b.style.visibility = ""; };
+      if (document.fonts && document.fonts.ready) document.fonts.ready.then(show, show); else show();
+    };
+    setTimeout(window.showEmbed, 2000);   // 読めなかった ときも 見えない ままに しない
+  })();
+</script>
+<header>がんばり管理 <a id="back-board" class="back" hidden>← ボードへ戻る</a></header>
+<main>
+  <section data-sec="day">
+    <h2>がんばりチェック</h2>
+    <div class="row">
+      <button id="prev" class="icon-btn">◀</button>
+      <input type="date" id="date">
+      <button id="next" class="icon-btn">▶</button>
+      <button id="today-btn">今日</button>
+    </div>
+    <div id="day-kids"></div>
+  </section>
+
+  <section data-sec="tasks">
+    <h2>やることの設定</h2>
+    <div class="tabs" id="task-filter"></div>
+    <label class="muted"><input type="checkbox" id="s-slots"> ごぜん・ごごに分けて表示する</label>
+    <div id="task-list"></div>
+    <div class="row save-row">
+      <button id="add-task">＋ やることを追加</button>
+      <button id="save-tasks" class="primary" style="margin-left:auto">保存</button>
+    </div>
+    <div class="once-add">
+      <h3>1回だけのやることを追加</h3>
+      <div class="row wrap">
+        <input type="text" id="once-name" placeholder="えんそくの じゅんび など" maxlength="30">
+        <input type="date" id="once-date">
+      </div>
+      <div class="row wrap" style="margin-top:6px">
+        <span class="chips" id="once-kids"></span>
+        <span class="muted"><input type="number" id="once-yen" min="0"> <span class="unit-name"></span></span>
+        <button id="once-ok" class="primary" style="margin-left:auto">追加</button>
+      </div>
+    </div>
+    <div class="preview">
+      <div class="row"><b>この日に出るもの</b><input type="date" id="pv-date"></div>
+      <div id="pv"></div>
+    </div>
+    <p class="muted">行をタップすると、だれが・いつ・ごほうびなどを変えられます。使わなくなったものは「使う」を外すと、記録を残したまま出なくなります。</p>
+  </section>
+
+  <section data-sec="grad">
+    <h2>できるようになったこと（「もう できる」にまとめる）</h2>
+    <p class="muted grad-lead">言われなくてもできるようになったやることは、子どもごとの「もう できる」に1つにまとめられます。記録はずっと残ります。</p>
+    <p class="muted">この2週間よくできているものに「もう できるかも」と出ます。決めるのはおうちの人です。</p>
+    <div id="grad"></div>
+  </section>
+
+  <section data-sec="goals">
+    <h2>みんなの目標</h2>
+    <div id="goal-edit"></div>
+    <div class="row" style="margin-top:8px">
+      <button id="add-goal">＋ 追加</button>
+      <button id="save-goals" class="primary" style="margin-left:auto">保存</button>
+    </div>
+    <p class="muted">開始日からの全員のがんばりで進みます（ためたポイントは減りません）。ボードには、達成していない一番上の目標が出ます。</p>
+  </section>
+
+  <section id="reward-section" data-sec="rewards">
+    <h2>ごほうび交換</h2>
+    <div id="exchange"></div>
+    <h3 style="font-size:15px;margin:16px 0 4px">ごほうびの一覧</h3>
+    <div id="reward-edit"></div>
+    <div class="row" style="margin-top:8px">
+      <button id="add-reward">＋ 追加</button>
+      <button id="save-rewards" class="primary" style="margin-left:auto">保存</button>
+    </div>
+    <p class="muted">単位が「ポイント」のときに使います。残高は、ためたポイントから交換した分を引いたものです。</p>
+  </section>
+
+  <section data-sec="kids" class="dup">
+    <h2>子ども</h2>
+    <div id="kid-edit"></div>
+    <div class="row" style="margin-top:8px">
+      <button id="add-kid">＋ 追加</button>
+      <button id="save-kids" class="primary" style="margin-left:auto">保存</button>
+    </div>
+    <p class="muted" id="free-kids" hidden></p>
+    <p class="muted">「表示」を外すと、記録は残したまま、ボードにもこのページにも出なくなります。ボードの設定（日付の右上の歯車 →「がんばりカレンダー」）と共通です。</p>
+  </section>
+
+  <section data-sec="calendar" class="dup">
+    <h2>カレンダー連携</h2>
+    <div class="row" style="flex-wrap:wrap">
+      <label><input type="radio" name="cal" value="none"> つかわない</label>
+      <label><input type="radio" name="cal" value="ical"> iCal の URL（おすすめ）</label>
+      <label><input type="radio" name="cal" value="gas"> Apps Script</label>
+    </div>
+    <details class="muted">
+      <summary>どちらを選べばいい？</summary>
+      <p><b>iCal の URL（おすすめ）</b>：Google カレンダーなどの「iCal 形式の URL」を貼るだけで使えます。出し方は下の「Google カレンダーの URL の出し方」を見てください。</p>
+      <p><b>Apps Script</b>：Google Apps Script で自分で用意した中継の URL です（予定の出し方を細かく変えたい人向け）。わからなければ iCal を選んでください。</p>
+    </details>
+    <input type="text" id="cal-url" placeholder="https://calendar.google.com/calendar/ical/…/basic.ics" style="width:100%;margin-top:8px">
+    <p class="muted" id="cal-warn" style="color:#e07a2e" hidden></p>
+    <div class="row" style="margin-top:8px"><button id="save-cal" class="primary" style="margin-left:auto">保存</button></div>
+    <details class="muted">
+      <summary>Google カレンダーの URL の出し方</summary>
+      <ol>
+        <li>パソコンのブラウザで Google カレンダーを開き、右上の歯車 →「設定」</li>
+        <li>左の「マイカレンダーの設定」から、子どもに見せたいカレンダーを選ぶ（家族用のカレンダーを1つ作っておくのがおすすめ）</li>
+        <li>「カレンダーの統合」の「iCal 形式の非公開 URL」をコピーして、上に貼り付ける</li>
+      </ol>
+      この URL を知っている人は誰でも予定を見られます。ほかの人に教えないでください。漏れたときは同じ画面の「リセット」で URL を作り直せます。URL はこの端末（またはこの家のサーバー）の中だけに保存し、外には送りません。
+    </details>
+  </section>
+
+  <section data-sec="data">
+    <h2>データの書き出し・読み込み</h2>
+    <div class="row">
+      <button id="export">書き出す</button>
+      <label class="file-btn"><input type="file" id="import" accept=".json,application/json">ファイルから戻す</label>
+    </div>
+    <p class="muted" id="export-result"></p>
+    <p class="muted">記録と設定を1つのファイルにします。機種変更の前に書き出しておくと、あとで戻せます（戻すと、いまの内容は置き換わります）。</p>
+  </section>
+
+  <section data-sec="settings">
+    <h2 id="settings-title">表示の設定</h2>
+    <div class="set-grid">
+      <span class="dup">天気の場所</span>
+      <span class="dup"><select id="s-office"></select> <select id="s-area"></select></span>
+      <span class="dup">平日の表示時間</span>
+      <span class="dup"><input type="time" id="s-weekday-from"> 〜 <input type="time" id="s-weekday-to"></span>
+      <span class="dup">土日祝の表示時間</span>
+      <span class="dup"><input type="time" id="s-holiday-from"> 〜 <input type="time" id="s-holiday-to"></span>
+      <span class="dup">画面オフまで</span>
+      <span class="dup"><select id="s-idle">
+        <option value="0.5">30秒</option><option value="1">1分</option><option value="2">2分</option><option value="3">3分</option>
+        <option value="5">5分</option><option value="10">10分</option><option value="15">15分</option><option value="20">20分</option><option value="30">30分</option>
+      </select></span>
+      <span class="dup">週の始まり</span>
+      <span class="dup"><label><input type="radio" name="week-start" value="0"> 日曜</label>
+        <label><input type="radio" name="week-start" value="1"> 月曜</label></span>
+      <span class="dup">ごほうびの単位</span>
+      <span class="dup"><label><input type="radio" name="unit" value="yen"> 円</label>
+        <label><input type="radio" name="unit" value="point"> ポイント</label></span>
+      <span>おうちの人の呼び方</span>
+      <span><input type="text" id="s-parent" maxlength="10" placeholder="ママ・パパ"> <span class="muted">「〇〇に みせてね」などに使います</span></span>
+      <span class="dup">低消費電力モード</span>
+      <span class="dup"><label><input type="checkbox" id="s-lowpower"> アニメーションを止める</label></span>
+    </div>
+    <div class="row" style="margin-top:10px"><button id="save-settings" class="primary" style="margin-left:auto">保存</button></div>
+    <p class="muted dup">ボードの設定画面（日付の右上の歯車）と共通の設定です。</p>
+    <p class="muted dup">天気は気象庁の地域の予報、雨の時刻は市区町村のあたりの予報から出しています。詳しくは天気アプリなどでご確認ください。</p>
+  </section>
+</main>
+<div class="toast" id="toast"></div>
+
+<script src="config.js"></script>
+<script src="palette.js"></script>
+<script src="words.js"></script>
+<script src="jma-areas.js"></script>
+<script src="area-select.js"></script>
+<script src="api.js"></script>
+<script src="admin.js"></script>
+</body>
+</html>
