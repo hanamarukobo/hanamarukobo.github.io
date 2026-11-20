@@ -5,31 +5,40 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>テストに参加する｜はなまるボード</title>
 <meta name="description" content="はなまるボードのテストに参加する方法。Google グループに入り、テストに参加して、Google Play から入れます。">
+<meta name="color-scheme" content="light">
 <link rel="icon" href="img/icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
-  :root { color-scheme: light dark; --bg: #fff7ee; --fg: #4a3e3e; --muted: #7a6a6a; --accent: #f08a3c; --card: #ffffff; --line: #f0dcd4; --btn: #f08a3c; --btn-fg: #ffffff; --note: #fff0c9; }
-  @media (prefers-color-scheme: dark) { :root { --bg: #1d1c1a; --fg: #ece9e3; --muted: #a8a49c; --accent: #ffad6b; --card: #2a2722; --line: #3a3833; --btn: #ff9a52; --btn-fg: #1d1c1a; --note: #3a3322; } }
-  * { box-sizing: border-box; }
-  body { margin: 0; background: var(--bg); color: var(--fg); font-family: system-ui, -apple-system, "Hiragino Sans", "Noto Sans JP", "Yu Gothic UI", sans-serif; line-height: 1.8; font-size: 16px; -webkit-text-size-adjust: 100%; }
-  main { max-width: 760px; margin: 0 auto; padding: 24px 16px 48px; }
-  .back { color: var(--muted); font-size: 0.95em; }
-  h1 { font-size: 1.6em; line-height: 1.4; margin: 8px 0 4px; }
-  .lead { margin: 8px 0 20px; }
-  .need { background: var(--card); border: 2px solid var(--line); border-radius: 14px; padding: 10px 16px; margin: 0 0 24px; }
-  .need p { margin: 4px 0; }
-  ol.steps { list-style: none; padding: 0; margin: 0; counter-reset: s; }
-  ol.steps > li { counter-increment: s; position: relative; background: var(--card); border: 2px solid var(--line); border-radius: 16px; padding: 14px 16px 14px 60px; margin: 0 0 14px; }
-  ol.steps > li::before { content: counter(s); position: absolute; left: 16px; top: 14px; width: 32px; height: 32px; border-radius: 50%; background: var(--accent); color: var(--btn-fg); font-weight: 700; text-align: center; line-height: 32px; }
-  ol.steps h2 { font-size: 1.1em; margin: 0 0 4px; line-height: 1.5; }
-  ol.steps p { margin: 4px 0; }
-  .btn { display: inline-block; background: var(--btn); color: var(--btn-fg); text-decoration: none; font-weight: 700; padding: 8px 18px; border-radius: 999px; margin: 6px 0 2px; word-break: keep-all; }
-  .note { background: var(--note); border-radius: 10px; padding: 6px 12px; font-size: 0.95em; }
-  h2.sec { font-size: 1.2em; margin: 32px 0 8px; }
-  dl { margin: 8px 0; }
-  dt { font-weight: 700; margin-top: 12px; }
-  dd { margin: 2px 0 0; }
-  footer { margin-top: 40px; color: var(--muted); font-size: 0.9em; border-top: 1px solid var(--line); padding-top: 12px; }
-  a { color: inherit; }
+*{box-sizing:border-box}
+html{color-scheme:light}
+:root{--bg:#fbf7ec;--fg:#3f3626;--ink:#4a3a1c;--muted:#716346;--accent:#d9a521;--accent-d:#855f0a;--btn:#c4561a;--btn-s:#8f3d10;--card:#fff;--line:#ece1c3;--note:#fff2cc;--c1b:#eecb6a;--hf:"Zen Maru Gothic",sans-serif}
+body{margin:0;color:var(--fg);font-family:"Zen Maru Gothic","Hiragino Maru Gothic ProN","Hiragino Sans","Noto Sans JP","Yu Gothic UI",sans-serif;line-height:1.85;font-size:16px;-webkit-text-size-adjust:100%;overflow-x:hidden;background:#fbf7ec radial-gradient(circle at 6% 3%,#fdf0c9 0,transparent 26%),radial-gradient(circle at 96% 32%,#fce9d6 0,transparent 24%),radial-gradient(circle at 4% 72%,#fff2cc 0,transparent 20%)}
+h1,h2{font-family:var(--hf);font-weight:700;color:var(--ink);letter-spacing:.02em}
+main{max-width:760px;margin:0 auto;padding:24px 18px 56px}
+.back{color:var(--muted);font-size:.95em}
+h1{font-size:1.8em;line-height:1.4;margin:8px 0 4px}
+.lead{margin:8px 0 20px}
+.need{background:#fff2cc;border:3px solid var(--c1b);border-radius:24px;padding:12px 18px;margin:0 0 26px}
+.need p{margin:4px 0}
+ol.steps{list-style:none;padding:0;margin:0;counter-reset:s}
+ol.steps>li{counter-increment:s;position:relative;background:var(--card);border:3px solid var(--line);border-radius:28px;padding:16px 18px 16px 66px;margin:0 0 16px}
+ol.steps>li:nth-child(odd){background:#fff2cc;border-color:#eecb6a}
+ol.steps>li:nth-child(even){background:#fce9d6;border-color:#f0bd8d}
+ol.steps>li::before{content:counter(s);position:absolute;left:18px;top:16px;width:36px;height:36px;border-radius:50%;background:var(--accent);color:#fff;font-family:var(--hf);font-weight:700;text-align:center;line-height:36px}
+ol.steps h2{font-size:1.15em;margin:0 0 4px;line-height:1.5}
+ol.steps p{margin:4px 0}
+.btn{display:inline-block;background:var(--btn);color:#fff;text-decoration:none;font-weight:700;padding:10px 22px;border-radius:999px;margin:8px 0 2px;word-break:keep-all;box-shadow:0 4px 0 var(--btn-s);transition:transform .1s,box-shadow .1s}
+.btn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--btn-s)}
+.note{background:rgba(255,255,255,.75);border-radius:14px;padding:6px 12px;font-size:.95em}
+h2.sec{display:inline-block;position:relative;z-index:0;font-size:1.45em;margin:40px 0 18px;line-height:1.4}
+h2.sec::after{content:"";position:absolute;left:0;right:0;bottom:-9px;height:10px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='36' height='10'%3E%3Cpath d='M1 6 Q10 -1 18 5 T35 5' fill='none' stroke='%23e3a63a' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E") repeat-x}
+dl{margin:8px 0}
+dt{font-weight:700;margin-top:12px;font-family:var(--hf);color:var(--ink)}
+dd{margin:2px 0 0}
+footer{margin-top:48px;color:var(--muted);font-size:.9em;padding:20px 22px;border-radius:28px;background:linear-gradient(135deg,#fdf0cf,#fce6d2)}
+a{color:inherit}
+@media(max-width:700px){ol.steps>li{padding:14px 14px 14px 58px}ol.steps>li::before{left:14px;top:14px}h1{font-size:1.6em}}
 </style>
 <!-- アクセスの数（GoatCounter。cookie なし。つなぐための番号 pair= がアドレスにあるときは送らない） -->
 <script>window.goatcounter = { path: function () { return /[?&]pair=/.test(location.search) ? null : location.pathname || "/"; } };</script>
@@ -75,7 +84,7 @@
   <h2 class="sec">よくある質問</h2>
   <dl>
     <dt>iPhone でも参加できますか？</dt>
-    <dd>テストに参加できるのは Android だけです。Android の端末をリビングなどに置いて使うときは、同じ Wi-Fi の iPhone から、置いた端末に出る QR コードを読み取ってブラウザで使えます。</dd>
+    <dd>アプリのテストに参加できるのは Android だけです。iPhone・iPad だけのご家庭は、トップの「ブラウザで試す」からブラウザ版を使えます。Android の端末をリビングなどに置いて使うときは、同じ Wi-Fi の iPhone から、置いた端末に出る QR コードを読み取ってブラウザで使えます。</dd>
     <dt>お金はかかりますか？</dt>
     <dd>かかりません。</dd>
     <dt>どんなことを教えてほしいですか？</dt>
