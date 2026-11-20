@@ -19,7 +19,7 @@
 <main class="board">
   <section class="card today" id="today">
     <!-- 設定の入口（日付の長押しも のこす）。子どもの 目に とまらないよう うすく 小さく -->
-    <button class="gear-btn" id="gear-btn" aria-label="設定"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M19.4 13a7.5 7.5 0 0 0 0-2l2.1-1.6-2-3.5-2.5 1a7.6 7.6 0 0 0-1.7-1L15 3.3h-4l-.4 2.6a7.6 7.6 0 0 0-1.7 1l-2.5-1-2 3.5L6.6 11a7.5 7.5 0 0 0 0 2l-2.1 1.6 2 3.5 2.5-1a7.6 7.6 0 0 0 1.7 1l.3 2.6h4l.4-2.6a7.6 7.6 0 0 0 1.7-1l2.5 1 2-3.5zM13 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z" transform="translate(-1 0)"/></svg></button>
+    <button class="gear-btn" id="gear-btn" aria-label="設定"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M19.4 13a7.5 7.5 0 0 0 0-2l2.1-1.6-2-3.5-2.5 1a7.6 7.6 0 0 0-1.7-1L15 3.3h-4l-.4 2.6a7.6 7.6 0 0 0-1.7 1l-2.5-1-2 3.5L6.6 11a7.5 7.5 0 0 0 0 2l-2.1 1.6 2 3.5 2.5-1a7.6 7.6 0 0 0 1.7 1l.3 2.6h4l.4-2.6a7.6 7.6 0 0 0 1.7-1l2.5 1 2-3.5zM13 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z" transform="translate(-1 0)"/></svg><span class="gear-tag">更新</span></button>
     <div class="month" id="month"></div>
     <div class="day"><span id="day"></span><span class="unit" id="day-unit">日</span></div>
     <!-- 曜日。よこおきでは 左右に きのう・あしたの 曜日を うすく ならべる -->
@@ -43,7 +43,6 @@
     <section class="card kids-card">
       <div class="kids-head">
         <h2><img class="ico" src="img/hanamaru.svg" alt="" draggable="false"> がんばりカレンダー</h2>
-        <button class="goal-pill" id="goal-pill" hidden></button>
       </div>
       <div class="kids" id="kids"></div>
     </section>
@@ -70,7 +69,11 @@
     <div class="kv-head">
       <button class="kv-close" id="kv-close" aria-label="とじる">✕</button>
       <div class="kv-title" id="kv-title"></div>
-      <div class="kv-streak" id="kv-streak"></div>
+      <!-- がんばり｜おさいふ の きりかえ（おさいふは 設定で 使うと きめた 子だけ。wallet.js。2026-11-19 に 見出しを 1行に した） -->
+      <div class="kv-tabs" role="tablist">
+        <button class="kv-tab on" id="kv-tab-cal" role="tab" aria-selected="true"></button>
+        <button class="kv-tab" id="kv-wallet" role="tab" aria-selected="false" hidden></button>
+      </div>
       <button class="kv-grad" id="kv-grad" hidden></button>
     </div>
     <div class="kv-body">
@@ -81,15 +84,14 @@
             <div class="kv-month" id="kv-month"></div>
             <button class="kv-mnav" id="kv-next" aria-label="つぎの つき">▶</button>
           </div>
-          <button class="kv-once" id="kv-add"></button>
         </div>
         <div class="kv-grid" id="kv-grid"></div>
-        <ul class="kv-rewards" id="kv-rewards" hidden></ul>
         <div class="kv-total" id="kv-total"></div>
       </section>
       <section class="card kv-tasks">
         <div class="kv-tasks-head">
           <h2 id="kv-todo-title">きょうの やること</h2>
+          <button class="kv-once kv-add2" id="kv-add2"></button>
           <span class="kv-progress" id="kv-progress"></span>
         </div>
         <!-- やることが おおい ときは スクロール。上・下に まだ ある ことを 矢印で 見せる -->
@@ -99,6 +101,19 @@
           <button class="kv-more down" id="kv-more-down" hidden>▼ したにも あるよ</button>
         </div>
         <div class="kv-status" id="kv-status"></div>
+      </section>
+    </div>
+    <!-- おさいふ（wallet.js）。左: ほしいもの と のこり、右: お金の きろく -->
+    <div class="kv-body wl-body" id="wl-body" hidden>
+      <section class="card wl-card">
+        <div class="wl-head"><h2 id="wl-wants-title"></h2><button class="kv-once" id="wl-want-add"></button></div>
+        <ul class="wl-wants" id="wl-wants"></ul>
+        <div class="wl-bal" id="wl-bal"></div>
+      </section>
+      <section class="card wl-card">
+        <div class="wl-head"><h2 id="wl-log-title"></h2></div>
+        <ul class="wl-log" id="wl-log"></ul>
+        <div class="wl-btns"><button class="wl-use" id="wl-use"></button><button class="wl-in" id="wl-in"></button></div>
       </section>
     </div>
     <div class="kv-confetti" id="kv-confetti"></div>
@@ -114,14 +129,14 @@
     <div class="qk-body">
       <div class="qk-form">
         <div class="qk-name-row">
-          <input type="text" id="qk-name" maxlength="30" placeholder="えんそくの じゅんび など">
+          <input type="text" id="qk-name" maxlength="30" placeholder="れい：うわばきを あらう">
           <button class="qk-voice" id="qk-voice" aria-label="こえで いれる" hidden>🎤</button>
         </div>
         <div class="qk-row"><span class="qk-label">だれが</span><div class="qk-chips" id="qk-kids"></div></div>
         <div class="qk-row"><span class="qk-label">いつ</span><div class="qk-chips" id="qk-when">
           <button data-when="0">きょう</button><button data-when="1">あした</button><input type="date" id="qk-date">
         </div></div>
-        <div class="qk-row"><span class="qk-label">ごほうび</span><input type="number" id="qk-yen" min="0" max="9999"><span id="qk-unit"></span></div>
+        <div class="qk-row"><span class="qk-label">ポイント</span><input type="number" id="qk-yen" min="0" max="9999"></div>
         <p class="qk-error" id="qk-error"></p>
         <button class="qk-ok" id="qk-ok">たす</button>
           <button class="qk-new ghost" id="qk-new" hidden>＋ あたらしく たす</button>
@@ -134,15 +149,14 @@
   </div>
 </div>
 
-<!-- みんなの目標。トップの見出しの横をタップすると開く -->
-<div class="goal-view" id="goal-view" hidden>
-  <div class="gv-board">
-    <button class="kv-close" id="gv-close" aria-label="とじる">✕</button>
-    <div class="gv-icon" id="gv-icon"></div>
-    <div class="gv-title" id="gv-title"></div>
-    <div class="gv-bar" id="gv-bar"></div>
-    <div class="gv-left" id="gv-left"></div>
-    <ul class="gv-kids" id="gv-kids"></ul>
+<!-- おさいふの 入力（wallet.js）。使った・ほしいもの は 本人、入れる は おうちの人（鍵の あと） -->
+<div class="quick wl-pop" id="wl-pop" hidden>
+  <div class="qk-board wl-board">
+    <button class="kv-close" id="wl-pop-close" aria-label="とじる">✕</button>
+    <div class="qk-title" id="wl-pop-title"></div>
+    <div class="wl-pop-body" id="wl-pop-body"></div>
+    <p class="qk-error" id="wl-pop-error"></p>
+    <div class="wl-pop-btns" id="wl-pop-btns"></div>
   </div>
 </div>
 
@@ -177,27 +191,30 @@
 <!-- 鍵の 番号を わすれて 入れなおし中（24時間 まつ あいだ。おうちの人が 気づけるように） -->
 <div class="batt-chip lock-chip" id="lock-chip" hidden>鍵の入れなおし中</div>
 
-<!-- 設定画面（おうちの人向け）。日付を2秒長押しで開く。タブは ボードの 並び（時計・天気・がんばりカレンダー・よてい）と システム -->
+<!-- 設定画面（おうちの人向け）。日付を2秒長押しで開く。タブは「だれの・何の 設定か」で 分ける（2026-11-19 に 9つから 8つに 組み直した。
+     前は 時計・天気・がんばりカレンダー・がんばり項目・カレンダー連携・使い方・要望・問い合わせ。くわしくは docs/handover/settings-tabs.md） -->
 <div class="settings" id="settings" hidden>
   <div class="panel">
     <div class="s-head">
       <h2 class="s-title">設定</h2>
       <nav class="s-nav" id="s-nav" role="tablist">
         <button data-page="day" id="s-tab-day" class="on">がんばりチェック</button>
-        <button data-page="clock">時計</button>
-        <button data-page="weather">天気</button>
-        <button data-page="kids">がんばりカレンダー</button>
-        <button data-page="tasks">がんばり項目</button>
-        <button data-page="calendar">カレンダー連携</button>
-        <button data-page="system">使い方</button>
-        <button data-page="pro">Pro</button>
-        <button data-page="contact">要望・問い合わせ</button>
+        <button data-page="kids">子ども</button>
+        <button data-page="tasks">やること</button>
+        <button data-page="parent">おうちの人</button>
+        <button data-page="board">ボードの表示</button>
+        <button data-page="system">この端末</button>
+        <button data-page="pro" hidden>Pro</button>
+        <button data-page="contact">ヘルプ</button>
       </nav>
     </div>
-    <!-- 電池が 熱い・弱って いる ときの おしらせ（押すと「使い方」の 電池の 欄へ） -->
+    <!-- 電池が 熱い・弱って いる ときの おしらせ（押すと「この端末」の 電池の 欄へ） -->
     <button class="s-battery-warn" id="s-battery-warn" hidden></button>
+    <!-- 新しい版の おしらせ（update.js）。つないだ スマホでは ボタンを 出さず「本体で更新してください」 -->
+    <div class="s-update" id="s-update" hidden><span class="s-update-text"></span><button type="button" id="s-update-btn" hidden>更新する</button></div>
     <div class="s-pages">
-      <section class="s-page" id="s-page-clock">
+      <!-- ボードの表示: 時計・天気・予定（カレンダー連携）・みんなで見るところの文字・週の始まり（入れたあとは ほぼ 触らない ものを 1つに） -->
+      <section class="s-page" id="s-page-board" hidden>
         <h3>時計の表示</h3>
         <div class="row">
           <label><input type="radio" name="s-clock" value="d24"> デジタル（24時間）</label>
@@ -205,11 +222,6 @@
           <label><input type="radio" name="s-clock" value="analog"> アナログ</label>
         </div>
         <p class="note">アナログは、赤い長い針が「分」（まわりの赤い数字）、青い短い針が「時」（青い数字）です。</p>
-        <h3>文字</h3>
-        <div class="row s-words" data-sec="clock"></div>
-      </section>
-
-      <section class="s-page" id="s-page-weather" hidden>
         <h3>天気の場所</h3>
         <div class="row"><select id="s-office"></select><select id="s-area"></select></div>
         <p class="note">天気は気象庁の地域の予報、雨の時刻は市区町村のあたりの予報から出しています。詳しくは天気アプリなどでご確認ください。</p>
@@ -224,40 +236,8 @@
         <h3>傘の目安</h3>
         <p class="note s-rule">市区町村のあたりで1時間に1mm以上の雨の予報なら、「あめは ○じごろから」と出して傘をすすめます。分からないときは地域の降水確率で、50%以上で傘、30%以上で折りたたみ傘、雨が長い日や雪の日は長ぐつです。</p>
         </div>
-        <h3>文字</h3>
-        <div class="row s-words" data-sec="weather"></div>
-      </section>
-
-      <section class="s-page" id="s-page-kids" hidden>
-        <h3>子ども</h3>
-        <ul class="s-kids" id="s-kids"></ul>
-        <button id="s-add-kid" class="ghost small">＋ 子どもを追加</button>
-        <p class="note" id="s-free-kids" hidden></p>
-        <p class="note">年齢の目安で、文字（ひらがな・漢字）が変わります。みんなで見る時計・天気・予定は、いちばん小さい子に合わせます。「表示」を外すと、記録を残したままボタンを出しません。</p>
-        <h3>週の始まり</h3>
-        <div class="row">
-          <label><input type="radio" name="s-week" id="s-week-sun"> 日曜</label>
-          <label><input type="radio" name="s-week" id="s-week-mon"> 月曜</label>
-        </div>
-        <h3>ご褒美の単位</h3>
-        <div class="row">
-          <label><input type="radio" name="s-unit" id="s-unit-yen"> 円</label>
-          <label><input type="radio" name="s-unit" id="s-unit-point"> ポイント</label>
-        </div>
-        <p class="note">ポイントにすると、貯めてご褒美と交換できます。</p>
-      </section>
-
-      <!-- がんばり項目の管理（admin.html を 中に 出す。やること・ごほうび・目標・書き出しなど） -->
-      <section class="s-page s-page-frame" id="s-page-tasks" hidden>
-        <iframe id="s-admin-frame" title="がんばり項目の管理"></iframe>
-      </section>
-
-      <!-- がんばりチェック（子どもの チェックを 見て「みました」を おす・すぎた日を 直す）。いちばん 左の タブ -->
-      <section class="s-page s-page-frame" id="s-page-day" hidden>
-        <iframe id="s-day-frame" title="がんばりチェック"></iframe>
-      </section>
-
-      <section class="s-page" id="s-page-calendar" hidden>
+        <!-- 予定（カレンダー連携）。Web 版では まだ 読めないので 隠す（settings.js） -->
+        <div class="s-group" id="s-cal-group">
         <h3>予定の読み込み先 <button class="s-help-btn" id="s-cal-help-btn" aria-label="説明">？</button></h3>
         <div class="row">
           <select id="s-cal-type">
@@ -275,8 +255,95 @@
           <p>どちらの URL も、知っている人は誰でも予定を見られます。ほかの人に教えないでください。</p>
         </div>
         <p class="note">URL はこの端末の中だけに保存します。「使わない」にすると、ボードの予定の欄がなくなります。</p>
-        <h3>文字</h3>
-        <div class="row s-words" data-sec="schedule"></div>
+        <h3>予定の時刻</h3>
+        <div class="row"><label><input type="checkbox" id="s-event-time"> 予定の時刻（何時から何時まで）を表示する</label></div>
+        </div>
+        <h3>みんなで見るところの文字（時計・天気・予定）</h3>
+        <div class="row s-words"></div>
+        <h3>週の始まり</h3>
+        <div class="row">
+          <label><input type="radio" name="s-week" id="s-week-sun"> 日曜</label>
+          <label><input type="radio" name="s-week" id="s-week-mon"> 月曜</label>
+        </div>
+      </section>
+
+      <section class="s-page" id="s-page-kids" hidden>
+        <h3>子ども</h3>
+        <ul class="s-kids" id="s-kids"></ul>
+        <button id="s-add-kid" class="ghost small">＋ 子どもを追加</button>
+        <p class="note" id="s-max-kids" hidden></p>
+        <p class="note">年齢の目安で、その子の画面の文字（ひらがな・漢字）が変わります。「＋ふりがな」は漢字にふりがなを付けます。「表示」を外すと、記録を残したままボタンを出しません。</p>
+        <h3>使う機能</h3>
+        <ul class="s-features" id="s-features"></ul>
+        <p class="note">おさいふは、おこづかい・お年玉と使ったお金、ほしいものを記録します。子どもの画面の名前の横の「おさいふ」から開きます。「1ポイント＝○円」を入れると、もくひょうの「こうかんした」のあとに、おさいふに入れるかを聞きます（空なら聞きません）。</p>
+        <h3>もくひょう</h3>
+        <ul class="s-goals" id="s-goals"></ul>
+        <p class="note">「みました」の日のポイントがここまでたまると「たっせい！」。ごほうびを渡したら、がんばりカレンダーの「こうかんした」を押すと、その分が引かれます。ごほうびの中身は、おうちで決めてください。</p>
+      </section>
+
+      <!-- やること（admin.html を 中に 出す。やることの設定・できるようになったこと） -->
+      <section class="s-page s-page-frame" id="s-page-tasks" hidden>
+        <iframe id="s-admin-frame" title="やること"></iframe>
+      </section>
+
+      <!-- がんばりチェック（子どもの チェックを 見て「みました」を おす・すぎた日を 直す）。いちばん 左の タブ -->
+      <section class="s-page s-page-frame" id="s-page-day" hidden>
+        <iframe id="s-day-frame" title="がんばりチェック"></iframe>
+      </section>
+
+      <!-- おうちの人: 鍵（いちばん上）・呼び方・毎日のお知らせ・データの書き出し。鍵が「なし」の 間は タブに しるし（settings.js） -->
+      <section class="s-page" id="s-page-parent" hidden>
+        <div class="s-group" id="s-lock-group">
+          <h3>鍵（設定・「みました」など、おうちの人がすること）</h3>
+          <div class="s-choices">
+            <label class="s-choice"><input type="radio" name="s-lock" value="none">
+              <span><b>なし</b></span></label>
+            <label class="s-choice"><input type="radio" name="s-lock" value="easy">
+              <span><b>計算問題</b><small>いちばん年上の子が、まだ習わない計算で確かめます。</small></span></label>
+            <label class="s-choice"><input type="radio" name="s-lock" value="pin">
+              <span><b>4桁の番号</b><small>忘れたときは、鍵の画面の「番号を忘れた」から、24時間後に計算問題で開けます。</small></span></label>
+          </div>
+          <div class="row" id="s-pin-row" hidden>
+            <span class="label">4桁の番号</span>
+            <input type="password" id="s-pin" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off" class="s-pin">
+            <span class="note" id="s-pin-keep" hidden>変えないときは空のまま</span>
+          </div>
+          <p class="note" id="s-lock-remote" hidden>鍵は置いてある端末で確かめます。つないだスマホやブラウザでは聞きません。</p>
+        </div>
+        <h3>おうちの人の呼び方</h3>
+        <div class="row"><input type="text" id="s-parent-name" maxlength="10" placeholder="ママ・パパ" class="s-parent-name"></div>
+        <p class="note">子どもの画面の「〇〇に みせてね」などに使います。</p>
+        <!-- 毎日の お知らせ（アプリだけ。この端末の 設定。settings.js・device.js・DailyNotice.java） -->
+        <div class="s-group" id="s-notice-group" hidden>
+          <h3>毎日のお知らせ</h3>
+          <label><input type="checkbox" id="s-notice"> 毎日、今日の予定とやることをお知らせする</label>
+          <div class="row" id="s-notice-row">
+            <span class="label">時刻</span>
+            <input type="time" id="s-notice-time" value="07:00">
+          </div>
+          <p class="note" id="s-notice-off" hidden>端末の設定で、このアプリの通知が止まっています。端末の「設定」→「アプリ」→「はなまるボード」→「通知」で許可してください。</p>
+          <p class="note">この端末だけの設定です。</p>
+        </div>
+        <!-- Google ドライブの 控え（Web 版だけ。drive.js・settings.js。アプリ・つないだ スマホ・クライアント ID が ない ときは 出さない）。文は Words.adult の drive… -->
+        <div class="s-group" id="s-drive-group" hidden>
+          <h3 id="s-drive-title"></h3>
+          <div class="row s-drive-row">
+            <button type="button" class="ghost small" id="s-drive-save"></button>
+            <button type="button" class="ghost small" id="s-drive-restore"></button>
+          </div>
+          <p class="note" id="s-drive-last"></p>
+          <p class="note s-drive-stale" id="s-drive-stale" hidden></p>
+          <p class="note" id="s-drive-result" aria-live="polite"></p>
+          <p class="note" id="s-drive-note"></p>
+        </div>
+        <!-- データの 書き出し・読み込み（datafile.js。がんばり管理の ページと おなじ 処理） -->
+        <h3>データの書き出し・読み込み</h3>
+        <div class="row">
+          <button type="button" class="ghost small" id="s-export">書き出す</button>
+          <label class="s-file-btn"><input type="file" id="s-import" accept=".json,application/json">ファイルから戻す</label>
+        </div>
+        <p class="note" id="s-export-result"></p>
+        <p class="note">記録と設定を1つのファイルにします。機種変更の前に書き出しておくと、あとで戻せます（戻すと、いまの内容は置き換わります）。</p>
       </section>
 
       <section class="s-page" id="s-page-system" hidden>
@@ -305,20 +372,12 @@
               <span><b>手に持って使う</b><small>スマホのように使います。画面のつけ消しは端末にまかせます。</small></span></label>
           </div>
         </div>
-        <div class="s-group" id="s-lock-group">
-          <h3>鍵（設定を開くときと「みました」）</h3>
-          <div class="s-choices">
-            <label class="s-choice"><input type="radio" name="s-lock" value="none">
-              <span><b>なし</b></span></label>
-            <label class="s-choice"><input type="radio" name="s-lock" value="easy">
-              <span><b>計算問題</b><small>いちばん年上の子が、まだ習わない計算で確かめます。</small></span></label>
-            <label class="s-choice"><input type="radio" name="s-lock" value="pin">
-              <span><b>4桁の番号</b><small>忘れたときは、鍵の画面の「番号を忘れた」から、24時間後に計算問題で開けます。</small></span></label>
-          </div>
-          <div class="row" id="s-pin-row" hidden>
-            <span class="label">4桁の番号</span>
-            <input type="password" id="s-pin" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off" class="s-pin">
-            <span class="note" id="s-pin-keep" hidden>変えないときは空のまま</span>
+        <div class="s-group" id="s-orient-row" hidden>
+          <h3>画面の向き</h3>
+          <div class="row">
+            <label><input type="radio" name="s-orient" value="landscape"> 横</label>
+            <label><input type="radio" name="s-orient" value="portrait"> 縦</label>
+            <label><input type="radio" name="s-orient" value="auto"> 自動（端末の回転に合わせる）</label>
           </div>
         </div>
         <div class="s-group" id="s-lan-group" hidden>
@@ -331,20 +390,21 @@
           </div>
           <div class="s-way">
             <h4>iPhone など … この QR コードを読み取る</h4>
+            <p class="s-ip-changed" id="s-ip-changed" hidden>この端末のアドレスが変わりました。ブラウザで使っている人は、この QR コードをもう一度読み取ってください。</p>
             <div class="s-qr-row">
               <div class="s-qr" id="s-lan-qr"></div>
-              <div><p class="note">同じ Wi-Fi で読み取ると、ブラウザで設定や「みました」を開けます。開けなくなったときは、もう一度読み取ってください。</p><p class="s-qr-url" id="s-lan-url"></p></div>
+              <div><p class="note">同じ Wi-Fi で読み取ると、ブラウザで設定や「みました」を開けます。ルーターによっては、この端末のアドレスが変わって開けなくなることがあります。そのときは、もう一度読み取ってください。できれば、ルーターの設定でこの端末のアドレスを固定してください。</p><p class="s-qr-url" id="s-lan-url"></p></div>
             </div>
           </div>
         </div>
         <div class="s-group" id="s-remote-group" hidden>
           <h3>つないでいる端末</h3>
           <p class="note" id="s-remote-name"></p>
-          <button class="ghost small" id="s-remote-off">つなぐのをやめる</button>
+          <div class="row"><button class="ghost small" id="s-remote-again">つなぎ直す</button><button class="ghost small" id="s-remote-off">つなぐのをやめる</button></div>
         </div>
         <div class="s-group" id="s-join-group" hidden>
           <h3>置いてある端末につなぐ</h3>
-          <p class="note">置いてある端末の設定の「使い方」に出ている番号でつなぎます。この端末の記録は消えず、つなぐのをやめると元に戻ります。</p>
+          <p class="note">置いてある端末の設定の「この端末」に出ている番号でつなぎます。この端末の記録は消えず、つなぐのをやめると元に戻ります。</p>
           <button class="ghost small" id="s-join">置いてある端末につなぐ</button>
         </div>
         <div class="s-group" id="s-screen-group">
@@ -379,8 +439,8 @@
           <button class="ghost small" id="s-bright-allow">許可する</button>
         </div>
         <div id="s-front-group" hidden>
-          <h3>ボードを前に出す</h3>
-          <label><input type="checkbox" id="s-front"> 電源を入れたときと、画面をつけておく時間のはじめに、ほかのアプリを開いていてもボードを出す</label>
+          <h3>ボードを自動で開く</h3>
+          <label><input type="checkbox" id="s-front"> 電源を入れたときと、画面をつけておく時間になったら、ほかのアプリを開いていてもボードを自動で開く</label>
           <div class="row" id="s-front-perm" hidden>
             <span class="label">ほかのアプリの上に表示</span>
             <span id="s-front-status"></span>
@@ -388,15 +448,15 @@
           </div>
         </div>
         </div>
-        <!-- 毎日の お知らせ（アプリだけ。この端末の 設定。settings.js・device.js・DailyNotice.java） -->
-        <div class="s-group" id="s-notice-group" hidden>
-          <h3>毎日のお知らせ</h3>
-          <label><input type="checkbox" id="s-notice"> 毎日、今日の予定とやることをお知らせする</label>
-          <div class="row" id="s-notice-row">
-            <span class="label">時刻</span>
-            <input type="time" id="s-notice-time" value="07:00">
+        <!-- 自動更新（Play から 入れた アプリだけ。この端末の 設定。update.js） -->
+        <div class="s-group" id="s-auto-group" hidden>
+          <h3>自動更新</h3>
+          <label><input type="checkbox" id="s-auto"> 新しい版を、決まった時間に更新する</label>
+          <div class="row" id="s-auto-row">
+            <span class="label">時間帯</span>
+            <input type="time" id="s-auto-from" value="04:00"> 〜 <input type="time" id="s-auto-to" value="05:00">
           </div>
-          <p class="note" id="s-notice-off" hidden>端末の設定で、このアプリの通知が止まっています。端末の「設定」→「アプリ」→「はなまるボード」→「通知」で許可してください。</p>
+          <p class="note">新しい版が出たら、歯車を押して「OK」を押してください。この時間に、画面をさわっていなければ更新します。</p>
         </div>
         <div class="s-group" id="s-battery-group" hidden>
           <h3>電池と安全</h3>
@@ -407,15 +467,7 @@
           <span class="label">低消費電力モード</span>
           <label><input type="checkbox" id="s-lowpower"> アニメーションを止めて、熱と電力を抑える</label>
         </div>
-        <div class="s-group" id="s-orient-row" hidden>
-          <h3>画面の向き</h3>
-          <div class="row">
-            <label><input type="radio" name="s-orient" value="landscape"> 横</label>
-            <label><input type="radio" name="s-orient" value="portrait"> 縦</label>
-            <label><input type="radio" name="s-orient" value="auto"> 自動</label>
-          </div>
-        </div>
-        <p class="note">画面オフの方法・ボードを前に出す・毎日のお知らせ・画面の向きは、この端末だけの設定です。</p>
+        <p class="note">画面オフの方法・ボードを自動で開く・画面の向き・自動更新は、この端末だけの設定です。</p>
       </section>
 
       <!-- Pro（pro.js）。無料版は 一覧を 鍵の 見た目で 出すだけ -->
@@ -441,40 +493,35 @@
       </section>
 
       <section class="s-page" id="s-page-contact" hidden>
-        <h3>ご要望・お問い合わせ</h3>
-        <p class="note">使いにくいところや、ほしい機能があれば、お気軽にお知らせください。速やかに検討します。</p>
-        <div class="s-qr-row">
-          <div class="s-qr" id="s-contact-qr"></div>
-          <div><p class="note" id="s-contact-text"></p><div class="s-contact-info" id="s-contact-info"></div></div>
-        </div>
-
+        <!-- 押して 覚える ガイド（guide.js。2026-11-20）。置いた 端末は 子どもと いっしょに、つないだ スマホ・ブラウザは おうちの人の 部分 -->
+        <div class="s-guide-row"><button type="button" class="ghost" id="s-guide">使い方をためす</button><span class="note">画面を押しながら、見方と使い方をたどります。</span></div>
         <!-- よくある質問。分類を タップすると 質問が、質問を タップすると 答えが ひらく -->
         <h3>よくある質問</h3>
         <div class="faq">
           <details class="faq-cat"><summary>画面・表示</summary>
             <details><summary>画面が暗くなる・消えてしまう</summary>
-              <p>設定の「使い方」の「画面をつけておく時間」のほかは、しばらく触らないと画面オフになります。オフになるまでの時間は「画面オフまで」で変えられます。</p></details>
+              <p>設定の「この端末」の「画面をつけておく時間」のほかは、しばらく触らないと画面オフになります。オフになるまでの時間は「画面オフまで」で変えられます。</p></details>
             <details><summary>朝、自動で画面がつかない</summary>
-              <p>アプリなら「画面をつけておく時間」になると自動で表示します。端末の省電力でアプリが止められているときは、端末の設定でこのアプリを最適化の対象から外してください。ほかのアプリを開いたままになるときは、設定の「使い方」で「ボードを前に出す」をオンにしてください。</p></details>
+              <p>アプリなら「画面をつけておく時間」になると自動で表示します。端末の省電力でアプリが止められているときは、端末の設定でこのアプリを最適化の対象から外してください。ほかのアプリを開いたままになるときは、設定の「この端末」で「ボードを自動で開く」をオンにしてください。</p></details>
             <details><summary>電源を入れたら、ボードが開くようにしたい</summary>
-              <p>設定の「使い方」で「ボードを前に出す」をオンにして、「ほかのアプリの上に表示」を許可してください（アプリのときだけ）。</p></details>
+              <p>設定の「この端末」で「ボードを自動で開く」をオンにして、「ほかのアプリの上に表示」を許可してください（アプリのときだけ）。</p></details>
             <details><summary>暗くしても明るさが下がらない</summary>
-              <p>設定の「使い方」で「システム設定の許可」を「許可する」にしてください（アプリのときだけ）。</p></details>
-            <details><summary>文字をひらがな／漢字にしたい</summary>
-              <p>子どもの年齢の目安（設定の「がんばりカレンダー」）で変わります。時計・天気・予定の文字は、それぞれのタブの「文字」で固定できます。</p></details>
+              <p>設定の「この端末」で「システム設定の許可」を「許可する」にしてください（アプリのときだけ）。</p></details>
+            <details><summary>文字をひらがな／漢字にしたい・漢字にふりがなをつけたい</summary>
+              <p>子どもの年齢の目安（設定の「子ども」）で変わります。「＋ふりがな」の付いた目安を選ぶと、漢字にふりがなが付きます（漢字に慣れるきっかけに）。やることの名前は、設定の「やること」で「ひらがな」を入れたものに付きます。時計・天気・予定など みんなで見るところは、いちばん小さい子に合わせます（設定の「ボードの表示」の「みんなで見るところの文字」で固定できます）。</p></details>
             <details><summary>画面を縦向きにしたい</summary>
-              <p>アプリでは、設定の「使い方」→「画面の向き」で選べます（この端末だけの設定です）。ブラウザや「自動」のときは、端末の画面の回転の設定に従います。</p></details>
+              <p>アプリでは、設定の「この端末」→「画面の向き」で選べます（この端末だけの設定です）。「自動」のときとブラウザでは、端末の画面の回転の設定に従います。端末を回しても向きが変わらないときは、端末の回転のロックを確かめてください。</p></details>
             <details><summary>端末が熱くなる・電池が気になる</summary>
-              <p>設定の「使い方」で「低消費電力モード」をオンにするか、画面オフを「スリープする」にしてください。</p></details>
+              <p>設定の「この端末」で「低消費電力モード」をオンにするか、画面オフを「スリープする」にしてください。</p></details>
           </details>
 
           <details class="faq-cat"><summary>天気・服装</summary>
             <details><summary>あしたやその先の天気を見たい</summary>
               <p>天気の欄を左右にスワイプすると、6日先まで見られます。あさってからは1日分のまとめで、服装や傘の目安は出しません。</p></details>
             <details><summary>天気が出ない・場所を変えたい</summary>
-              <p>設定の「天気」→「天気の場所」で選んでください。Wi-Fi につながっているかも確かめてください。</p></details>
+              <p>設定の「ボードの表示」→「天気の場所」で選んでください。Wi-Fi につながっているかも確かめてください。</p></details>
             <details><summary>服装の目安が家の感覚と合わない</summary>
-              <p>目安の気温は、設定の「天気」→「服装の目安」で変えられます。いらなければ「ボードに服装と傘の目安を表示する」をオフにしてください。</p></details>
+              <p>目安の気温は、設定の「ボードの表示」→「服装の目安」で変えられます。いらなければ「ボードに服装と傘の目安を表示する」をオフにしてください。</p></details>
             <details><summary>傘の目安や雨の時刻がずれる</summary>
               <p>雨の時刻は、選んだ市区町村のあたりの予報です。詳しくは天気アプリなどの雨雲レーダーで確かめてください。</p></details>
             <details><summary>夕方になると明日の天気に変わる</summary>
@@ -483,64 +530,77 @@
 
           <details class="faq-cat"><summary>やること・みました</summary>
             <details><summary>やることを増やしたい・変えたい</summary>
-              <p>設定の「がんばり項目」→「やることの設定」で、名前・ポイント（円）・曜日・子どもごとなどを変えられます。</p></details>
+              <p>設定の「やること」→「やることの設定」で、名前・ポイント・曜日・子どもごとなどを変えられます。</p></details>
             <details><summary>子どもや、やることはいくつまで入れられる？</summary>
-              <p>やることは、いくつでも入れられます。無料版では、子どもは2人までです（3人目からは Pro。準備中です）。</p></details>
+              <p>やることは、いくつでも入れられます。子どもは8人まで表示できます。どちらも無料です。</p></details>
             <details><summary>設定を変えたのに、戻ってしまった</summary>
-              <p>設定は、タブごとに下の「保存」を押すと保存されます。保存していないタブには「●」が付きます。「がんばり項目」の中は、欄ごとに「保存」があります。</p></details>
+              <p>設定は、タブごとに下の「保存」を押すと保存されます。保存していないタブには「●」が付きます。「やること」の中は、欄ごとに「保存」があります。</p></details>
             <details><summary>週のどこかでやればよいこと（塾の宿題など）を入れたい</summary>
-              <p>設定の「がんばり項目」で、やることの「いつ」を「週に何回」にして、回数を選んでください。回数にとどくと、その週の残りの日は「こんしゅう できた」になります。</p></details>
+              <p>設定の「やること」で、やることの「いつ」を「週に何回」にして、回数を選んでください。回数にとどくと、その週の残りの日は「こんしゅう できた」になります。</p></details>
             <details><summary>今日だけのやることを入れたい</summary>
-              <p>子どもの名前を押して開く画面で、月の見出しの横にある「＋ 1かいだけの やること」から入れられます。</p></details>
+              <p>子どもの名前を押して開く画面で、「きょうの やること」の右の「＋ きょうだけ」から入れられます。カレンダーであしたから先の日を選ぶと「＋ このひだけ」になり、その日の分を入れられます。</p></details>
             <details><summary>入れた今日だけのやることを直したい・消したい</summary>
-              <p>同じ「＋ 1かいだけの やること」の画面の右に、これからの分が並びます。押すと直せて、✕ で消せます。</p></details>
+              <p>同じ「＋ きょうだけ」の画面に、これからの分が並びます。押すと直せて、✕ で消せます。</p></details>
             <details><summary>「みました」はどこで押す？</summary>
               <p>子どもの名前を押して開く画面の下にあります。設定の「がんばりチェック」でも押せます。</p></details>
             <details><summary>子どもが「みました」を押してしまう</summary>
-              <p>設定の「使い方」→「鍵」で「計算問題」か「4桁の番号」を選んでください。</p></details>
+              <p>はじめは鍵がありません。設定の「おうちの人」→「鍵」で「計算問題」か「4桁の番号」を選ぶと、設定を開くとき・「みました」・「こうかんした」・おさいふに入れるときに、おうちの人か確かめます。</p></details>
             <details><summary>鍵の4桁の番号を忘れた</summary>
               <p>鍵の画面の「番号を忘れた」→「入れなおしを始める」を押してください。24時間たつと、計算問題で開けるようになり、番号は消えます。</p></details>
             <details><summary>鍵の計算問題が子どもに解けてしまわない？</summary>
               <p>いちばん年上の子の年齢の目安に合わせて、まだ習わない問題を、毎回ちがう形で出します。</p></details>
             <details><summary>前の日のチェックを直したい・「みました」を押し忘れた</summary>
-              <p>子どもの画面のカレンダーでその日をタップすると、直したり「みました」を押したりできます（子どもが直せるのは先月1日から）。設定の「がんばりチェック」なら、いつの日でも直せます。「みました」のあとに子どもの画面でチェックを変えると、「みました」は取り消しになります。</p></details>
+              <p>がんばりカレンダーでその日をタップすると、直したり「みました」を押したりできます（子どもが直せるのは先月1日から）。設定の「がんばりチェック」なら、いつの日でも直せます。「みました」のあとに子どもの画面でチェックを変えると、「みました」は取り消しになります。</p></details>
             <details><summary>はなまるはいつつく？</summary>
               <p>「みました」を押した日に、やることが1つでもできていれば、はなまる（<img class="ico" src="img/hanamaru.svg" alt="">）がつきます。</p></details>
             <details><summary>毎日のお知らせ（通知）を止めたい・時刻を変えたい</summary>
-              <p>Android のアプリでは、設定の「使い方」の「毎日のお知らせ」で、オン・オフと時刻を変えられます。スマホでは、かんたん設定でオンにできます（はじめは毎朝7時）。お知らせが届かないときは、端末の設定でこのアプリの通知が許可されているか確かめてください。</p></details>
+              <p>Android のアプリでは、設定の「おうちの人」の「毎日のお知らせ」で、オン・オフと時刻を変えられます。スマホでは、かんたん設定でオンにできます（はじめは毎朝7時）。お知らせが届かないときは、端末の設定でこのアプリの通知が許可されているか確かめてください。</p></details>
             <details><summary>「いまから やる」ってなに？</summary>
               <p>子どもの画面のやることの横にあるボタンです。やり始めるときに子どもが自分で押すと、画面がにぎやかに応援します。ポイントは変わりません。押してからできたやることは「自分から始めた」として、「がんばりチェック」とふりかえり（Pro）に出ます。</p></details>
             <details><summary>「もう できる」（できるようになったこと）ってなに？</summary>
-              <p>言われなくてもできるようになったやることを、子どもごとの「もう できる」に1つにまとめる仕組みです。設定の「がんばり項目」→「できるようになったこと」で、直近2週間でその日の8割できたもの（毎日のやることなら12回。回数の少ないものは4回以上）に「もう できるかも」と出ます。決めるのはおうちの人です。</p>
+              <p>言われなくてもできるようになったやることを、子どもごとの「もう できる」に1つにまとめる仕組みです。設定の「やること」→「できるようになったこと」で、直近2週間でその日の8割できたもの（毎日のやることなら12回。回数の少ないものは4回以上）に「もう できるかも」と出ます。決めるのはおうちの人です。</p>
               <p>まとめると、子どもは「もう できる」を開いて「ぜんぶ できた！」を押すだけになります（1つと数え、ポイントはまとめたやることの合計から始まります）。記録はずっと残り、名前の横の階段の数字が増えます。戻すときは、同じ場所か「がんばりチェック」の「▸ 中身」から「やることに戻す」を押します。</p></details>
             <details><summary>Pro ってなに？</summary>
-              <p>できるようになったことを子どもが見返せるページ、おうちの人からのコメント、毎週・毎月のふりかえり、3人以上の子どもの表示が使えます（設定の「Pro」タブ）。Pro は準備中です。いまある無料の機能は、これからも無料のままです。</p></details>
-            <details><summary>ためたポイントをごほうびと交換したい</summary>
-              <p>設定の「がんばり項目」の「ごほうび交換」で、ごほうびの一覧を作り、交換を記録できます。</p></details>
-            <details><summary>ポイントと円を切り替えたい</summary>
-              <p>設定の「がんばりカレンダー」→「ご褒美の単位」で切り替えられます。</p></details>
+              <p>できるようになったことを子どもが見返せるページ、おうちの人からのコメント、毎週・毎月のふりかえりが使えます（設定の「Pro」タブ）。Pro は準備中です。いまある無料の機能は、これからも無料のままです。</p></details>
+            <details><summary>おさいふってなに？</summary>
+              <p>子どもごとに、おこづかい・お年玉と使ったお金、ほしいものを記録できます。設定の「子ども」の「使う機能」で、使う子だけ「おさいふ」に印をつけると、子どもの画面の上に「おさいふ」が出ます（「がんばりカレンダー」と切りかえます）。</p>
+              <p>お金を入れるのはおうちの人（鍵のあと）、使ったお金とほしいものは本人が書きます。お年玉など、すぐに使わないお金は「貯金」に入れられます。本人も、おさいふのお金を「ちょきんする」で貯金に移せます。貯金から出すときは、おうちの人が「貯金からおさいふへ」を使います。ポイントをお金に換えるかどうかは、おうちで決めてください。換えるときは、設定の「子ども」→「使う機能」で「1ポイント＝○円」を入れると、もくひょうの「こうかんした」のあとに、おさいふに入れるかを聞きます（金額は変えられ、入れないこともできます）。まちがえた行は、押して消せます（鍵のあと）。</p></details>
+            <details><summary>もくひょうってなに？ ごほうびと交換したい</summary>
+              <p>「みました」の日のポイントが、子どもごとのもくひょう（はじめは50ポイント）までたまると「たっせい！」になり、ホームのカードが金色になります。ごほうびを渡したら、がんばりカレンダーの左下の「こうかんした」を押すと、もくひょうの分が引かれます（超えた分は残ります。取り消しはできないので、ごほうびを渡してから押してください）。もくひょうの数は、設定の「子ども」で子どもごとに変えられます。シール・おこづかいなど、ごほうびの中身は、おうちで決めてください。前の版から使っている場合は、これまでのポイントがすべて入っています。いまから数え始めたいときは、もくひょうを「これまで」の数にして「こうかんした」を押し、もくひょうの数を戻してください。</p></details>
+            <details><summary>もくひょうとごほうびは、どう決めればいい？</summary>
+              <p>はじめに、お子さんと一緒に決めるのがおすすめです。自分で決めたもくひょうがあると、続けやすくなります。最初は届きやすい数（2〜3週間でたまるくらい）にして、慣れてきたら少しずつ上げてください。ごほうびは、おこづかい・好きなおやつ・お出かけなど、ご家庭で自由に決められます。</p></details>
+            <details><summary>おこづかい（円）で使いたい</summary>
+              <p>単位はポイントです。1ポイントを1円にするなど、おうちで決めて使ってください。設定の「子ども」で「1ポイント＝○円」を決めると、もくひょうの「こうかんした」のあとに、おさいふに入れるかを聞きます。</p></details>
           </details>
 
           <details class="faq-cat"><summary>予定（カレンダー連携）</summary>
             <details><summary>あしたやその先の予定を見たい</summary>
               <p>予定の欄の ◀ ▶ を押すか、左右にスワイプすると、6日先まで見られます。</p></details>
             <details><summary>Google カレンダーの予定を出したい</summary>
-              <p>パソコンで Google カレンダーを開き、設定 → 予定を出したいカレンダー →「カレンダーの統合」の「iCal 形式の非公開 URL」をコピーして、設定の「カレンダー連携」に貼ってください。</p></details>
+              <p>パソコンで Google カレンダーを開き、設定 → 予定を出したいカレンダー →「カレンダーの統合」の「iCal 形式の非公開 URL」をコピーして、設定の「ボードの表示」の「予定の読み込み先」に貼ってください。</p></details>
             <details><summary>予定が出ない・反映が遅い</summary>
               <p>URL と Wi-Fi を確かめてください。Google カレンダーで変えた予定は、反映まで時間がかかることがあります。</p></details>
+            <details><summary>予定の時刻を出したい</summary>
+              <p>設定の「ボードの表示」で「予定の時刻を表示する」をオンにすると、「10:30〜11:30」のように出ます。終日の予定は時刻を出しません。</p></details>
             <details><summary>予定の欄がいらない</summary>
-              <p>設定の「カレンダー連携」で「使わない」を選ぶと、予定の欄がなくなります。</p></details>
+              <p>設定の「ボードの表示」の「予定の読み込み先」で「使わない」を選ぶと、予定の欄がなくなります。</p></details>
           </details>
 
           <details class="faq-cat"><summary>スマホとつなぐ（2台で使う）</summary>
             <details><summary>おうちの人のスマホからも使いたい</summary>
-              <p>置いてある端末で、設定の「使い方」を「この端末を置いて、別の端末からつなぐ」にして保存します。スマホにも「はなまるボード」のアプリを入れ、「置いてある端末につなぐ」を選んで、置いてある端末に出ている番号を入れてください。</p></details>
+              <p>置いてある端末で、設定の「この端末」を「この端末を置いて、別の端末からつなぐ」にして保存します。スマホにも「はなまるボード」のアプリを入れ、「置いてある端末につなぐ」を選んで、置いてある端末に出ている番号を入れてください。</p></details>
             <details><summary>スマホだけで使っていたスマホを、あとからつなぎたい</summary>
-              <p>つないでも、スマホの記録は消えません（つなぐのをやめると元に戻ります）。記録を移すときは、スマホの設定の「がんばり項目」→「データの書き出し・読み込み」で書き出し、置いてある端末の同じところの「ファイルから戻す」で読み込みます（置いてある端末の記録は置き換わります）。</p></details>
+              <p>つないでも、スマホの記録は消えません（つなぐのをやめると元に戻ります）。記録を移すときは、スマホの設定の「おうちの人」→「データの書き出し・読み込み」で書き出し、置いてある端末の同じところの「ファイルから戻す」で読み込みます（置いてある端末の記録は置き換わります）。</p></details>
             <details><summary>置いてある端末が見つからない</summary>
-              <p>同じ Wi-Fi か（ゲスト用の Wi-Fi ではつながりません）、置いてある端末でアプリが開いているかを確かめてください。ルーターの「端末どうしの通信を制限する」設定が有効だと見つかりません。</p></details>
+              <p>同じ Wi-Fi か（ゲスト用の Wi-Fi ではつながりません）、置いてある端末でアプリが開いているかを確かめてください。ルーターの「端末どうしの通信を制限する」設定が有効だと見つかりません。</p>
+              <p>前はつながっていたのにつながらなくなったときは、スマホの設定の「この端末」の「つなぎ直す」を押し、置いてある端末に出ている番号を入れ直してください（アプリを入れ直す必要はありません）。</p></details>
             <details><summary>iPhone から使いたい</summary>
-              <p>置いてある端末の設定の「使い方」に出ている QR コードを、同じ Wi-Fi の iPhone で読み取ると、ブラウザで開けます。</p></details>
+              <p>置いてある端末の設定の「この端末」に出ている QR コードを、同じ Wi-Fi の iPhone で読み取ると、ブラウザで開けます。</p></details>
+            <details><summary>「アプリの版が違います」と出た</summary>
+              <p>Android のスマホのアプリは、自分の版の画面で置いてある端末のデータを使います。版が違うと、ない機能が出なかったり表示が欠けたりするので、古いほうのアプリを Google Play で更新してください。iPhone などのブラウザは、置いてある端末の画面を開くので、版の違いはありません。</p></details>
+            <details><summary>iPhone のブラウザで開けなくなった</summary>
+              <p>置いてある端末のアドレス（IP アドレス）が変わると、前に読み取ったページは開けなくなります。置いてある端末の設定の「この端末」の QR コードを、もう一度読み取ってください。アドレスが変わったときは、置いてある端末の ⚙ の横に「アドレス」と出ます。⚙ を押すと、設定の「この端末」の QR コードが開きます。</p>
+              <p>ルーターの設定で、置いてある端末のアドレスを固定する（DHCP の予約）と変わらなくなります。アプリでつないだ Android のスマホは、アドレスが変わっても自動でつなぎ直します。</p></details>
             <details><summary>家の外から使いたい</summary>
               <p>いまは同じ Wi-Fi の中だけで使えます。家の外からは使えません。</p></details>
           </details>
@@ -553,22 +613,48 @@
           </details>
 
           <details class="faq-cat"><summary>データ・設定</summary>
+            <details><summary>⚙ がオレンジになっている</summary>
+              <p>「更新」と出ているときは、アプリの新しい版が出ています。⚙ を押して「OK」を押すと、Google Play の確認のあと、決まった時間（はじめは 4:00〜5:00）に更新します。すぐ更新するときは「今すぐ更新」を押してください。置いてある端末につないでいるスマホでは、置いてある端末（本体）で更新してください。</p>
+              <p>「アドレス」と出ているときは、置いてある端末のアドレスが変わりました。⚙ を押すと設定の「この端末」が開くので、iPhone などのブラウザで使っている人は、QR コードをもう一度読み取ってください。</p></details>
+            <details><summary>アプリを自動で更新したい</summary>
+              <p>置いて使う端末は、Play の自動更新が来にくいため、アプリが決まった時間に更新します。新しい版が出たら ⚙ を押して「OK」を押してください。時間帯は設定の「この端末」の「自動更新」で変えられます。最新の版かは、設定の「ヘルプ」の「更新を確認」で確かめられます。</p></details>
             <details><summary>データはどこに保存される？</summary>
               <p>記録や設定は、この端末の中に保存し、外には送りません。くわしくは、このページのいちばん下の「プライバシーポリシー」をご覧ください。</p></details>
+            <!-- Web 版で Google ドライブの 控えが ある ときだけ 出す（settings.js。Drive.on） -->
+            <details id="faq-web-drive" hidden><summary>iPhone・iPad で使いたい・データが消えないか心配</summary>
+              <p>iPhone・iPad では、このブラウザの Web 版を「ホーム画面に追加」して使ってください。記録はブラウザの中に保存するため、しばらく開かないと消えることがあります。設定の「おうちの人」→「Google ドライブに控える」で控えておくと、消えても「ドライブから戻す」で戻せます。控えはお使いの Google ドライブに保存し、はなまる工房には送りません。</p></details>
             <details><summary>機種変更・アプリの入れ直しをしたい</summary>
-              <p>設定の「がんばり項目」→「データの書き出し・読み込み」で、前もって書き出しておくと、新しい端末で「ファイルから戻す」で元に戻せます。</p></details>
+              <p>設定の「おうちの人」→「データの書き出し・読み込み」で、前もって書き出しておくと、新しい端末で「ファイルから戻す」で元に戻せます。</p></details>
             <details><summary>はじめの設定をやり直したい</summary>
               <p>設定の下にある「かんたん設定」から、よく使う設定だけをやり直せます。いまの値が入っているので、変えないところはそのまま進めてください。</p></details>
-            <details><summary>使い方の説明をもう一度見たい</summary>
-              <p>設定の下にある「説明を見る」から見られます。</p></details>
+            <details><summary>使い方をもう一度見たい</summary>
+              <p>このページのいちばん上の「使い方をためす」で、画面を押しながら見方と使い方をたどれます（お子さんと一緒にどうぞ）。はじめの説明は、設定の下の「説明を見る」から見られます。</p></details>
           </details>
         </div>
-        <p class="note">解決しないときは、上の QR コードのフォームからお知らせください。</p>
+        <p class="note">解決しないときは、下の QR コードのフォームからお知らせください。</p>
+
+        <h3>ご要望・お問い合わせ</h3>
+        <p class="note">使いにくいところや、ほしい機能があれば、お気軽にお知らせください。速やかに検討します。</p>
+        <div class="s-qr-row">
+          <div class="s-qr" id="s-contact-qr"></div>
+          <div><p class="note" id="s-contact-text"></p><div class="s-contact-info" id="s-contact-info"></div>
+            <div class="row s-update-check"><button type="button" class="ghost small" id="s-update-check" hidden>更新を確認</button><span class="note" id="s-update-check-msg"></span></div></div>
+        </div>
 
         <h3>プライバシーポリシー</h3>
         <div class="s-qr-row">
           <div class="s-qr" id="s-privacy-qr"></div>
           <div><p class="note" id="s-privacy-text"></p><p class="s-qr-url" id="s-privacy-url"></p></div>
+        </div>
+
+        <!-- 招待コード（settings.js の renderPro。文言は words.js の Words.adult）。-Pro の ビルドでは 出さない。開くまで「Pro」タブは 出さない -->
+        <div class="s-group" id="s-procode-group" hidden>
+          <h3 id="s-procode-title"></h3>
+          <div class="row s-procode-row" id="s-procode-row">
+            <input type="text" id="s-procode" class="s-procode" maxlength="40" autocomplete="off" autocapitalize="characters" spellcheck="false">
+            <button type="button" class="ghost small" id="s-procode-btn"></button>
+          </div>
+          <p class="note" id="s-procode-msg" aria-live="polite"></p>
         </div>
       </section>
     </div>
@@ -576,11 +662,59 @@
     <div class="buttons">
       <button id="s-help" class="ghost">説明を見る</button>
       <button id="s-easy" class="ghost">かんたん設定</button>
-      <!-- 保存は 時計・天気・がんばりカレンダー・カレンダー連携・使い方 を まとめて（その タブの ときだけ 出す。保存しても 閉じない）。
+      <!-- 保存は 子ども・おうちの人・ボードの表示・この端末 を まとめて（settings.js の SAVE_PAGES。その タブの ときだけ 出す。保存しても 閉じない）。
            閉じるは 保存して いない 変更が あれば きく -->
       <span class="s-saved" id="s-saved" aria-live="polite"></span>
       <button class="s-save-btn" id="s-save" disabled>保存</button>
       <button id="s-cancel">閉じる</button>
+    </div>
+  </div>
+</div>
+
+<!-- 新しい版の おしらせ（update.js。歯車を 押したとき・設定の「更新する」「更新を確認」。大人向け） -->
+<div class="lock upd" id="upd" hidden>
+  <div class="upd-board">
+    <button class="kv-close" id="upd-close" aria-label="閉じる">✕</button>
+    <p class="upd-text" id="upd-text"></p>
+    <p class="upd-note" id="upd-note">押すと、Google Play の確認が出ます。</p>
+    <div class="upd-btns">
+      <button type="button" class="ghost" id="upd-later">閉じる</button>
+      <button type="button" class="ghost" id="upd-now">今すぐ更新</button>
+      <button type="button" id="upd-ok">OK</button>
+    </div>
+  </div>
+</div>
+
+<!-- 戻るで アプリを とじる 前に きく（board.js の Board.back。ホームで 戻ったとき） -->
+<!-- 押して 覚える ガイド（guide.js）。見せる ところ だけ 穴を あけ、まわりの 4枚で ほかを 押せなく する -->
+<div class="guide" id="guide" hidden>
+  <div class="gd-block" id="gd-top"></div><div class="gd-block" id="gd-bottom"></div><div class="gd-block" id="gd-left"></div><div class="gd-block" id="gd-right"></div>
+  <div class="gd-ring" id="gd-ring"></div>
+  <div class="gd-cover" id="gd-cover"></div>
+  <div class="gd-tip" id="gd-tip">
+    <div class="gd-title" id="gd-title"></div>
+    <div class="gd-text" id="gd-text"></div>
+    <div class="gd-foot"><button type="button" class="gd-skip" id="gd-skip"></button><span class="gd-hint" id="gd-hint"></span><button type="button" class="gd-next" id="gd-next"></button></div>
+  </div>
+</div>
+<!-- かんたん設定の あと（と 次の 日に 1度だけ）聞く -->
+<div class="lock upd" id="gd-ask" hidden>
+  <div class="upd-board">
+    <p class="upd-text">お子さんと一緒に、使い方を試しますか？</p>
+    <p class="gd-ask-note">画面を押しながら、天気・予定・やることの見方をたどります（2分ほど）。</p>
+    <div class="upd-btns">
+      <button type="button" class="ghost" id="gd-ask-no">あとで</button>
+      <button type="button" id="gd-ask-yes">一緒に試す</button>
+    </div>
+  </div>
+</div>
+
+<div class="lock upd" id="exit-ask" hidden>
+  <div class="upd-board">
+    <p class="upd-text">アプリを とじますか？</p>
+    <div class="upd-btns">
+      <button type="button" class="ghost" id="exit-no">もどる</button>
+      <button type="button" id="exit-yes">とじる</button>
     </div>
   </div>
 </div>
@@ -613,7 +747,8 @@
     <div class="tu-preview" id="tu-preview" hidden></div>
     <div class="tu-dots" id="tu-dots"></div>
     <div class="tu-buttons">
-      <label class="tu-hide"><input type="checkbox" id="tu-hide"> つぎから ひょうじしない</label>
+      <!-- 2026-11-20 から 説明は はじめてだけ 自分から 出すので「つぎから ひょうじしない」は 出さない（id は tutorial.js が 読む） -->
+      <label class="tu-hide" hidden><input type="checkbox" id="tu-hide"> つぎから ひょうじしない</label>
       <button class="ghost" id="tu-back">もどる</button>
       <button id="tu-next">つぎへ</button>
     </div>
@@ -624,12 +759,12 @@
 <div class="setup" id="connect" hidden>
   <div class="su-board cn-board">
     <h2>置いてある端末につなぐ</h2>
-    <p class="su-note">同じ Wi-Fi にある「はなまるボード」を探しています。置いてある端末で、設定の「使い方」で「この端末を置いて、別の端末からつなぐ」を選んで保存しておいてください。</p>
-    <p class="su-note cn-keep" id="cn-keep" hidden>この端末の記録は消えません（つないでいる間は見えず、つなぐのをやめると元に戻ります）。置いてある端末へ移すときは、先に設定の「がんばり項目」→「データの書き出し・読み込み」で書き出し、置いてある端末の同じところの「ファイルから戻す」で読み込んでください。</p>
+    <p class="su-note">同じ Wi-Fi にある「はなまるボード」を探しています。置いてある端末で、設定の「この端末」で「この端末を置いて、別の端末からつなぐ」を選んで保存しておいてください。</p>
+    <p class="su-note cn-keep" id="cn-keep" hidden>この端末の記録は消えません（つないでいる間は見えず、つなぐのをやめると元に戻ります）。置いてある端末へ移すときは、先に設定の「おうちの人」→「データの書き出し・読み込み」で書き出し、置いてある端末の同じところの「ファイルから戻す」で読み込んでください。</p>
     <ul class="cn-list" id="cn-list"></ul>
     <p class="su-note" id="cn-hint" hidden>見つからないときは：置いてある端末でアプリが開いているか／同じ Wi-Fi につないでいるか（ゲスト用の Wi-Fi ではつながりません）を確かめて、もう一度さがしてください。</p>
     <button class="ghost small" id="cn-retry">もう一度さがす</button>
-    <div class="su-pin-row">つなぐための番号（置いてある端末の 設定 →「使い方」）<input type="tel" inputmode="numeric" maxlength="6" id="cn-code"></div>
+    <div class="su-pin-row">つなぐための番号（置いてある端末の 設定 →「この端末」）<input type="tel" inputmode="numeric" maxlength="6" id="cn-code"></div>
     <p class="su-error" id="cn-error"></p>
     <div class="su-buttons">
       <button class="ghost" id="cn-cancel">もどる</button>
@@ -672,7 +807,7 @@
         <div><span class="label">土日祝</span><input type="time" id="su-holiday-from"> 〜 <input type="time" id="su-holiday-to"></div>
       </div>
       <p class="su-note">ほかの時間は、しばらく触らないと画面オフになります。</p>
-      <p class="su-note" id="su-front-row" hidden><label><input type="checkbox" id="su-front"> 電源を入れたときと、つけておく時間のはじめに、ボードを前に出す（最後に許可の画面が開きます）</label></p>
+      <p class="su-note" id="su-front-row" hidden><label><input type="checkbox" id="su-front"> 電源を入れたときと、つけておく時間になったら、ボードを自動で開く（最後に許可の画面が開きます）</label></p>
     </section>
     <section class="su-step" data-step="area" hidden>
       <h2>天気の場所</h2>
@@ -680,33 +815,55 @@
       <p class="su-note">住んでいる市区町村を選んでください。</p>
     </section>
     <section class="su-step" data-step="kids" hidden>
-      <h2>子どもの名前と ごほうび</h2>
+      <h2>子どもの名前</h2>
       <ul class="su-names" id="su-names"></ul>
       <button class="ghost small" id="su-add">＋ ふやす</button>
       <p class="su-note" id="su-free" hidden></p>
-      <p class="su-q su-sub">ごほうびの単位</p>
-      <div class="su-cards small" id="su-unit">
-        <button data-value="point">ポイント<small>ためて ごほうびと交換</small></button>
-        <button data-value="yen">おこづかい（円）<small>月末にまとめて渡す</small></button>
-      </div>
+      <p class="su-note">できたやることのポイントが 50 たまるごとに「たっせい！」になります（数は設定で変えられます）。</p>
     </section>
     <section class="su-step" data-step="tasks" hidden>
       <h2>やること</h2>
       <div id="su-tasks-edit">
         <p class="su-q">はじめは、すぐにできる簡単なことがおすすめです。毎日「できた！」を味わえると、続きやすくなります。</p>
         <ul class="su-tasks" id="su-tasks"></ul>
-        <div class="su-yen">上のやることを1つ達成するごとに <input type="number" id="su-yen" min="0" max="999" step="1" inputmode="numeric"> <span id="su-yen-unit">ポイント</span></div>
+        <div class="su-yen">上のやることを1つ達成するごとに <input type="number" id="su-yen" min="0" max="999" step="1" inputmode="numeric"> ポイント</div>
         <p class="su-note su-warn" id="su-yen-mixed" hidden>すでに項目ごとに別の値が入っています。数字を入れると、3つとも一律で上書きします。</p>
         <p class="su-note" id="su-tasks-note"></p>
       </div>
-      <p class="su-note" id="su-tasks-fixed" hidden>やることは、設定の「がんばり項目」で変えてあるので、ここでは変えません。</p>
+      <p class="su-note" id="su-tasks-fixed" hidden>やることは、設定の「やること」で変えてあるので、ここでは変えません。</p>
+    </section>
+    <!-- おさいふ（2026-11-18。子どもごと。kid.wallet・kid.walletRate） -->
+    <section class="su-step" data-step="wallet" hidden>
+      <h2>おさいふ</h2>
+      <p class="su-q">おさいふを使いますか？</p>
+      <div class="su-cards small" id="su-wallet">
+        <button data-value="off">使わない<small>たまったポイントで、決めたごほうびと交換します</small></button>
+        <button data-value="on">使う<small>ポイントを好きな単位でお金にして入れられます。おこづかい・お年玉・使ったお金も記録できます</small></button>
+      </div>
+      <div id="su-wallet-box" hidden>
+        <ul class="su-wallet-kids" id="su-wallet-kids"></ul>
+        <div class="su-yen">1ポイント＝ <input type="number" id="su-rate" min="0" max="10000" step="1" inputmode="numeric" placeholder="例：10"> 円</div>
+        <p class="su-note">もくひょうの「こうかんした」のあとに、おさいふに入れるかを聞きます（金額はその場で変えられます。空なら聞きません）。</p>
+      </div>
+    </section>
+    <!-- 鍵（2026-11-18。前は かんたん設定に なく、鍵が あると 気づかない 人が いた） -->
+    <section class="su-step" data-step="lock" hidden>
+      <h2>鍵</h2>
+      <p class="su-q">「みました」「こうかんした」や設定は、おうちの人がすることです。鍵をかけると、押したときにおうちの人か確かめます。</p>
+      <div class="su-cards small" id="su-lock">
+        <button data-value="none">なし<small>だれでも押せます</small></button>
+        <button data-value="easy">計算問題<small>子どもがまだ習わない計算</small></button>
+        <button data-value="pin">4桁の番号<small>忘れても24時間後に開けます</small></button>
+      </div>
+      <div class="su-pin-row" id="su-pin-row" hidden>4桁の番号 <input type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off" id="su-pin"></div>
+      <p class="su-note" id="su-pin-keep" hidden>変えないときは空のまま</p>
     </section>
     <section class="su-step" data-step="calendar" hidden>
       <h2>カレンダー連携</h2>
       <p class="su-q">Google カレンダーの予定を、ボードに出せます。</p>
       <div class="su-cards small" id="su-cal">
         <button data-value="ical">設定する<small>iCal 形式の URL を貼る</small></button>
-        <button data-value="later">あとで設定する<small>設定の「カレンダー連携」からいつでも</small></button>
+        <button data-value="later">あとで設定する<small>設定の「ボードの表示」からいつでも</small></button>
       </div>
       <div id="su-cal-box" hidden>
         <input type="url" id="su-cal-url" placeholder="https://calendar.google.com/…/basic.ics">
@@ -732,7 +889,9 @@
 <script src="ical.js"></script>
 <script src="holidays.js"></script>
 <script src="api.js"></script>
+<script src="datafile.js"></script>
 <script src="device.js"></script>
+<script src="drive.js"></script>
 <!-- ボード: board.js（土台）から app.js（起動）まで、この じゅんで 読む（わけは board.js の 先頭） -->
 <script src="board.js"></script>
 <script src="clock.js"></script>
@@ -744,12 +903,15 @@
 <script src="app.js"></script>
 <script src="stairs.js"></script>
 <script src="kids.js"></script>
+<script src="wallet.js"></script>
 <script src="usage-cards.js"></script>
 <script src="setup.js"></script>
 <script src="tutorial.js"></script>
+<script src="guide.js"></script>
 <script src="qrcode.js"></script>
 <script src="contact.js"></script>
 <script src="pro.js"></script>
 <script src="remote.js"></script>
+<script src="update.js"></script>
 </body>
 </html>

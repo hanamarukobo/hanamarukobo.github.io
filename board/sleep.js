@@ -58,13 +58,14 @@
 
   function updateSleep(now) {
     if (window.BoardApi.usage(B.settings) === "phone" || window.BoardApi.remote) {
-      // スマホだけ・置いた端末に つないだ スマホは ふつうの アプリと おなじ（画面オフは 端末に まかせる。黒い画面も 出さない）
+      // スマホだけ・置いた端末に つないだ スマホは ふつうの アプリと おなじ（画面オフは 端末に まかせる。黒い画面も 出さない）。
+      //   明るさも 端末に まかせる（-1）。前は 起動の たびに 180 に 固定して、暗い 部屋で まぶしく なっていた（2026-11-11 の 問い合わせ、Pixel 9 Pro XL）
       setKeepOn(false);
       if (wakeAt) { wakeAt = null; window.EchoBoard.scheduleWake(0); }
       if (B.sleeping !== false) {
         B.sleeping = false;
         $("sleep").hidden = true;
-        setBrightness(C.brightness.on);
+        setBrightness(-1);
       }
       return;
     }

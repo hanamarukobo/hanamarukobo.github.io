@@ -1,4 +1,4 @@
-// 設定の「要望・問い合わせ」タブ。スマホの カメラで 読み取れる QR コードを 出す（qrcode.js）
+// 設定の「ヘルプ」タブ。スマホの カメラで 読み取れる QR コードを 出す（qrcode.js）
 (function () {
   "use strict";
 
@@ -56,11 +56,14 @@
     }
     var url = formUrl(info);
     $("s-contact-qr").innerHTML = qrSvg(url);
-    $("s-contact-text").textContent = "スマホのカメラで QR コードを読み取ると、受付フォームが開きます。アプリのバージョンと機種は、最初から入力されています。";
-    // ブラウザで 開いて いる ときと、ブラウザの ある 端末の アプリでは、その まま 押せる リンクも（同じ スマホでは QR を 読み取れない）。
-    // 置いて つかう 端末（Echo など）は ブラウザが ない ことも あるので QR だけ。アプリの 中の リンクは 端末の ブラウザで ひらく
+    // ブラウザで 開いて いる ときと、ブラウザの ある 端末の アプリでは「この端末で開く」か「QR を ほかの スマホで 読み取る」かを えらぶ
+    // （同じ スマホでは QR を 読み取れない）。置いて つかう 端末（Echo など）は ブラウザが ない ことも あるので QR だけ。
+    // どちらでも バージョンと 機種は 入って いる（11-18 に 文を 短く した）
     if (Device.canOpenLink()) {
-      $("s-contact-text").insertAdjacentHTML("beforeend", '<br><a href="' + esc(url) + '"' + (window.Capacitor ? "" : ' target="_blank" rel="noopener"') + '>受付フォームを開く</a>');
+      $("s-contact-text").innerHTML = "この端末で開くか、別のスマホで QR コードを読み取ってください。バージョンと機種は入力済みです。<br>" +
+        '<a href="' + esc(url) + '"' + (window.Capacitor ? "" : ' target="_blank" rel="noopener"') + ">この端末で開く</a>";
+    } else {
+      $("s-contact-text").textContent = "スマホのカメラで QR コードを読み取ると、受付フォームが開きます。バージョンと機種は入力済みです。";
     }
   }
 
@@ -75,6 +78,6 @@
 
   renderContact();
   renderPrivacy();
-  // 設定の「使い方」（2台連携の ブラウザ用の QR）でも つかう
+  // 設定の「この端末」（2台連携の ブラウザ用の QR）でも つかう
   window.makeQr = qrSvg;
 })();

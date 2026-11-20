@@ -21,7 +21,7 @@
   // （var settings = Board.settings と とって おくと、入れかわった あとも 古い ほうを 見て しまう）
   var B = window.Board = {
     // 表示の設定はデータの中（ママ・パパのページと共通）。届くまでは config.js の既定値
-    settings: { unit: "yen", weekStart: 0, lowPower: false, display: C.display },
+    settings: { weekStart: 0, lowPower: false, display: C.display },
     display: C.display,
     kids: [],          // 子どもの一覧（設定画面で へんしゅうする）
     holidays: {},      // { "YYYY-MM-DD": "祝日名" }
@@ -35,12 +35,13 @@
   function $(id) { return document.getElementById(id); }
 
   // 子どもに見せる ことば（words.js）。みんなで見る ところは いちばん小さい子の だんかいに あわせる。
-  // 時計・天気・よてい ごとに 設定（settings.words）で「ひらがな」「漢字」に かえられる
-  //   auto: いちばん小さい子に あわせる / kana: ひらがな（小学3年〜 の子しか いなくても ひらがな） / kanji: 漢字
+  // 設定（settings.words。時計・天気・よていに 同じ 値。2026-11-18 から 1か所で 選ぶ）で「ひらがな」「漢字」に かえられる
+  //   auto: いちばん小さい子に あわせる（その子が ふりがななら ふりがな） / kana: ひらがな（小学3年〜 の子しか いなくても ひらがな） / kanji: 漢字 / ruby: 漢字に ふりがな
   function levelFor(sec) {
     var m = (B.settings.words || {})[sec] || "auto";
     if (m === "kanji") return "upper";
-    if (m === "kana") return B.level === "upper" ? "lower" : B.level;
+    if (m === "ruby") return "ruby";
+    if (m === "kana") return B.level === "upper" || B.level === "ruby" ? "lower" : B.level;
     return B.level;
   }
   // curSec は いま かいている ところ（renderDate / renderWeather / renderEvents が きりかえる）
@@ -88,6 +89,8 @@
   function applySettings(s) {
     if (!s) return;
     B.settings = s;
+    // つないだ スマホで、置いた 端末から 1度でも 読めたか（weather.js。読めるまで 天気の ところは 空ける）
+    if (!B.gotState) { B.gotState = true; if (started && B.renderWeather) B.renderWeather(); }
     B.display = s.display || C.display;
     // 地域・カレンダーが かわったら すぐ よみなおす
     var key = B.placeKey();
@@ -103,7 +106,7 @@
     document.body.classList.toggle("lowpower", !!s.lowPower);
     $("lock-chip").hidden = !(s.parentLock && s.parentLock.type === "pin" && typeof s.parentLock.resetAt === "number");
     B.updateLan();
-    var look = JSON.stringify([s.words || {}, s.clock || "", s.clothes || {}, s.showAdvice !== false]);
+    var look = JSON.stringify([s.words || {}, s.clock || "", s.clothes || {}, s.showAdvice !== false, !!s.eventTime]);
     if (look !== lastLook) {
       lastLook = look;
       if (started) { B.renderWeather(); B.renderEvents(); B.renderClock(new Date()); }
@@ -115,7 +118,7 @@
     applySettings(ev.detail.settings);
     B.kids = ev.detail.kids || [];
     // ことばの だんかい・おうちの人の よびかたが かわったら かきなおす
-    var lv = window.Words.youngest(B.kids), pn = (ev.detail.settings || {}).parentName || "ママ・パパ";
+    var lv = window.Words.youngestText(B.kids), pn = (ev.detail.settings || {}).parentName || "ママ・パパ";
     if (lv !== B.level || pn !== B.parentName) {
       B.level = lv;
       B.parentName = pn;
@@ -132,6 +135,22 @@
     lastCal = B.calSource() ? B.calSource().type + B.calSource().url : "";
   }
 
+  // 見出しを 1行に おさめる（入りきらない ときだけ 字を すこし 小さく。min px まで）。
+  //   幅の せまい スマホ（360 前後）で「1回だけの やることを／たす」と 折れて いた（11-18 テスターの 声）。出した あとに 呼ぶ
+  B.fitLine = function (el, min) {
+    if (!el) return;
+    el.style.fontSize = "";
+    // 字の 幅は Range で はかる（はみ出しは scrollWidth に 出ない ことが ある）
+    var cs = getComputedStyle(el), fs = parseFloat(cs.fontSize), ws = el.style.whiteSpace;
+    var room = el.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight), range = document.createRange();
+    el.style.whiteSpace = "nowrap";
+    range.selectNodeContents(el);
+    while (range.getBoundingClientRect().width > room + 1 && fs > (min || 14)) {
+      fs -= 0.5;
+      el.style.fontSize = fs + "px";
+    }
+    el.style.whiteSpace = ws;
+  };
   B.$ = $;
   B.W = W;
   B.levelFor = levelFor;
@@ -145,4 +164,43 @@
   B.targetDay = targetDay;
   B.applySettings = applySettings;
   B.markStarted = markStarted;
+
+  // 戻る（ボタン・端から 戻る ジェスチャー。MainActivity の backToPage から 呼ぶ）。いちばん 上に 出て いる 画面を 1つ 閉じる。
+  //   なにも 出て いなければ「アプリを とじますか？」。ホームアプリの とき（home）は 何も しない（置きっぱなし）。
+  //   前は アプリが そのまま 終わった（2026-11-18 テスターの 声）。かえす 文字は MainActivity が 見る（"none" は ページが ない とき だけ）
+  function shown(id) { var e = $(id); return !!e && !e.hidden; }
+  function press(id) { $(id).click(); return "closed"; }
+  function askExit(home) {
+    if (home) return "stay";
+    $("exit-ask").hidden = false;
+    return "asked";
+  }
+  B.back = function (home) {
+    B.lastTouch = Date.now();
+    if (shown("exit-ask")) { $("exit-ask").hidden = true; return "closed"; }
+    if (window.Guide && window.Guide.active()) { window.Guide.back(); return "closed"; }
+    if (shown("lock")) return press("lk-close");
+    if (shown("upd")) return press("upd-close");
+    if (shown("connect")) return press("cn-cancel");
+    if (shown("setup")) {
+      if (shown("su-back")) return press("su-back");
+      if (shown("su-close")) return press("su-close");
+      return askExit(home);   // はじめての かんたん設定の 1つめ
+    }
+    if (shown("wl-pop")) return press("wl-pop-close");
+    if (shown("quick")) return press("qk-close");
+    if (shown("tutorial")) return press("tu-skip");
+    if (shown("settings")) return press("s-cancel");
+    if (shown("bundle-view")) return press("bdv-close");
+    if (shown("grad-view")) return press("grv-close");
+    if (shown("kid-view")) return press($("kid-view").classList.contains("wallet-mode") ? "kv-tab-cal" : "kv-close");
+    if (shown("sleep")) { if (B.updateSleep) B.updateSleep(new Date()); return "closed"; }
+    return askExit(home);
+  };
+  $("exit-no").addEventListener("click", function () { $("exit-ask").hidden = true; });
+  $("exit-ask").addEventListener("click", function (ev) { if (ev.target === $("exit-ask")) $("exit-ask").hidden = true; });
+  $("exit-yes").addEventListener("click", function () {
+    $("exit-ask").hidden = true;
+    if (window.EchoBoard && window.EchoBoard.exitApp) window.EchoBoard.exitApp();
+  });
 })();

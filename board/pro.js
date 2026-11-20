@@ -1,5 +1,6 @@
 // 設定の「Pro」タブ（おうちの人向け）。Pro で できる ことの 一覧・ふりかえり（毎週・毎月）・できるようになったことへの コメント。
-//   無料版は 一覧を 鍵の 見た目で 出すだけ（子どもの 画面には Pro の 案内を 出さない）。Pro かは BoardApi.isPro()
+//   無料版は 一覧を 鍵の 見た目で 出すだけ（子どもの 画面には Pro の 案内を 出さない）。Pro かは BoardApi.isPro(state)
+//   （ビルドの -Pro か 招待コード。2026-11-20 から 開いて いない 家には この タブを 出さない。settings.js の renderPro）
 //   ふりかえりは できなかった ことを 言わない（よかった ことと、つづけやすく する こつ だけ）
 (function () {
   "use strict";
@@ -20,7 +21,6 @@
       ["できるようになったことを見返す", "子どもの名前の横の階段のしるしを押すと、できるようになったことが山の段になって並びます。いつ、何ができるようになったかを、子どもが自分でいつでも見返せます。"],
       [parent + "からのコメント", "できるようになったことに、ひとことを添えられます。子どもが見返すたびに目に入ります（あとから書き直せます）。"],
       ["ふりかえり", "子どもごとに、毎週・毎月のふりかえりを見られます。"],
-      ["子ども3人から", "3人以上の子どもを表示できます。"],
     ];
   }
   function parentName() { return ((state && state.settings) || {}).parentName || "ママ・パパ"; }
@@ -88,7 +88,7 @@
     if (selfStart) lines.push("<li>自分から始めた: <b>" + selfStart + "回</b></li>");
     if (grads.length) lines.push("<li>新しく「もう できる」になったこと: " + grads.map(function (g) { return "「" + esc(g.name) + "」"; }).join("") + "</li>");
     if (ready.length) lines.push('<li class="pro-suggest">' + ready.map(function (t) { return "「" + esc(t.name) + "」"; }).join("") +
-      "は、もう できるかも。「がんばり項目」の「できるようになったこと」でまとめられます。</li>");
+      "は、もう できるかも。設定の「やること」の「できるようになったこと」でまとめられます。</li>");
     return '<div class="pro-kid"><div class="pro-kid-name">' + kidName(k) + "</div>" +
       (lines.length ? "<ul>" + lines.join("") + "</ul>" : '<p class="note">この期間のふりかえりは、「みました」の記録がたまると出ます。</p>') +
       (lines.length ? calendar(k, r) + taskBars(k, r) : "") + trend(k) + "</div>";
@@ -197,18 +197,23 @@
     }).join("");
   }
 
-  function render() {
-    var pro = Api.isPro();
-    $("pro-status").innerHTML = pro
-      ? "<b>Pro の機能をお使いいただけます。</b>テストにご協力いただいている方は、正式に公開したあとも Pro のままお使いいただけます。"
-      : "<b>Pro は準備中です。</b>いまお使いの機能は、これからも無料のままお使いいただけます。";
+  // テストの 版（ビルドの -Pro）と 招待コードで 開いた 家で 一言を かえる
+  function paint(pro) {
+    $("pro-status").innerHTML = !pro ? "<b>Pro は準備中です。</b>いまお使いの機能は、これからも無料のままお使いいただけます。"
+      : Api.proBuild ? "<b>Pro の機能をお使いいただけます。</b>テストにご協力いただいている方は、正式に公開したあとも Pro のままお使いいただけます。"
+      : "<b>Pro の機能をお使いいただけます。</b>";
     $("pro-status").classList.toggle("on", pro);
     renderFeatures(pro);
     $("pro-report-group").hidden = !pro;
     $("pro-comment-group").hidden = !pro;
+  }
+
+  function render() {
+    paint(Api.isPro({ settings: window.Board && window.Board.settings }));
     Api.state().then(function (s) {
       state = s;
-      renderFeatures(pro);   // おうちの人の よびかた（ママ・パパ など）
+      var pro = Api.isPro(s);
+      paint(pro);   // おうちの人の よびかた（ママ・パパ など）も
       if (!pro) return;
       $("pro-comment-title").textContent = parentName() + "からのコメント";
       var pick = document.querySelector('input[name="pro-period"][value="' + period + '"]');

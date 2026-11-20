@@ -25,85 +25,25 @@
       if (!$("date").value) $("date").value = s.today;
       renderDay();
       renderGrad();
-      fillSettings(s.settings);
-      fillCalendar(s.settings);
-      renderExchange();
       if (!$("pv-date").value) $("pv-date").value = s.today;
       renderPreview();
-      $("reward-section").style.display = isPoint() ? "" : "none";
     });
   }
 
-  // ---- 表示の設定（Echo の設定画面と共通） ----
-  function fillSettings(st) {
-    var d = st.display;
-    $("s-weekday-from").value = d.weekday.from;
-    $("s-weekday-to").value = d.weekday.to;
-    $("s-holiday-from").value = d.holiday.from;
-    $("s-holiday-to").value = d.holiday.to;
-    // 一覧に ない 値（31分以上 など）は 消さずに 足す（index.html の 設定と おなじ）
-    var idle = String(d.idleMinutes);
-    if (!$("s-idle").querySelector('option[value="' + idle + '"]')) {
-      var opt = document.createElement("option");
-      opt.value = idle;
-      opt.textContent = idle + "分";
-      $("s-idle").appendChild(opt);
-    }
-    $("s-idle").value = idle;
-    $("s-lowpower").checked = !!st.lowPower;
-    // 未設定のときは config.js の地域（いまの家の構成）
-    var C = window.CONFIG || {};
-    window.AreaSelect.fill($("s-office"), $("s-area"),
-      st.location || (C.jma && C.jma.area ? { office: C.jma.office, area: C.jma.area, city: C.jma.city } : null));
-    $("s-parent").value = st.parentName || "";
-    // 前の PIN（いまは 使わない）は 計算問題と おなじ「あり」
-    var unit = st.unit === "point" ? "point" : "yen";
-    Array.prototype.forEach.call(document.getElementsByName("unit"), function (r) { r.checked = r.value === unit; });
-    var ws = String(st.weekStart || 0);
-    Array.prototype.forEach.call(document.getElementsByName("week-start"), function (r) { r.checked = r.value === ws; });
-  }
-  $("save-settings").addEventListener("click", function () {
-    var ws = document.querySelector("input[name=week-start]:checked");
-    // 設定画面と 重なる 項目を 隠して いるときは、よびかただけ 保存する（ほかの タブで かえた 設定を もどさない）。
-    // 鍵は ボードの 設定の「使い方」で えらぶ（ここでは かえない）
-    var body = document.body.classList.contains("in-app") ? { parentName: $("s-parent").value.trim() } : {
-      unit: (document.querySelector("input[name=unit]:checked") || {}).value || "yen",
-      location: window.AreaSelect.value($("s-office"), $("s-area")),
-      parentName: $("s-parent").value.trim(),
-      weekStart: ws ? parseInt(ws.value, 10) : 0,
-      lowPower: $("s-lowpower").checked,
-      display: {
-        weekday: { from: $("s-weekday-from").value, to: $("s-weekday-to").value },
-        holiday: { from: $("s-holiday-from").value, to: $("s-holiday-to").value },
-        idleMinutes: parseFloat($("s-idle").value) || 1,
-      },
-    };
-    post("/api/board/settings", body).then(function () { toast("保存しました"); return load(); })
-      .then(function () { renderTaskEdit(); renderGoalEdit(); renderRewardEdit(); })
-      .catch(function (err) { toast("保存できませんでした: " + err.message); });
-  });
-
   function post(url, body) { return window.BoardApi.post(url, body); }
 
-  function isPoint() { return state.settings.unit === "point"; }
-  function unitName() { return isPoint() ? "ポイント" : "円"; }
-  function u(n) { return n + unitName(); }
+  // やることの 値は ポイント（2026-11-12 に 円を やめた）
+  function u(n) { return n + "ポイント"; }
 
   // 「表示」を外した子は出さない
   function visibleKids() { return state.kids.filter(function (k) { return k.active !== false; }); }
 
-  // その日に その子に出る やること（毎日・曜日・1回だけ）と、その子の金額
+  // その日に その子に出る やること（毎日・曜日・1回だけ）と、その子の ポイント
   function dayTasks(kid, date) { return window.BoardApi.tasksFor(state.tasks, kid, date); }
   function yenOf(t, kid) { return window.BoardApi.yenOf(t, kid); }
-  function entry(date, kid) {
-    var e = (state.days[date] || {})[kid] || { checks: [], approved: false };
-    e.counts = e.counts || {};
-    return e;
-  }
-  // チェックは 0 か 1、かいすうは回数
-  function taskCount(t, e) {
-    return t.kind === "count" ? (e.counts[t.id] || 0) : (e.checks.indexOf(t.id) >= 0 ? 1 : 0);
-  }
+  // その日の 記録と、やった 回数（チェックは 0 か 1、かいすうは回数）。決まりは api.js
+  function entry(date, kid) { return window.BoardApi.entry(state, date, kid); }
+  function taskCount(t, e) { return window.BoardApi.taskCount(t, e); }
 
   // ---- がんばりチェック ----
   var bundleOpen = {};   // 中身を ひらいて いる 子（「もう できる」の ▸）
@@ -264,9 +204,10 @@
   });
 
   // ---- やることの設定（家族で1つのリスト。1件ごとに だれが・いつ） ----
-  //   ふだんは「毎日・みんな」。曜日・1回だけ・子どもごとの金額・ごぜん/ごご は 行をひらいたときだけ出す
+  //   ふだんは「毎日・みんな」。曜日・1回だけ・子どもごとの ポイント・ごぜん/ごご は 行をひらいたときだけ出す
   var WD = ["日", "月", "火", "水", "木", "金", "土"];
   var editing = [], dirty = false, filterKid = null, openKey = null, seq = 0;
+  var PALETTE = window.KID_PALETTE;
 
   function keyOf(t) { return t.id || t._k; }
   function kidName(id) { var k = state.kids.filter(function (k) { return k.id === id; })[0]; return k ? k.name : "?"; }
@@ -412,7 +353,7 @@
       when += ' <input type="date" data-i="' + i + '" data-f="date" value="' + (r.date || state.today) + '">';
     }
     var assigned = kids.filter(function (k) { return !t.kids || t.kids.indexOf(k.id) >= 0; });
-    var yen = '<input type="number" min="0" data-i="' + i + '" data-f="yen" value="' + t.yen + '"> ' + unitName() + (count ? " × 回数" : "") +
+    var yen = '<input type="number" min="0" data-i="' + i + '" data-f="yen" value="' + t.yen + '">' + (count ? " × 回数" : "") +
       ' <label class="muted"><input type="checkbox" data-i="' + i + '" data-f="byKid"' + (t.yenByKid ? " checked" : "") + '> 子どもごとに変える</label>';
     if (t.yenByKid) {
       yen += '<div class="by-kid">' + assigned.map(function (k) {
@@ -432,7 +373,7 @@
       '<span>種類</span><span class="chips">' +
         chip("✓ チェック", !count, 'data-i="' + i + '" data-kind="check"') +
         (r.type === "perweek" ? "" : chip("＋ 回数", count, 'data-i="' + i + '" data-kind="count"')) + '</span>' +
-      '<span>ご褒美</span><span>' + yen + '</span>' +
+      '<span>ポイント</span><span>' + yen + '</span>' +
       '<div class="t-actions"><label class="muted"><input type="checkbox" data-i="' + i + '" data-f="active"' + (t.active ? " checked" : "") + '> 使う</label>' +
       (r.type === "once" ? '<button class="icon-btn" data-del="' + i + '">消す</button>' : "") +
       '<span class="moves"><button class="icon-btn" data-up="' + i + '">↑</button><button class="icon-btn" data-down="' + i + '">↓</button></span></div>' +
@@ -449,7 +390,7 @@
         chip("ごぜん", t.slot === "am", 'data-i="' + i + '" data-slot="am"') +
         chip("ごご", t.slot === "pm", 'data-i="' + i + '" data-slot="pm"') +
         chip("いつでも", !t.slot, 'data-i="' + i + '" data-slot=""') + '</span>' : "") +
-      '<span>ご褒美</span><span><input type="number" min="0" data-i="' + i + '" data-f="yen" value="' + t.yen + '"> ' + unitName() +
+      '<span>ポイント</span><span><input type="number" min="0" data-i="' + i + '" data-f="yen" value="' + t.yen + '">' +
       ' <span class="muted">（まとめたやることの合計から始まります）</span></span>' +
       '<div class="t-actions"><label class="muted"><input type="checkbox" data-i="' + i + '" data-f="active"' + (t.active ? " checked" : "") + '> 使う</label></div>' +
       '</div>';
@@ -532,7 +473,7 @@
     dirty = true;
     $("save-tasks").disabled = false;
   });
-  // なまえ・金額は 入れおわったら 一覧の 表示に 反映する
+  // なまえ・ポイントは 入れおわったら 一覧の 表示に 反映する
   $("task-list").addEventListener("change", function (ev) {
     if (ev.target.type === "text" || ev.target.type === "number" || ev.target.type === "date") renderTaskEdit();
   });
@@ -575,7 +516,7 @@
   });
   $("once-ok").addEventListener("click", function () {
     var name = $("once-name").value.trim();
-    if (!name) return toast("なまえを入れてください");
+    if (!name) return toast("やることが未入力です");
     if (!onceKids.length) return toast("だれがやるか選んでください");
     if (dirty && !confirm("保存していない変更も一緒に保存します。よろしいですか？")) return;
     var all = visibleKids().map(function (k) { return k.id; });
@@ -587,7 +528,6 @@
   function resetOnce() {
     $("once-date").value = state.today;
     $("once-yen").value = commonYen();
-    Array.prototype.forEach.call(document.querySelectorAll(".unit-name"), function (el) { el.textContent = unitName(); });
     renderOnceKids();
   }
 
@@ -602,250 +542,24 @@
   }
   $("pv-date").addEventListener("change", renderPreview);
 
-  // ---- 子ども（名前・色・表示・並び） ----
-  var PALETTE = window.KID_PALETTE, kidsEdit = [];
-
-  function startKidEdit() {
-    kidsEdit = JSON.parse(JSON.stringify(state.kids));
-    renderKidEdit();
-  }
-  function renderKidEdit() {
-    $("kid-edit").innerHTML = kidsEdit.map(function (k, i) {
-      var c = PALETTE[k.color] || PALETTE.purple;
-      return '<div class="kid-row">' +
-        '<span class="swatch" style="background:' + c.main + '"></span>' +
-        '<input type="text" maxlength="12" data-i="' + i + '" data-f="name" value="' + esc(k.name) + '" placeholder="なまえ">' +
-        '<select data-i="' + i + '" data-f="honor" title="名前のあと">' + [["", "なし"], ["ちゃん", "ちゃん"], ["くん", "くん"]].map(function (h) {
-          return '<option value="' + h[0] + '"' + ((k.honor || "") === h[0] ? " selected" : "") + '>' + h[1] + '</option>';
-        }).join("") + '</select>' +
-        '<select data-i="' + i + '" data-f="level" title="言葉の難しさ">' + window.Words.LEVELS.map(function (l) {
-          return '<option value="' + l + '"' + ((k.level || "lower") === l ? " selected" : "") + '>' + window.Words.LABELS[l] + '</option>';
-        }).join("") + '</select>' +
-        '<select data-i="' + i + '" data-f="color">' + Object.keys(PALETTE).map(function (key) {
-          return '<option value="' + key + '"' + (key === k.color ? " selected" : "") + '>' + PALETTE[key].label + '</option>';
-        }).join("") + '</select>' +
-        '<label class="muted"><input type="checkbox" data-i="' + i + '" data-f="active"' + (k.active !== false ? " checked" : "") + '>表示</label>' +
-        '<button class="icon-btn" data-up="' + i + '">↑</button>' +
-        '<button class="icon-btn" data-down="' + i + '">↓</button>' +
-        '</div>';
-    }).join("");
-    freeKidsNote();
-  }
-  // 無料の 上限（同梱版だけ）。表示する 子が 上限まで いたら「＋ 追加」を 押せなく する
-  function freeKidsNote() {
-    var lim = window.BoardApi.limits && window.BoardApi.limits();
-    var shown = kidsEdit.filter(function (k) { return k.active !== false; }).length;
-    var full = !!lim && shown >= lim.kids;
-    $("add-kid").disabled = full;
-    $("free-kids").hidden = !full;
-    if (full) $("free-kids").textContent = window.Words.t("freeKids", "upper", { n: lim.kids, next: lim.kids + 1 });
-  }
-  $("kid-edit").addEventListener("input", function (ev) {
-    var i = ev.target.dataset.i, f = ev.target.dataset.f;
-    if (i === undefined) return;
-    kidsEdit[i][f] = f === "active" ? ev.target.checked : ev.target.value;
-    if (f === "color") renderKidEdit();
-    if (f === "active") freeKidsNote();
-  });
-  $("kid-edit").addEventListener("click", function (ev) {
-    var up = ev.target.dataset.up, down = ev.target.dataset.down, i, j;
-    if (up !== undefined) { i = +up; j = i - 1; } else if (down !== undefined) { i = +down; j = i + 1; } else return;
-    if (j < 0 || j >= kidsEdit.length) return;
-    var tmp = kidsEdit[i]; kidsEdit[i] = kidsEdit[j]; kidsEdit[j] = tmp;
-    renderKidEdit();
-  });
-  $("add-kid").addEventListener("click", function () {
-    var used = kidsEdit.map(function (k) { return k.color; });
-    var color = Object.keys(PALETTE).filter(function (c) { return used.indexOf(c) < 0; })[0] || "purple";
-    kidsEdit.push({ id: "", name: "", color: color, active: true, level: "lower", honor: "" });
-    renderKidEdit();
-  });
-  $("save-kids").addEventListener("click", function () {
-    post("/api/parent/kids", { kids: kidsEdit.filter(function (k) { return k.name.trim(); }) })
-      .then(function () { toast("保存しました"); return load(); })
-      .then(function () {
-        startKidEdit();
-        startEdit();
-        resetOnce();
-      })
-      .catch(function (err) { toast("保存できませんでした: " + err.message); });
-  });
-
-  // ---- みんなの目標 ----
-  var goalsEdit = [];
-  function startGoalEdit() { goalsEdit = JSON.parse(JSON.stringify(state.goals || [])); renderGoalEdit(); }
-  function earned(kid, since) {
-    var total = 0;
-    Object.keys(state.days).forEach(function (d) {
-      var e = state.days[d][kid];
-      if ((!since || d >= since) && e && e.approved && e.result) total += e.result.yen;
-    });
-    return total;
-  }
-  function renderGoalEdit() {
-    $("goal-edit").innerHTML = goalsEdit.map(function (g, i) {
-      var sum = state.kids.reduce(function (a, k) { return a + earned(k.id, g.start); }, 0);
-      return '<div class="goal-row">' +
-        '<input type="text" class="title" data-i="' + i + '" data-f="title" value="' + esc(g.title) + '" placeholder="りょこう など">' +
-        '<span class="muted"><input type="number" min="1" data-i="' + i + '" data-f="target" value="' + g.target + '">' + unitName() + '</span>' +
-        '<span class="muted">開始 <input type="date" data-i="' + i + '" data-f="start" value="' + g.start + '"></span>' +
-        '<label class="muted"><input type="checkbox" data-i="' + i + '" data-f="done"' + (g.done ? " checked" : "") + '>達成</label>' +
-        '<span class="muted" style="margin-left:auto">いま ' + u(sum) + '</span>' +
-        '</div>';
-    }).join("") || '<p class="muted">まだありません</p>';
-  }
-  $("goal-edit").addEventListener("input", function (ev) {
-    var i = ev.target.dataset.i, f = ev.target.dataset.f;
-    if (i === undefined) return;
-    var g = goalsEdit[i];
-    if (f === "done") g.done = ev.target.checked ? state.today : null;
-    else if (f === "target") g.target = parseInt(ev.target.value, 10) || 1;
-    else g[f] = ev.target.value;
-  });
-  $("add-goal").addEventListener("click", function () {
-    goalsEdit.push({ id: "", title: "", target: 500, start: state.today, done: null });
-    renderGoalEdit();
-  });
-  $("save-goals").addEventListener("click", function () {
-    post("/api/parent/goals", { goals: goalsEdit })
-      .then(function () { toast("保存しました"); return load(); })
-      .then(startGoalEdit)
-      .catch(function (err) { toast("保存できませんでした: " + err.message); });
-  });
-
-  // ---- ごほうび交換 ----
-  var rewardsEdit = [];
-  function startRewardEdit() { rewardsEdit = JSON.parse(JSON.stringify(state.rewards || [])); renderRewardEdit(); }
-  function renderRewardEdit() {
-    $("reward-edit").innerHTML = rewardsEdit.map(function (r, i) {
-      return '<div class="reward-row">' +
-        '<input type="text" class="title" data-i="' + i + '" data-f="name" value="' + esc(r.name) + '" placeholder="おかし など">' +
-        '<span class="muted"><input type="number" min="1" data-i="' + i + '" data-f="points" value="' + r.points + '">' + unitName() + '</span>' +
-        '<label class="muted"><input type="checkbox" data-i="' + i + '" data-f="active"' + (r.active ? " checked" : "") + '>使う</label>' +
-        '</div>';
-    }).join("") || '<p class="muted">まだありません</p>';
-  }
-  $("reward-edit").addEventListener("input", function (ev) {
-    var i = ev.target.dataset.i, f = ev.target.dataset.f;
-    if (i === undefined) return;
-    var r = rewardsEdit[i];
-    r[f] = f === "active" ? ev.target.checked : f === "points" ? parseInt(ev.target.value, 10) || 1 : ev.target.value;
-  });
-  $("add-reward").addEventListener("click", function () {
-    rewardsEdit.push({ id: "", name: "", points: 100, active: true });
-    renderRewardEdit();
-  });
-  $("save-rewards").addEventListener("click", function () {
-    post("/api/parent/rewards", { rewards: rewardsEdit })
-      .then(function () { toast("保存しました"); return load(); })
-      .then(startRewardEdit)
-      .catch(function (err) { toast("保存できませんでした: " + err.message); });
-  });
-
-  function balance(kid) {
-    return (state.exchanges || []).reduce(function (a, x) { return x.kid === kid ? a - x.points : a; }, earned(kid));
-  }
-  function renderExchange() {
-    var rewards = (state.rewards || []).filter(function (r) { return r.active; });
-    var options = rewards.map(function (r) {
-      return '<option value="' + r.id + '">' + esc(r.name) + '（' + u(r.points) + '）</option>';
-    }).join("");
-    var rows = visibleKids().map(function (k) {
-      return '<div class="bal"><b>' + esc(k.name) + '　残り ' + u(balance(k.id)) + '</b>' +
-        (rewards.length ? '<select data-kid="' + k.id + '">' + options + '</select>' +
-          '<button data-exchange="' + k.id + '">交換する</button>' : "") +
-        '</div>';
-    }).join("");
-    var history = (state.exchanges || []).slice(-10).reverse().map(function (x) {
-      var k = state.kids.filter(function (k) { return k.id === x.kid; })[0];
-      return '<li>' + x.date + ' ' + esc(k ? k.name : "?") + '：' + esc(x.name) + '（' + u(x.points) + '）' +
-        '<button data-undo="' + x.id + '">取り消し</button></li>';
-    }).join("");
-    $("exchange").innerHTML = rows + (history ? '<ul class="history">' + history + '</ul>' : "");
-  }
-  $("exchange").addEventListener("click", function (ev) {
-    var d = ev.target.dataset;
-    if (d.exchange) {
-      var sel = document.querySelector('#exchange select[data-kid="' + d.exchange + '"]');
-      post("/api/parent/exchange", { kid: d.exchange, rewardId: sel.value })
-        .then(function () { toast("交換しました"); return load(); })
-        .catch(function (err) { toast("交換できませんでした: " + err.message); });
-    } else if (d.undo) {
-      if (!confirm("この交換を取り消しますか？")) return;
-      post("/api/parent/exchange", { undo: d.undo })
-        .then(function () { toast("取り消しました"); return load(); });
-    }
-  });
-
-  // ---- カレンダー ----
-  // 未設定のときは config.js の Apps Script（いまの家の構成）
-  function fillCalendar(st) {
-    var C = window.CONFIG || {};
-    var cal = st.calendar || (C.calendar && C.calendar.url ? { type: "gas", url: C.calendar.url } : { type: "none", url: "" });
-    Array.prototype.forEach.call(document.getElementsByName("cal"), function (r) { r.checked = r.value === cal.type; });
-    $("cal-url").value = cal.url || "";
-    calWarn();
-  }
-  // 共有リンクなど 読めない URL を 貼ったら、その場で 正しい URL の 出し方を 出す（api.js の calUrlProblem）
-  function calWarn() {
-    var bad = !!window.BoardApi.calUrlProblem($("cal-url").value);
-    $("cal-warn").hidden = !bad;
-    $("cal-warn").textContent = bad ? window.Words.t("calShareLink", "upper") : "";
-  }
-  $("cal-url").addEventListener("input", calWarn);
-  $("save-cal").addEventListener("click", function () {
-    var type = (document.querySelector("input[name=cal]:checked") || {}).value || "none";
-    post("/api/board/settings", { calendar: { type: type, url: $("cal-url").value.trim() } })
-      .then(function () { toast("保存しました"); return load(); })
-      .catch(function (err) { toast("保存できませんでした: " + err.message); });
-  });
-
-  // ---- データの書き出し・読み込み ----
+  // ---- データの書き出し・読み込み（datafile.js。ボードの 設定の「おうちの人」と おなじ 処理） ----
   $("export").addEventListener("click", function () {
-    window.BoardApi.state().then(function (s) {
-      var data = JSON.parse(JSON.stringify(s));
-      delete data.today;
-      data.exportedAt = new Date().toISOString();
-      var name = "ganbari-" + s.today + ".json", text = JSON.stringify(data, null, 1);
-      // アプリの中では ダウンロードが使えないので、アプリ（MainActivity）に保存してもらう
-      if (window.EchoBoard && typeof window.EchoBoard.saveFile === "function") {
-        var where = window.EchoBoard.saveFile(name, text);
-        $("export-result").textContent = where ? "保存しました: " + where : "保存できませんでした";
-        return;
-      }
-      var a = document.createElement("a");
-      a.href = URL.createObjectURL(new Blob([text], { type: "application/json" }));
-      a.download = name;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      $("export-result").textContent = name + " を保存しました";
-    });
+    window.DataFile.save().then(function (msg) { $("export-result").textContent = msg; },
+      function (err) { $("export-result").textContent = "保存できませんでした（" + err.message + "）"; });
   });
 
   $("import").addEventListener("change", function (ev) {
     var file = ev.target.files[0];
     ev.target.value = "";
     if (!file) return;
-    var reader = new FileReader();
-    reader.onload = function () {
-      var data;
-      try { data = JSON.parse(reader.result); } catch (e) { return toast("ファイルを読めませんでした"); }
-      if (!data || !Array.isArray(data.kids) || typeof data.days !== "object") return toast("はなまるボードのファイルではありません");
-      var days = Object.keys(data.days).length;
-      if (!confirm("子ども " + data.kids.length + "人・記録 " + days + "日ぶんの内容に置き換えます。よろしいですか？")) return;
-      post("/api/parent/import", { data: data })
-        .then(function () { toast("戻しました"); return load(); })
-        .then(function () {
-          startKidEdit();
-          startEdit();
-          resetOnce();
-          startGoalEdit();
-          startRewardEdit();
-        })
-        .catch(function (err) { toast("戻せませんでした: " + err.message); });
-    };
-    reader.readAsText(file);
+    window.DataFile.load(file).then(function (done) {
+      if (!done) return;
+      toast("戻しました");
+      return load().then(function () {
+        startEdit();
+        resetOnce();
+      });
+    }).catch(function (err) { toast(err.message); });
   });
 
   // 項目が ふえたので、見出しを タップして ひらく・とじる。ひらいている ものは この端末で おぼえる
@@ -855,6 +569,8 @@
     if (!Array.isArray(open)) open = ["day"];
     // 「がんばりチェック」タブでは いつも ひらく
     if (document.body.classList.contains("only-day") && open.indexOf("day") < 0) open.push("day");
+    // 「やること」タブで 2つとも とじて いたら、やることの設定を ひらいて おく
+    if (document.body.classList.contains("only-tasks") && open.indexOf("tasks") < 0 && open.indexOf("grad") < 0) open.push("tasks");
     Array.prototype.forEach.call(document.querySelectorAll("main > section[data-sec]"), function (sec) {
       var id = sec.dataset.sec;
       sec.classList.toggle("closed", open.indexOf(id) < 0);
@@ -872,13 +588,12 @@
     $("back-board").hidden = false;
     $("back-board").href = window.BoardApi.boardUrl;
   }
-  // アプリの中や、ボードの 設定画面の タブの 中では、子ども・カレンダー・天気・表示の時間などは 設定画面の ほうで 変える
-  if (window.BoardApi.local || /[?&]embed=1/.test(location.search)) {
-    document.body.classList.add("in-app");
-    document.body.classList.toggle("embed", /[?&]embed=1/.test(location.search));
+  // ボードの 設定画面の タブの 中（?embed=1）。子ども・予定・天気・表示の時間などは 設定画面の ほうで 変える
+  //   （前は /admin を じかに 開いた ときだけ 見える 古い 設定の 欄が あった。2026-11-20 に なくした）
+  if (/[?&]embed=1/.test(location.search)) {
+    document.body.classList.toggle("embed", true);
     document.body.classList.toggle("only-day", /[?&]only=day/.test(location.search));
-    document.body.classList.toggle("no-day", /[?&]hide=day/.test(location.search));
-    $("settings-title").textContent = "おうちの人の設定";
+    document.body.classList.toggle("only-tasks", /[?&]only=tasks/.test(location.search));
   }
   // 設定画面の 色（昼・夜）を もらう
   if (document.body.classList.contains("embed")) {
@@ -894,33 +609,27 @@
   }
 
   // 保存して いない 欄（ボードの 設定画面が 閉じる 前に きく。settings.js の confirmClose）。
-  // 欄の 中で 入力・追加・削除を したら しるしを つけ、その欄の「保存」を 押したら けす。やることは dirty で みる
-  var touched = {};
-  [["goals", "save-goals"], ["rewards", "save-rewards"], ["kids", "save-kids"], ["calendar", "save-cal"], ["settings", "save-settings"]].forEach(function (x) {
-    var sec = document.querySelector('[data-sec="' + x[0] + '"]');
-    function mark(ev) {
-      // 保存ボタン・見出し（ひらく・とじる）・ごほうびの 交換（すぐ 保存される）は かぞえない
-      if (ev.target.closest("#" + x[1] + ", h2, #exchange")) return;
-      touched[x[0]] = true;
-    }
-    sec.addEventListener("input", mark);
-    sec.addEventListener("change", mark);
-    sec.addEventListener("click", function (ev) { if (ev.target.closest("button")) mark(ev); });
-    $(x[1]).addEventListener("click", function () { touched[x[0]] = false; });
-  });
+  //   保存の いる 欄は やることの 設定だけ（dirty で みる。ほかは 押した ときに すぐ 保存する）
   window.unsavedSections = function () {
     return Array.prototype.filter.call(document.querySelectorAll("section[data-sec]"), function (sec) {
       if (sec.offsetParent === null && getComputedStyle(sec).display === "none") return false;   // 隠して いる 欄
-      return sec.dataset.sec === "tasks" ? dirty : !!touched[sec.dataset.sec];
+      return sec.dataset.sec === "tasks" && dirty;
     }).map(function (sec) { return sec.querySelector("h2").textContent.trim(); });
   };
 
   load().then(function () {
-    startKidEdit();
     startEdit();
     resetOnce();
-    startGoalEdit();
-    startRewardEdit();
+    if (window.showEmbed) window.showEmbed();
+  }).catch(function (err) {
+    // 読めない ときは 空の ままに しない（つないだ スマホで 空だった。11-18）。理由を 出す
+    console.error(err);
+    var box = document.createElement("p");
+    box.className = "load-error";
+    var why = window.BoardApi.connWhy(err);
+    box.textContent = why ? "置いてある端末のデータを読めませんでした。" + why + "。"
+      : "置いてある端末のデータを読めませんでした（" + (err && err.message || "つながりません") + "）。画面を閉じて、もう一度開いてください。";
+    document.body.insertBefore(box, document.body.firstChild);
     if (window.showEmbed) window.showEmbed();
   });
 })();

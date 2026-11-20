@@ -38,11 +38,12 @@
     var p = place();
     return p ? p.area + ":" + (p.city ? p.city.code : p.lat ? p.lat + "," + p.lon : "") : "";
   }
-  // 天気の 見出しの 横に だす 場所（小さい子には よみがな）
+  // 天気の 見出しの 横に だす 場所（小さい子には よみがな、ふりがなの ときは 漢字に よみがな）。エスケープ 済みの HTML
   function placeLabel() {
     var p = place(), c = p && p.city;
     if (!c) return "";
-    return levelFor("weather") !== "upper" && c.kana ? c.kana : c.name;
+    if (levelFor("weather") === "ruby") return window.Words.rubyName(c.name, c.kana, escapeHtml);
+    return escapeHtml(levelFor("weather") !== "upper" && c.kana ? c.kana : c.name);
   }
 
   // ---- あめ（家の あたり 1km四方。rain.js） ----
@@ -321,7 +322,7 @@
     // 見出しの 横に 場所（練馬区 など）
     var word = offset < 3 ? W(["today", "tomorrow", "dayAfter"][offset]) : W("nthDay", { d: date.getDate() });
     var title = W("weatherTitle", { day: word }), pl = placeLabel();
-    if (pl) title += '<span class="place">（' + escapeHtml(pl) + '）</span>';
+    if (pl) title += '<span class="place">（' + pl + '）</span>';
     if ($("weather-title").innerHTML !== title) $("weather-title").innerHTML = title;
     var dots = "", max = wxMax();
     for (var i = 0; i <= max; i++) dots += i === offset ? '<i class="on"></i>' : "<i></i>";
@@ -329,7 +330,9 @@
     var sum = p && offset < 2 ? daySummary(day) : null;
     if (!sum && p && (wx.week || {})[day]) { renderWeekDay(wx.week[day]); return; }
     if (!sum) {
-      $("slots").innerHTML = '<div class="muted">' +
+      // つないだ スマホで 置いた 端末に つながらない ときは 地域も わからない。理由は がんばりカレンダーに 出るので、ここは 空ける（2026-11-19）
+      var cut = !p && (window.BoardApi.remote || window.BoardApi.paired) && !B.gotState;
+      $("slots").innerHTML = cut ? "" : '<div class="muted">' +
         W(!p ? "noArea" : wxError ? "wxError" : "loading") + '</div>';
       $("summary").innerHTML = "";
       $("advice").innerHTML = "";

@@ -18,7 +18,7 @@ window.CONFIG = {
     idleMinutes: 1,
   },
 
-  // 待機中の画面の明るさ（0〜255）
-  brightness: { on: 180, off: 0 },
+  // on は 起きている とき（-1 = 端末の 明るさの まま。2026-11-18 から。前は 180 に 固定して まぶしかった）、off は 暗くする とき
+  brightness: { on: -1, off: 0 },
 };
 window.CONFIG.web = true;

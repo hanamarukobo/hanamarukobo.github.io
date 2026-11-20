@@ -68,6 +68,16 @@ html, body {
   -webkit-user-select: none;
   user-select: none;
 }
+/* カメラの 切り欠き（スマホの 上の 帯）の 分だけ 中身を 内側に（app.js の setSafe。ない 端末は 0）。
+   背景は 帯まで のばし、重ねる 画面は 透明の ふちで 寄せる（暗い まくは 帯まで とどく） */
+body { box-sizing: border-box; padding: var(--sa-t, 0px) var(--sa-r, 0px) var(--sa-b, 0px) var(--sa-l, 0px); }
+.kid-view, .settings, .grad-view, .lock, .setup, .tutorial, .quick {
+  border-style: solid;
+  border-color: transparent;
+  border-width: var(--sa-t, 0px) var(--sa-r, 0px) var(--sa-b, 0px) var(--sa-l, 0px);
+  /* 背景の 絵（グラデーション）も ふちの 外から かく。ないと ふちに 下の 端の 色が くりかえして 出る（子どもの 画面の 上の 帯が ピンク。2026-11-18） */
+  background-origin: border-box;
+}
 
 /* 横置きは 幅960 で組み、高さは画面の縦横比に合わせる（Echo Show 5 は 480、16:10 のタブレットは 600）。
    縦置きは 幅600 で組む。--bw / --bh と拡大率は app.js の fit() が決める */
@@ -114,6 +124,14 @@ h2 { margin: 0; font-size: 21px; font-weight: 700; color: var(--orange); white-s
 }
 .gear-btn svg { width: 100%; height: 100%; display: block; }
 .gear-btn:active { opacity: .8; }
+/* 新しい 版が ある とき（update.js）: ⚙ を オレンジに して 横に「更新」の 札と 点滅する 赤い 点（11-18。歯車だけでは 気づきにくかった）。
+   OK で 予約したら もとの 歯車に もどす（予約は 設定を 開いたときの おしらせと 設定の いちばん上で わかる） */
+.gear-tag { display: none; }
+.gear-btn.has-update { color: #ff8a3d; opacity: 1; width: auto; display: flex; align-items: center; gap: 3px; padding: 5px 10px 5px 6px; border-radius: 999px; background: #fff1e4; box-shadow: 0 0 0 2px #ffb27a inset; }
+.gear-btn.has-update svg { width: 24px; height: 24px; flex: none; }
+.gear-btn.has-update .gear-tag { display: inline; font-size: 15px; font-weight: 700; color: #e0661a; line-height: 1; white-space: nowrap; }
+.gear-btn.has-update::after { content: ""; position: absolute; top: 0; right: 0; width: 12px; height: 12px; border-radius: 50%; background: #ff5a5a; box-shadow: 0 0 0 2px #fff; animation: upd-dot 1.6s ease-in-out infinite; }
+@keyframes upd-dot { 50% { transform: scale(0.6); opacity: 0.5; } }
 .month { font-size: 34px; font-weight: 700; color: var(--wd); }
 .day { font-weight: 700; line-height: 1; margin-top: 2px; }
 .day #day { font-size: 104px; letter-spacing: -2px; }
@@ -152,7 +170,7 @@ h2 { margin: 0; font-size: 21px; font-weight: 700; color: var(--orange); white-s
 .slot .label { font-size: 16px; font-weight: 700; color: var(--blue); }
 .slot .icon { font-size: 32px; line-height: 1.15; }
 .slot .temp { font-size: 24px; font-weight: 700; line-height: 1.1; }
-.slot .rain { font-size: 15px; color: var(--blue); }
+.slot .rain { font-size: 15px; color: var(--blue); min-height: 1.45em; } /* 降水確率の ない 時間帯も 1行ぶん とる（今日と 明日で 高さが かわらない。2026-11-18） */
 
 /* 自前の 絵（words.js の Words.icon）。絵文字と おなじく 字の 大きさに あわせる */
 img.ico { display: inline-block; width: 1.2em; height: 1.2em; vertical-align: -0.25em; object-fit: contain; -webkit-user-drag: none; user-select: none; }
@@ -313,6 +331,7 @@ body.night .advice .tile.need { background: #4a2f44; }
 .kids.mode-icon .kid-btn .badge { width: 34px; height: 34px; font-size: 19px; top: -8px; right: -6px; border-width: 2px; }
 
 .kids .offline { grid-column: 1 / -1; color: var(--muted); text-align: center; align-self: center; }
+.kids .offline .reconnect { margin-top: 10px; font: inherit; font-size: 16px; font-weight: 700; padding: 6px 18px; border-radius: 999px; border: 2px solid var(--orange); background: transparent; color: var(--orange); }
 
 /* がんばりカレンダー */
 .kid-view {
@@ -340,19 +359,14 @@ body.night .advice .tile.need { background: #4a2f44; }
   box-shadow: var(--shadow);
 }
 .kv-title { font-size: 28px; font-weight: 700; color: var(--kid); white-space: nowrap; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
-/* 名前が 長いときは 見出しを「…」で ちぢめ、れんぞく と ⛰️ は はみ出さない */
-.kv-head .kv-streak, .kv-head .kv-grad { flex: none; }
-.kv-streak {
-  margin-left: auto;
-  background: var(--card);
-  border-radius: 999px;
-  padding: 4px 12px;
-  font-size: 16px;
-  font-weight: 700;
-  box-shadow: var(--shadow);
-  white-space: nowrap;
-}
-.kv-streak .hot { color: #ff6a3d; }
+/* 名前が 長いときは 名前を「…」で ちぢめ、きりかえ と ⛰️ は はみ出さない。きりかえ と ⛰️ は 右に よせる（2026-11-20。名前の すぐ 右だと 中途半端な 位置に 見えた） */
+.kv-head .kv-grad { flex: none; }
+/* がんばり｜おさいふ の きりかえ（おさいふを 使わない 子は がんばり だけ） */
+.kv-tabs { flex: none; margin-left: auto; display: flex; gap: 2px; padding: 4px; border-radius: 999px; background: var(--kid); box-shadow: var(--shadow); }
+.kv-tab { border: none; background: transparent; font: inherit; font-size: 18px; font-weight: 700; color: #fff; border-radius: 999px; padding: 4px 14px; display: flex; align-items: center; gap: 4px; white-space: nowrap; cursor: pointer; }
+.kv-tab[hidden] { display: none; }
+.kv-tab.on { background: var(--card); color: var(--kid); cursor: default; }
+.kv-tab .ico { width: 1.25em; height: 1.25em; }
 .kv-body { flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; min-height: 0; }
 
 .kv-cal { padding: 10px 12px; }
@@ -400,7 +414,7 @@ body.night .advice .tile.need { background: #4a2f44; }
   justify-content: center;
 }
 .kv-cell .wait { font-size: 16px; opacity: 0.7; }
-.kv-total { margin-top: auto; display: flex; gap: 10px; align-items: center; font-weight: 700; }
+.kv-total { margin-top: auto; display: flex; flex-direction: column; gap: 6px; font-weight: 700; }
 .kv-total .yen {
   background: #fff1c9;
   color: #b07a00;
@@ -408,7 +422,79 @@ body.night .advice .tile.need { background: #4a2f44; }
   padding: 3px 12px;
   font-size: 17px;
 }
-.kv-total .count { font-size: 16px; color: var(--muted); }
+.kv-total .count { font-size: 16px; color: var(--muted); white-space: nowrap; }
+.kv-total .yen { white-space: nowrap; }
+.kv-sums { display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: center; }
+/* もくひょうの はこ（数字は ここだけ。ホームの ゲージは 数字なし） */
+.kv-goal { background: #fff8de; border-radius: 16px; padding: 6px 12px 8px; }
+.kv-goal-head { display: flex; justify-content: space-between; gap: 8px; font-size: 16px; color: #b07a00; white-space: nowrap; }
+body.night .kv-goal { background: #3e3826; }
+/* 「みました」まちの ポイント（kids.js。ゲージの うすい しまと 一言） */
+.kv-wait { display: flex; align-items: center; gap: 4px; margin-top: 4px; font-size: 14px; color: #a07a30; white-space: nowrap; overflow: hidden; }
+.kv-wait b { font-weight: 700; flex: none; }
+.kv-wait span { overflow: hidden; text-overflow: ellipsis; }
+.kv-wait .ico { width: 1.15em; height: 1.15em; }
+body.night .kv-wait { color: #e8c977; }
+.kg-wait { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 999px;
+  background: repeating-linear-gradient(-45deg, rgba(255, 210, 63, 0.75) 0 5px, rgba(255, 210, 63, 0.3) 5px 10px); }
+.kid-goal .kg-wait { background: repeating-linear-gradient(-45deg, rgba(255, 255, 255, 0.6) 0 5px, rgba(255, 255, 255, 0.25) 5px 10px); }
+/* とどいたら「こうかんした」（おうちの人。取り消しは ない） */
+.kv-exchange { border: none; border-radius: 999px; padding: 2px 12px; background: #f5a623; color: #fff; font: inherit; font-size: 15px; font-weight: 700; white-space: nowrap; }
+.kv-exchange .ico { width: 1.1em; height: 1.1em; }
+/* 低い 画面（960×480 など）: もくひょうの はこを 1行に（もくひょう ⭐44/50・ゲージ・あと6） */
+@media (max-height: 560px) {
+  .kv-goal { display: flex; align-items: center; gap: 8px; padding: 4px 10px; }
+  .kv-goal-head { display: contents; }
+  .kv-goal-head > span:last-child { order: 2; }
+  .kv-goal .kv-gauge { order: 1; flex: 1; margin-top: 0; }
+  .kv-goal .kv-gauge .kg-star { display: none; }
+  /* 1行の はこでは ゲージが ちぢむので、一言は 出さない（ゲージの しまは 出る） */
+  .kv-wait { display: none; }
+  .kv-total { gap: 4px; }
+  /* 6週ある 月でも 下の はこが 切れないように マスを 少し 低く */
+  .kv-cell { height: 38px; }
+  .kv-cell .flower .ico { width: 26px; height: 26px; }
+}
+body.night .kv-goal-head { color: #ffd76a; }
+
+/* もくひょうの ゲージ（ホームの カードと がんばりカレンダー。kids.js の goalGauge）:
+   左に ⭐（ポイントの しるし）、右に 旗。8割で「もうすこし！」、とどいた 日は「たっせい！」 */
+.kid-goal, .kv-gauge { display: flex; align-items: center; gap: 6px; width: 100%; min-width: 0; }
+.kg-star, .kg-flag { flex: none; display: flex; }
+.kg-star .ico, .kg-flag .ico { width: 26px; height: 26px; vertical-align: 0; }
+.kg-track { position: relative; flex: 1; min-width: 0; height: 22px; border-radius: 999px; background: rgba(255, 255, 255, 0.5); overflow: hidden; }
+.kg-fill { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 999px; background: #ffd23f; }
+.kg-word { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; color: #8a4b00; white-space: nowrap; }
+.kid-goal { max-width: 300px; margin-top: 4px; }
+/* ホームの カードの 上では、空きを 暗く・たまった ぶんを 白に（空きが 明るいと たまって いるように 見えるため。11-16） */
+.kid-goal .kg-track { background: rgba(0, 0, 0, 0.16); }
+.kid-goal .kg-fill { background: rgba(255, 255, 255, 0.95); }
+.kid-goal .kg-word { color: #6b5040; }
+.goal-reached .kid-goal .kg-fill { background: #ffd75e; }
+.goal-reached .kid-goal .kg-word { color: #7a4a00; }
+.kv-gauge { margin-top: 4px; }
+.kv-gauge .kg-track { background: rgba(0, 0, 0, 0.08); height: 18px; }
+body.night .kv-gauge .kg-track { background: rgba(255, 255, 255, 0.15); }
+.kids.mode-row .kid-goal { gap: 3px; margin-top: 2px; }
+.kids.mode-row .kg-star .ico, .kids.mode-row .kg-flag .ico { width: 18px; height: 18px; }
+.kids.mode-row .kid-goal .kg-track { height: 16px; }
+.kids.mode-row .kid-goal .kg-word { font-size: 11px; }
+.kids.tally-small .kid-goal { margin-top: 0; }
+.kids.tally-small .kid-goal .kg-track { height: 16px; }
+.kids.tally-small .kid-goal .kg-star .ico, .kids.tally-small .kid-goal .kg-flag .ico { width: 20px; height: 20px; }
+/* まるい アイコンの ときは ゲージだけ（⭐と 旗・ことばは 出さない） */
+.kids.mode-icon .kid-goal { width: 70%; margin-top: 2px; }
+.kids.mode-icon .kid-goal .kg-star, .kids.mode-icon .kid-goal .kg-flag, .kids.mode-icon .kid-goal .kg-word { display: none; }
+.kids.mode-icon .kid-goal .kg-track { height: 8px; }
+/* もくひょうに とどいたら（こうかんするまで）: カードの 下の ほうだけ うすく 金色に（ふちは 光らせない。えらんだ ように 見えるので。
+   11-16 に 全体の グラデーションから 弱めた。color-mix を つかわず 重ねて ふるい WebView でも 同じ 色に） */
+.kid-btn.goal-reached { background: linear-gradient(180deg, rgba(242, 201, 76, 0) 45%, rgba(242, 201, 76, 0.55)), var(--kid); }
+
+/* 設定の もくひょう（子どもごと） */
+.settings .s-goals { list-style: none; margin: 4px 0 8px; padding: 0; }
+.settings .s-goals li { display: flex; align-items: center; gap: 10px; padding: 6px 0; border-bottom: 2px dashed #f0dcd4; }
+.settings .s-goals .g-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.settings .s-goals input[type=number] { width: 6em; }
 
 .kv-tasks { padding: 12px 14px; }
 .kv-tasks-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
@@ -452,7 +538,7 @@ body.night .advice .tile.need { background: #4a2f44; }
 .kv-list li.done .box { animation: pop 0.35s ease-out; }
 .kv-list .box .ico { width: 36px; height: 36px; vertical-align: 0; }
 .kv-list li.locked { opacity: 0.85; }
-.kv-list .name { font-size: 20px; font-weight: 700; line-height: 1.25; word-break: keep-all; overflow-wrap: anywhere; }   /* 分かち書きの すきまで 折りかえす */
+.kv-list .name { font-size: 20px; font-weight: 700; line-height: 1.25; word-break: keep-all; word-break: auto-phrase; overflow-wrap: anywhere; }   /* 分かち書きの すきまで 折りかえす。漢字の 文は 文節で（auto-phrase。効かない ブラウザは keep-all の まま） */
 .kv-list li.done .name { color: var(--muted); }
 .kv-list .money { margin-left: auto; flex: none; font-size: 15px; font-weight: 700; color: #b07a00; background: #fff1c9; border-radius: 999px; padding: 2px 10px; }
 @keyframes pop { 0% { transform: scale(0.6); } 70% { transform: scale(1.2); } 100% { transform: scale(1); } }
@@ -506,21 +592,14 @@ body.night .advice .tile.need { background: #4a2f44; }
 .kv-list .go { flex: none; margin-left: auto; border: none; border-radius: 999px; padding: 5px 12px; background: var(--kid); color: #fff; font: inherit; font-size: 15px; font-weight: 700; white-space: nowrap; box-shadow: 0 3px 0 rgba(0, 0, 0, 0.12); }
 .kv-list .go:active { transform: translateY(2px); box-shadow: none; }
 .kv-list .go + .money { margin-left: 0; }
-/* 押したあと（まだ できて いない あいだ）: 丸と 火が 心ぞうの ように「ドクン、ドクン」と 大きく。名前は ゆらさず 同じ 拍子で 太く なる
-   （字は Medium と Bold しか ないので、太さは 字の まわりの 影で ふやす）。丸は 1.35倍まで（行の すきま 8px に おさまる） */
+/* 押したあと（まだ できて いない あいだ）: 丸と 火が 心ぞうの ように「ドクン、ドクン」と 大きく。丸は 1.35倍まで（行の すきま 8px に おさまる）。
+   名前を 太く する 動きは 描きなおしが 重いので やめた（2026-11-05。火で 十分 目立つ） */
 .kv-list li.started:not(.done) .box { border-style: dashed; animation: go-pulse 1.2s ease-in-out infinite; }
 .kv-list li.started:not(.done) .box .ico { animation: go-flame 1.2s ease-in-out infinite; }
-.kv-list li.started:not(.done) .name { animation: go-bold 1.2s ease-in-out infinite; }
 .kv-list li.started .box .ico { width: 28px; height: 28px; }
 .kv-list .self .ico { width: 22px; height: 22px; margin-left: 6px; vertical-align: -3px; }
 @keyframes go-pulse { 0%, 70%, 100% { transform: scale(1); } 14% { transform: scale(1.35); } 28% { transform: scale(1.06); } 42% { transform: scale(1.26); } }
-@keyframes go-flame { 0%, 70%, 100% { transform: scale(1) rotate(0); } 14% { transform: scale(1.3) rotate(-8deg); } 28% { transform: scale(1.05) rotate(6deg); } 42% { transform: scale(1.22) rotate(-4deg); } }
-@keyframes go-bold {
-  0%, 70%, 100% { text-shadow: 0 0 0 transparent, 0 0 0 transparent, 0 0 0 transparent, 0 0 0 transparent; }
-  14%, 42% { text-shadow: 0.7px 0 0 currentColor, -0.7px 0 0 currentColor, 0 0.5px 0 currentColor, 0 -0.5px 0 currentColor; }
-  28% { text-shadow: 0.2px 0 0 currentColor, -0.2px 0 0 currentColor, 0 0.1px 0 currentColor, 0 -0.1px 0 currentColor; }
-}
-.kv-go { position: absolute; inset: 0; pointer-events: none; overflow: hidden; z-index: 5; }
+@keyframes go-flame { 0%, 70%, 100% { transform: scale(1) rotate(0); } 14% { transform: scale(1.3) rotate(-8deg); } 28% { transform: scale(1.05) rotate(6deg); } 42% { transform: scale(1.22) rotate(-4deg); } }.kv-go { position: absolute; inset: 0; pointer-events: none; overflow: hidden; z-index: 5; }
 .kv-go .go-flash { position: absolute; left: 50%; top: 50%; width: 140vmax; height: 140vmax; margin: -70vmax 0 0 -70vmax; border-radius: 50%;
   background: radial-gradient(circle, var(--kid-soft, #fff3b0) 0%, rgba(255, 255, 255, 0) 60%); animation: go-flash 1.6s ease-out forwards; }
 .kv-go .go-ray { position: absolute; left: 50%; top: 50%; width: 16px; height: 46%; margin-left: -8px; transform-origin: 50% 0; border-radius: 8px;
@@ -592,6 +671,7 @@ body.night .advice .tile.need { background: #4a2f44; }
   padding: 8px 10px;
 }
 .events .mark { flex: none; font-size: 18px; line-height: 1.4; }
+.events .time { flex: none; font-size: 16px; font-weight: 700; line-height: 1.6; color: var(--pink); font-variant-numeric: tabular-nums; white-space: nowrap; }
 .events .title { font-size: 19px; font-weight: 700; line-height: 1.3; overflow-wrap: break-word; min-width: 0; }
 .events li.empty { justify-content: center; color: var(--muted); font-size: 19px; background: transparent; }
 
@@ -661,9 +741,6 @@ body.lowpower *, body.lowpower *::before, body.lowpower *::after {
 /* 設定画面のタブ（がめん / こども） */
 .settings .s-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
 .settings .s-head h2 { margin: 0; }
-.settings .s-tabs { display: flex; gap: 8px; }
-.settings .s-tabs button { background: transparent; color: var(--text); padding: 6px 20px; }
-.settings .s-tabs button.on { background: var(--orange); color: #fff; }
 .settings button.small { font-size: 18px; padding: 4px 14px; }
 
 /* こどもの一覧 */
@@ -682,33 +759,13 @@ body.lowpower *, body.lowpower *::before, body.lowpower *::after {
   flex: none;
 }
 
-/* みんなの目標（トップの見出しの よこ） */
+/* がんばりカレンダーの 見出し */
 .kids-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
 .kids-head h2 { margin: 0; }
 /* 見出しは 改行しない（字の 幅が 少し 広い 端末で「がんばり / カレンダー」「きょうの / やること」と 2行に なった） */
 .kids-head h2, .kv-tasks-head h2 { white-space: nowrap; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
-.goal-pill { flex: none; }
-.goal-pill {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  border: none;
-  border-radius: 999px;
-  padding: 2px 10px 2px 6px;
-  background: #fff3c9;
-  color: #b07a00;
-  font: inherit;
-  font-size: 15px;
-  font-weight: 700;
-}
-.goal-pill[hidden] { display: none; }
-.goal-pill .gp-icon { font-size: 20px; }
-.goal-pill .gp-bar { width: 70px; height: 10px; border-radius: 999px; background: rgba(0, 0, 0, 0.1); overflow: hidden; }
-.goal-pill .gp-bar span { display: block; height: 100%; background: #f5b82e; border-radius: 999px; }
-.goal-pill.reached { background: #f5b82e; color: #fff; }
-body.night .goal-pill { background: #4a4030; color: #ffd76a; }
 
-/* できるようになったこと（いつもの に まとめた やること）*/
+/* できるようになったこと（「もう できる」に まとめた やること）*/
 .kv-grad {
   border: none;
   font: inherit;
@@ -754,7 +811,7 @@ body.night .goal-pill { background: #4a4030; color: #ffd76a; }
 .grv-board .kv-close { position: absolute; top: 14px; left: 14px; }
 .grv-hello { margin: 0 0 10px; font-size: 22px; font-weight: 700; color: var(--kid); }
 .grv-hello b { display: block; font-size: 40px; color: #ff6a3d; }
-.grv-title { font-size: 26px; font-weight: 700; color: var(--kid); padding: 0 40px; word-break: keep-all; overflow-wrap: anywhere; }
+.grv-title { font-size: 26px; font-weight: 700; color: var(--kid); padding: 0 40px; word-break: keep-all; word-break: auto-phrase; overflow-wrap: anywhere; }
 .grv-title .honor { font-size: 0.55em; }
 .grv-count { font-size: 18px; color: var(--muted); margin: 2px 0 10px; }
 .grv-steps { list-style: none; margin: 0; padding: 0 0 4px; overflow-y: auto; min-height: 0; text-align: left; scrollbar-width: thin; }
@@ -787,66 +844,10 @@ body.night .grv-steps .st-date { color: var(--muted); }
 body.portrait .grv-board { padding: 18px 18px 20px; }
 body.portrait .grv-steps li { width: 82%; margin-left: calc(var(--i) * 3%); }
 body.portrait .grv-title { font-size: 22px; }
-body.portrait .kv-grad { order: 4; font-size: 16px; padding: 6px 12px; }
+body.portrait .kv-grad { font-size: 16px; padding: 6px 12px; }
 
-.goal-view {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.45);
-  z-index: 6;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.goal-view[hidden] { display: none; }
-.gv-board {
-  position: relative;
-  width: 760px;
-  background: var(--card);
-  color: var(--text);
-  border-radius: 30px;
-  padding: 20px 40px 26px;
-  text-align: center;
-}
-.gv-board .kv-close { position: absolute; top: 14px; left: 14px; }
-.gv-icon { font-size: 72px; line-height: 1.1; }
-.gv-title { font-size: 34px; font-weight: 700; margin: 4px 0 14px; }
-.gv-bar { display: flex; height: 34px; border-radius: 999px; background: rgba(0, 0, 0, 0.08); overflow: hidden; }
-.gv-bar span { height: 100%; }
-.gv-left { font-size: 22px; margin: 12px 0 8px; color: var(--muted); }
-.gv-left b { font-size: 30px; color: var(--orange); }
-.gv-kids { list-style: none; margin: 0; padding: 0; display: flex; justify-content: center; flex-wrap: wrap; gap: 8px 24px; font-size: 20px; }
-.gv-kids li { display: flex; align-items: center; gap: 6px; }
-.gv-kids .dot { width: 16px; height: 16px; border-radius: 50%; background: var(--kid); }
-
-/* がんばりカレンダーの ごほうび（ポイントのとき） */
-.kv-reward-btn {
-  border: none;
-  border-radius: 999px;
-  padding: 4px 14px;
-  background: var(--kid);
-  color: #fff;
-  font: inherit;
-  font-size: 17px;
-  font-weight: 700;
-}
-.kv-rewards { list-style: none; margin: 0; padding: 0; flex: 1; overflow-y: auto; min-height: 0; }
-.kv-rewards[hidden] { display: none; }
-.kv-rewards li { display: flex; align-items: center; gap: 10px; padding: 8px 4px; border-bottom: 2px dashed var(--kid-soft); }
-.kv-rewards .icon { font-size: 36px; }
-.kv-rewards .body { flex: 1; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
-.kv-rewards .name { font-size: 20px; font-weight: 700; display: flex; justify-content: space-between; gap: 8px; }
-.kv-rewards .name small { font-size: 15px; color: var(--muted); white-space: nowrap; }
-.kv-rewards .bar { height: 12px; border-radius: 999px; background: var(--kid-soft); overflow: hidden; }
-.kv-rewards .bar span { display: block; height: 100%; background: var(--kid); border-radius: 999px; }
-.kv-rewards .hint { font-size: 15px; color: var(--muted); }
-.kv-rewards li.ok .hint { color: var(--kid); font-weight: 700; }
-.kv-total .yen, .kv-reward-btn { white-space: nowrap; }
-.kv-total.point .yen { font-size: 16px; }
-.kv-total.point .kv-reward-btn { margin-left: auto; }
 .kv-grid[hidden] { display: none; }
 
-.settings .buttons .admin-btn { margin-right: auto; }
 
 /* 親モードの鍵 */
 .lock, .setup {
@@ -946,6 +947,11 @@ body.night .lk-keys button { background: rgba(255, 255, 255, 0.08); }
   #su-place img { height: 60px; }
   [data-step="usage"] .su-note { display: none; }
 }
+.su-board .su-yen input#su-rate { width: 120px; }
+.su-wallet-kids { list-style: none; margin: 14px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px 22px; font-size: 20px; }
+.su-wallet-kids input { width: 22px; height: 22px; vertical-align: -3px; }
+#su-wallet-box[hidden] { display: none; }
+#su-pin-keep[hidden] { display: none; }
 .su-pin-row { margin-top: 16px; display: flex; align-items: center; gap: 12px; font-size: 20px; }
 .su-pin-row[hidden] { display: none; }
 .su-pin-row input { flex: none; width: 120px; letter-spacing: 6px; }
@@ -965,6 +971,9 @@ body.night .lk-keys button { background: rgba(255, 255, 255, 0.08); }
 .su-board button.ghost { background: transparent; color: var(--text); }
 .su-board button.small { font-size: 18px; padding: 4px 16px; }
 .su-buttons button[hidden] { visibility: hidden; display: inline-block; }
+/* せまい スマホで「もどる」「保存する」が 2つ ならぶと 字が 折りかえして ボタンが 縦に のびていた（Galaxy S26。2026-11-05） */
+.su-buttons button { white-space: nowrap; }
+body.portrait .su-buttons button { padding: 8px 20px; }
 
 /* キーボードで 画面が ひくくなっても 入力欄まで スクロールできるように（margin: auto で はみでた ときは 上から ならべる） */
 .settings, .setup { overflow-y: auto; }
@@ -1021,11 +1030,11 @@ body.portrait .greeting { grid-column: 2; grid-row: 3; }
 /* がんばりカレンダー: カレンダーの下に きょうの やること */
 body.portrait .kv-body { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
 body.portrait .kv-title { font-size: 24px; }
-body.portrait .kv-streak { font-size: 14px; padding: 4px 10px; }
+body.portrait .kv-tab { font-size: 16px; padding: 4px 10px; }
 
 /* 重ねて出す画面は 盤面の幅に おさめる */
 .settings .panel { max-width: calc(var(--bw, 960px) - 20px); }
-.gv-board, .su-board { max-width: calc(var(--bw, 960px) - 20px); }
+.su-board { max-width: calc(var(--bw, 960px) - 20px); }
 body.portrait .settings .row { flex-wrap: wrap; }
 body.portrait .settings .label { width: 100%; }
 body.portrait .settings .panel { max-height: calc(var(--bh, 480px) - 40px); }
@@ -1038,12 +1047,9 @@ body.portrait #su-place b { font-size: 17px; }
 body.portrait .su-names { grid-template-columns: 1fr; max-height: 420px; }
 body.portrait .su-area { flex-direction: column; }
 .settings .row[hidden] { display: none; }
-/* たておき: れんぞく は タイトルの下の行に、設定の ボタンは おりかえす */
-body.portrait .kv-head { flex-wrap: wrap; height: auto; row-gap: 6px; }
-body.portrait .kv-streak { order: 3; margin-left: 60px; }
+/* たておき: 設定の ボタンは おりかえす（子どもの 画面の 見出しは 1行の まま。2026-11-19） */
 .settings .buttons button { white-space: nowrap; }
 body.portrait .settings .buttons { flex-wrap: wrap; }
-body.portrait .settings .buttons .admin-btn { width: 100%; margin-right: 0; }
 .settings .s-kids select { font-size: 16px; max-width: 180px; min-width: 0; flex: 0 1 auto; text-overflow: ellipsis; }
 .settings .s-kids .k-moves { display: flex; gap: 4px; flex: none; }
 .settings .s-kids .k-moves button { width: 34px; height: 34px; min-width: 0; padding: 0; }
@@ -1109,6 +1115,8 @@ body.night .tu-dots span.on { background: var(--orange); }
 .tu-buttons { display: flex; align-items: center; gap: 12px; width: 100%; }
 .tu-hide { margin-right: auto; display: flex; align-items: center; gap: 8px; font-size: 18px; color: var(--muted); }
 .tu-hide input { width: 22px; height: 22px; }
+/* 2026-11-20 から 出さない。ボタンは 右に よせた まま */
+.tu-hide[hidden] { display: flex; visibility: hidden; }
 .tu-buttons button {
   font: inherit;
   font-size: 22px;
@@ -1122,6 +1130,7 @@ body.night .tu-dots span.on { background: var(--orange); }
 .tu-buttons button[hidden] { display: none; }
 body.portrait .tu-buttons { flex-wrap: wrap; }
 body.portrait .tu-hide { width: 100%; }
+body.portrait .tu-hide[hidden] { display: none; }
 .settings .buttons { flex-wrap: wrap; }
 #s-bright-status { font-size: 17px; color: var(--muted); }
 .settings button[hidden] { display: none; }
@@ -1151,7 +1160,7 @@ body.night .kv-cell.is-selected { background: rgba(255, 255, 255, 0.12); }
 }
 .kv-list .once.week { background: transparent; color: var(--kid); border: 2px solid var(--kid); }
 .kv-list li.weekdone { opacity: 0.6; }
-/* いつもの: 中身の 名前を 下に 小さく。かいだんの しるしを 名前の 前に */
+/* もう できる: 中身の 名前を 下に 小さく。かいだんの しるしを 名前の 前に */
 .kv-list .stairs { width: 1.2em; height: 1.2em; margin-right: 6px; vertical-align: -0.2em; }
 .kv-list .bundle-peek { display: inline-block; vertical-align: 0.15em; margin-left: 10px; font-size: 0.6em; font-weight: 700; color: #c0702c; background: #fff; border: 2px solid #f3c9a0; border-radius: 999px; padding: 1px 10px; white-space: nowrap; }
 body.night .kv-list .bundle-peek { background: transparent; color: #f3b27a; border-color: rgba(243, 178, 122, 0.5); }
@@ -1268,6 +1277,13 @@ body.portrait .bdv-go { min-width: 0; width: 100%; }
 }
 .qk-chips button.on { background: var(--kid, var(--orange)); color: #fff; }
 .qk-chips input[type=date] { font-size: 16px; padding: 4px 6px; }
+/* 見本の字は うすく（入れた字と まちがえないように。11-18 テスターの 声）。空のまま たそうと したら 枠を ピンクに */
+.qk-board input::placeholder { color: var(--muted); opacity: 0.6; }
+.qk-board input.need, .qk-board input.need:focus { border-color: var(--pink); outline: 2px solid var(--pink); outline-offset: 0; }
+/* 見出しは ことばの 切れ目で 折る（字の 幅が 広い 端末で「た／す」に 割れていた） */
+.qk-title { word-break: keep-all; font-size: clamp(17px, 5vw, 22px); }
+body.portrait .qk-title { font-size: clamp(17px, 5vw, 19px); }
+.kv-tasks-head .kv-add2 { flex: none; font-size: 14px; padding: 2px 10px; align-self: center; }
 .qk-error { margin: 0; min-height: 20px; color: var(--pink); font-size: 15px; }
 .qk-ok {
   align-self: flex-end;
@@ -1310,7 +1326,6 @@ body.portrait .qk-body { flex-direction: column; }
   padding: 12px 22px 14px;
 }
 .settings .s-title { margin: 0 0 8px; }
-.settings .s-body { display: flex; gap: 16px; flex: 1; min-height: 0; }
 .settings .s-nav { flex: none; width: 176px; display: flex; flex-direction: column; gap: 6px; }
 .settings .s-nav button {
   background: transparent;
@@ -1347,7 +1362,6 @@ body.portrait .qk-body { flex-direction: column; }
 .settings .s-help[hidden] { display: none; }
 .settings .s-help p { margin: 6px 0; }
 .settings .buttons { margin-top: 8px; }
-body.portrait .settings .s-body { flex-direction: column; }
 body.portrait .settings .s-nav { width: auto; flex-direction: row; flex-wrap: wrap; }
 body.portrait .settings .s-nav button { font-size: 16px; padding: 4px 12px; }
 /* 項目を かえても 大きさが かわらないように */
@@ -1433,6 +1447,11 @@ body.portrait .tu-buttons button:first-of-type { grid-column: 2; }
 .tu-board { height: calc(var(--bh, 480px) - 20px); min-height: 0; }
 body.portrait .tu-board { height: min(720px, calc(var(--bh, 960px) - 40px)); }
 .tu-text { min-height: 0; overflow-y: auto; }
+/* 文だけの ページ（おうちの人。画面の例なし）は 下が 大きく 空くので、見出しと 文を まとめて 上下の 真ん中に
+   （ボタンの 位置は そのまま。長くて スクロール する ときは 上下の 空きが 0 に なる） */
+.tu-board.for-parent:not(.has-preview) .tu-title { margin-top: auto; }
+.tu-board.for-parent:not(.has-preview) .tu-text { flex: 0 1 auto; }
+.tu-board.for-parent:not(.has-preview) .tu-dots { margin-top: auto; }
 .tu-board.for-parent .tu-icon { font-size: 52px; }
 .tu-board.for-parent .tu-title { font-size: 26px; margin: 2px 0 8px; }
 .tu-board.for-parent .tu-text { font-size: 18px; }
@@ -1457,7 +1476,6 @@ body.portrait .tu-board { height: min(720px, calc(var(--bh, 960px) - 40px)); }
 .tm-side { display: flex; flex-direction: column; align-items: center; gap: 4px; }
 .tm-stamp { font-size: 64px; line-height: 1; }
 .tm-ok { font-size: 18px; font-weight: 700; color: #fff; background: var(--orange); border-radius: 999px; padding: 4px 16px; }
-.tm-streak { font-size: 16px; font-weight: 700; color: var(--orange); }
 
 /* 設定の QR コード（要望・問い合わせ、スマホから がんばり管理） */
 .settings .s-qr-row { display: flex; gap: 16px; align-items: flex-start; }
@@ -1486,6 +1504,8 @@ body.portrait .settings .s-qr-row { align-items: stretch; } body.portrait .setti
 /* ボードの 高さは ほかの ページと おなじ。見本が のこりを うめる */
 .tu-board.for-parent.has-preview .tu-text { flex: 0 1 auto; }
 .tu-board.for-parent.has-preview .tu-preview { flex: 1 0 170px; }
+/* 低い 画面（960×480 など）は 画面の例を 少し 低く して、文を 隠さない（操作の ページに 鍵の 一文を 足した。11-18） */
+@media (max-height: 520px) { .tu-board.for-parent.has-preview .tu-preview { flex-basis: 130px; } }
 body:not(.portrait) .tu-board.for-parent.has-preview .tu-text { font-size: 18px; }
 /* 文が 入りきらない ときの スクロールバーは 細く うすく */
 .tu-text { scrollbar-width: thin; scrollbar-color: rgba(128, 128, 128, 0.45) transparent; }
@@ -1507,7 +1527,6 @@ body:not(.portrait) .tu-board.for-parent.has-preview .tu-text { font-size: 18px;
 body.night .kv-status .kv-approve { background: transparent; color: #6fd39b; border-color: #6fd39b; }
 
 /* はじめての 設定: 使い方（置く・スマホだけ → 1台・2台） */
-.su-share { margin-top: 10px; }
 .su-q { font-weight: 700; margin: 0 0 6px; }
 .su-cards.small button { padding: 8px 10px; font-size: 18px; }
 .su-cards button:disabled { opacity: 0.4; }
@@ -1520,7 +1539,7 @@ body.night .kv-status .kv-approve { background: transparent; color: #6fd39b; bor
 .su-guide { margin: 10px 0 0; padding: 10px 14px; border-radius: 14px; border: 2px solid var(--orange); background: var(--cream); font-size: 15px; line-height: 1.6; color: var(--text); }
 .su-guide b { display: block; color: var(--orange); }
 .su-cards button.how-only small, .settings .u-card.how-only small { color: var(--text); }
-#su-place button { padding: 10px; } .su-share + .su-note, #su-place + .su-share + .su-note { margin-top: 6px; }
+#su-place button { padding: 10px; }
 .su-board h2 { white-space: normal; }
 
 /* 月の 見出しの 右に「1回だけの やること」を たす ボタン（おうちの人。鍵の あと） */
@@ -1541,7 +1560,7 @@ body.night .kv-status .kv-approve { background: transparent; color: #6fd39b; bor
 .settings .panel { width: calc(var(--bw, 960px) - 12px); max-width: none; height: calc(var(--bh, 480px) - 12px); max-height: none; }
 body.portrait .settings .panel { height: calc(var(--bh, 960px) - 12px); }
 
-/* 設定の「がんばり項目」タブ（admin.html を 中に 出す） */
+/* 設定の「やること」タブ（admin.html を 中に 出す） */
 .settings .s-page-frame { height: 100%; }
 /* タブごとの 保存。保存して いない 変更が ある タブには ● */
 .settings .s-saved:empty { display: none; }
@@ -1559,6 +1578,21 @@ body.portrait .settings .buttons .s-saved { position: absolute; left: 50%; botto
 .settings .s-saved { font-size: 15px; color: var(--muted); }
 .settings .s-save-btn:disabled { opacity: 0.4; }
 #s-nav button.dirty::after { content: " ●"; color: var(--orange); font-size: 0.8em; }
+/* 鍵が「なし」の あいだ「おうちの人」の タブに つける しるし（保存して いない ● とは 別。左に 小さな ピンクの 点） */
+#s-nav button.hint::before { content: ""; display: inline-block; width: 0.45em; height: 0.45em; border-radius: 50%;
+  background: var(--pink); margin-right: 0.3em; vertical-align: 0.15em; }
+#s-nav button.hint.on::before { background: currentColor; }
+/* おうちの人: ファイルから 戻す（ファイルを えらぶ 欄は 隠して、ボタンの 見た目に） */
+.settings .s-file-btn { font-size: 18px; padding: 4px 14px; border-radius: 999px; border: 2px solid var(--orange); color: var(--text); cursor: pointer; }
+.settings .s-file-btn input { display: none; }
+/* おうちの人: Google ドライブの 控え（Web 版だけ）。スマホでは ボタンを 折り返す。押して いる 間は うすく */
+.settings .s-drive-row { flex-wrap: wrap; }
+.settings .s-drive-row button:disabled { opacity: 0.5; cursor: default; }
+.settings .s-drive-stale { color: var(--text); }
+.settings .s-parent-name { width: 12em; max-width: 100%; }
+.settings .s-procode-row { flex-wrap: wrap; }
+.settings .s-procode { width: 12em; max-width: 100%; }
+.settings #s-procode-btn:disabled { opacity: 0.5; cursor: default; }
 .settings .s-page-frame[hidden] { display: none; }
 .settings #s-admin-frame, .settings #s-day-frame { display: block; width: 100%; height: 100%; border: 0; background: transparent; }
 .settings .s-nav { scrollbar-width: none; } .settings .s-nav::-webkit-scrollbar { display: none; }
@@ -1618,6 +1652,11 @@ body:not(.portrait) .settings .s-head { gap: 10px; }
 #setup .su-names input { flex: 1; min-width: 0; width: auto; }
 #setup .su-names select { max-width: 185px; }
 body.portrait #setup .su-names { grid-template-columns: minmax(0, 1fr); }
+/* スマホ: 名前の 欄が せまく「なまえ」が 切れた ので、年齢の めやすは 名前の 下の 行に（2026-11-19） */
+@media (max-width: 480px) {
+  #setup .su-names li { flex-wrap: wrap; }
+  #setup .su-names select { flex: 0 0 calc(100% - 40px); max-width: none; margin-left: 40px; }
+}
 .su-tasks { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
 .su-tasks input { width: 100%; box-sizing: border-box; }
 .su-yen { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 10px; font-size: 19px; font-weight: 700; }
@@ -1662,9 +1701,27 @@ body.lowpower .cn-spin { animation: cn-spin 0.8s linear infinite !important; }
 /* 電池の おしらせ */
 .settings .s-battery-warn { display: block; width: 100%; margin: 6px 0 0; padding: 6px 12px; border: none; border-radius: 10px; background: rgba(255, 134, 168, 0.18); color: var(--pink); font: inherit; font-size: 15px; font-weight: 700; text-align: left; }
 .settings .s-battery-warn[hidden] { display: none; }
+/* 新しい版の おしらせ（大人向け） */
+.upd { z-index: 40; }
+.upd-board { position: relative; width: min(460px, calc(100vw - 32px)); background: var(--card); border-radius: 20px; padding: 20px 20px 18px; box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25); }
+.upd-board .kv-close { position: absolute; top: 8px; right: 10px; left: auto; }
+.upd-text { margin: 0 56px 6px 0; font-size: 19px; font-weight: 700; color: var(--text); line-height: 1.5; }
+.upd-note { margin: 0 0 14px; font-size: 14px; color: var(--muted); }
+.upd-note[hidden], .upd-btns button[hidden] { display: none; }
+.upd-btns { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+.upd-btns button { font: inherit; font-size: 15px; font-weight: 700; padding: 7px 14px; border-radius: 999px; border: 2px solid #ff8a3d; background: #ff8a3d; color: #fff; cursor: pointer; }
+.upd-btns button.ghost { background: transparent; color: #c45a10; }
+.s-update-check { margin-top: 8px; gap: 10px; align-items: center; }
+.s-update-check button[hidden] { display: none; }
+.settings .s-update { display: flex; align-items: center; gap: 10px; margin: 6px 0 0; padding: 6px 12px; border-radius: 10px; background: rgba(255, 138, 61, 0.16); color: #c45a10; font-size: 15px; font-weight: 700; }
+.settings .s-update[hidden], .settings .s-update button[hidden] { display: none; }
+.settings .s-update-text { flex: 1; min-width: 0; }
+.settings .s-update button { flex: none; padding: 6px 14px; border: none; border-radius: 999px; background: #ff8a3d; color: #fff; font: inherit; font-size: 15px; font-weight: 700; cursor: pointer; }
 .batt-chip { position: fixed; left: 8px; bottom: 6px; z-index: 5; padding: 2px 10px; border-radius: 999px; background: rgba(255, 134, 168, 0.85); color: #fff; font-size: 13px; font-weight: 700; pointer-events: none; }
 .batt-chip[hidden] { display: none; }
 .lock-chip { left: auto; right: 8px; background: rgba(120, 110, 140, 0.8); }
+.settings .s-ip-changed { margin: 4px 0 8px; padding: 6px 12px; border-radius: 10px; background: #fff1e6; color: #c45a10; font-weight: 700; font-size: 15px; }
+.settings .s-ip-changed[hidden] { display: none; }
 .lk-note { font-size: 14px; color: var(--muted); margin: 8px 0 0; }
 .lk-note[hidden], .lk-forgot[hidden] { display: none; }
 .lk-forgot { margin-top: 6px; border: 0; background: none; color: var(--muted); font: inherit; font-size: 14px; text-decoration: underline; padding: 4px 8px; }
@@ -1677,8 +1734,6 @@ body.lowpower .cn-spin { animation: cn-spin 0.8s linear infinite !important; }
 .kid-btn .dots { display: flex; gap: 5px; justify-content: center; flex-wrap: wrap; }
 .kid-btn .dots i { width: 13px; height: 13px; border-radius: 50%; border: 2px solid rgba(255, 255, 255, 0.95); box-sizing: border-box; }
 .kid-btn .dots i.on { background: #fff; }
-.kid-btn .did { display: flex; flex-direction: column; align-items: center; max-width: 100%; font-size: 15px; font-weight: 700; line-height: 1.35; opacity: 0.95; }
-.kid-btn .did > span { max-width: 100%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .kids.mode-row .kid-btn .dots i { width: 10px; height: 10px; }
 .kids.mode-icon .kid-btn .dots { display: none; }
 /* ホームの ボタンの まる（できたら はなまる） */
@@ -1788,13 +1843,16 @@ body:not(.portrait) .today:has(.clock.analog) .wd-side { display: none; }
 .kv-list-wrap { position: relative; flex: 1; min-height: 0; display: flex; flex-direction: column; }
 .kv-more { position: absolute; left: 50%; transform: translateX(-50%); z-index: 2; border: none; border-radius: 999px; padding: 4px 16px; font: inherit; font-size: 15px; font-weight: 700; background: var(--kid); color: #fff; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18); white-space: nowrap; }
 .kv-more[hidden] { display: none; }
-.kv-more.up { top: 2px; }
-.kv-more.down { bottom: 2px; animation: kv-nudge 1.4s ease-in-out 3; }
+.kv-more.up { top: 0; }
+.kv-more.down { bottom: 0; animation: kv-nudge 1.4s ease-in-out 3; }
+/* はみだす ときだけ 上と 下に 帯の 場所（矢印は ここ。やることの 行には かさねない） */
+.kv-list-wrap.scrolls { padding: 28px 0; }
+.kv-list-wrap.scrolls .kv-more { padding: 2px 14px; font-size: 14px; }
 @keyframes kv-nudge { 0%, 100% { transform: translate(-50%, 0); } 50% { transform: translate(-50%, 4px); } }
 /* 上・下の はしを うすく して、つづきが ある ことを 見せる */
 .kv-list-wrap::before, .kv-list-wrap::after { content: ""; position: absolute; left: 0; right: 0; height: 26px; pointer-events: none; z-index: 1; opacity: 0; transition: opacity 0.2s; }
-.kv-list-wrap::before { top: 0; background: linear-gradient(var(--card), transparent); }
-.kv-list-wrap::after { bottom: 0; background: linear-gradient(transparent, var(--card)); }
+.kv-list-wrap::before { top: 28px; background: linear-gradient(var(--card), transparent); }
+.kv-list-wrap::after { bottom: 28px; background: linear-gradient(transparent, var(--card)); }
 .kv-list-wrap:has(.kv-more.up:not([hidden]))::before, .kv-list-wrap:has(.kv-more.down:not([hidden]))::after { opacity: 1; }
 /* 下の ひとこと と「みました」は 1行に、すこし 小さく */
 .kv-status { display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap; font-size: 16px; padding: 8px 12px; line-height: 1.3; }
@@ -1817,7 +1875,7 @@ body:not(.portrait) .today:has(.clock.analog) .wd-side { display: none; }
 .settings .s-way h4 { margin: 0 0 6px; font-size: 17px; }
 .settings .s-way .note { margin-top: 0; }
 .settings .s-way .note + .note { margin-top: 6px; }
-/* 「きょう」「こんげつ」を 大きく 目立たせる（白い うすい おびの 上に はなまる） */
+/* 「きょう」を 大きく 目立たせる（白い うすい おびの 上に はなまる） */
 .kid-btn .tally { gap: 8px; margin-top: 6px; padding: 4px 12px; border-radius: 999px; background: rgba(255, 255, 255, 0.24); }
 .kid-btn .tally .tl { font-size: 21px; }
 .kid-btn .tally .dots { gap: 4px; }
@@ -1838,7 +1896,7 @@ body:not(.portrait) .today:has(.clock.analog) .wd-side { display: none; }
 .kids.mode-row .kid-btn .tally.tight .num { font-size: 16px; }
 /* 名前の あとの「ちゃん」「くん」は 小さく（よこはばを とらない） */
 .kid-btn .name .honor { font-size: 0.55em; margin-left: 2px; opacity: 0.9; }
-/* ボタンが ひくい とき（Echo Show 5 など）: 「きょう」「こんげつ」を みんな そろえて 小さく */
+/* ボタンが ひくい とき（Echo Show 5 など）: 「きょう」と もくひょうを みんな そろえて 小さく */
 .kids.tally-small .kid-btn { gap: 2px; }
 .kids.tally-small .kid-btn .tally { margin-top: 0; padding: 1px 10px; gap: 4px; }
 .kids.tally-small .kid-btn .tally .tl { font-size: 15px; }
@@ -1846,8 +1904,6 @@ body:not(.portrait) .today:has(.clock.analog) .wd-side { display: none; }
 .kids.tally-small .kid-btn .tally .num { font-size: 19px; line-height: 22px; }
 /* 子どもの 画面の 見出しの「ちゃん」「くん」も 小さく */
 .kv-title .honor { font-size: 0.6em; margin-left: 2px; }
-/* まるい アイコンの ときは「こんげつ」を 出さない（ラベルが なく「きょう」と 見分けられない） */
-.kids.mode-icon .kid-btn .tally-month { display: none; }
 /* なおせない 日の やることを おしたとき、下の ひとことを ゆらす */
 .kv-status.nudge { animation: kv-shake 0.5s; }
 @keyframes kv-shake { 0%, 100% { transform: translateX(0); } 20%, 60% { transform: translateX(-6px); } 40%, 80% { transform: translateX(6px); } }
@@ -1878,6 +1934,9 @@ body.night .su-warn { background: #4a3a2e; color: #ffc9a3; }
 
 /* 日にちの ふりがな（words.js の dayHtml・dayUnit）。読みが ながくても 行の 高さが かわりすぎない ように 小さく */
 ruby.dr { ruby-position: over; ruby-align: center; }
+/* 漢字に ふりがな（子どもごとの kid.ruby。words.js の "ruby"）。読みは 小さく うすく、行の 高さを なるべく ふやさない */
+ruby { ruby-position: over; ruby-align: center; }
+ruby rt { font-size: max(0.5em, 8px); font-weight: 700; letter-spacing: 0; line-height: 1; opacity: 0.85; }
 ruby.dr rt { font-size: max(0.5em, 9px); font-weight: 700; letter-spacing: 0; line-height: 1; opacity: 0.85; }
 /* ホームの 大きな 日にちの「日」の ふりがな（words.js の dayUnit）。幅に かぞえない */
 .day .unit .du { position: relative; display: inline-block; }
@@ -1923,8 +1982,11 @@ body:not(.portrait) .tu-buttons #tu-back { grid-column: 2; grid-row: 1; }
 body:not(.portrait) .tu-buttons #tu-next { grid-column: 3; grid-row: 1; }
 body:not(.portrait) .tu-hide { grid-column: 4; grid-row: 1; justify-self: end; white-space: normal; word-break: keep-all; text-align: left; line-height: 1.3; min-width: 0; }
 .tu-hide input { flex: none; }
-/* できるようになったこと: 無料は 数を 見せる バッジ（押せる 見た目に しない）。Pro は 押すと 段の 地図 */
-.kv-grad.badge { box-shadow: none; background: transparent; padding-left: 4px; padding-right: 4px; cursor: default; pointer-events: none; }
+/* できるようになったこと: 無料は 数を 見せる バッジ（押せる 見た目に しない）。Pro は 押すと 段の 地図。
+   無料で 押したら 階段が ぴょんと はねるだけ（押しても なにも おきないと こわれて 見えた。2026-11-19） */
+.kv-grad.badge { box-shadow: none; background: transparent; padding-left: 4px; padding-right: 4px; cursor: default; }
+.kv-grad.hop .stairs { animation: grad-hop 0.5s ease-out; }
+@keyframes grad-hop { 0%, 100% { transform: translateY(0); } 35% { transform: translateY(-8px) scale(1.1); } 70% { transform: translateY(0) scale(0.96); } }
 
 /* 段の 地図（Pro。stairs.js）。地図の 中の 色は 昼・夜で かえない（絵として 見せる） */
 .grv-map { display: none; }
@@ -1948,7 +2010,7 @@ body:not(.portrait) .tu-hide { grid-column: 4; grid-row: 1; justify-self: end; w
 .sm.phone .sm-name { font-size: 15px; }
 .sm-card { position: absolute; box-sizing: border-box; background: rgba(255, 255, 255, 0.94); border: 4px solid #ffd76a; border-radius: 22px; padding: 8px 16px 12px; text-align: center; color: #4a3e3e; pointer-events: none; }
 .sm-card-head { font-size: 16px; font-weight: 700; color: #e8708f; }
-.sm-card-name { display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 26px; font-weight: 700; line-height: 1.3; word-break: keep-all; overflow-wrap: anywhere; }
+.sm-card-name { display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 26px; font-weight: 700; line-height: 1.3; word-break: keep-all; word-break: auto-phrase; overflow-wrap: anywhere; }
 .sm-card-name img { width: 36px; height: 36px; flex: none; }
 .sm-card-comment { margin-top: 4px; font-size: 15px; color: #8a7272; overflow-wrap: anywhere; }
 .sm.phone .sm-card-name { font-size: 20px; }
@@ -2002,4 +2064,118 @@ body.portrait .settings .pro-features { grid-template-columns: minmax(0, 1fr); }
 .settings .pro-cmt-saved { font-size: 14px; color: var(--muted); }
 /* かんたん設定の 毎日の お知らせ（スマホの アプリだけ。setup.js） */
 .su-check { display: flex; align-items: center; gap: 10px; margin: 12px 0 0; font-size: 16px; line-height: 1.5; }
+.su-check[hidden] { display: none; }   /* スマホ以外で 出て、押しても 入らなかった（2026-11-19） */
 .su-check input { width: 22px; height: 22px; flex: none; }
+
+/* ---- おさいふ（wallet.js。2026-11-18）。がんばりカレンダーの 中の もう1つの ページ ---- */
+/* 入口は 見出しの きりかえ［がんばり｜おさいふ］（.kv-tabs）。おさいふの ときも 見出しは そのまま */
+.kid-view.wallet-mode .kv-body:not(.wl-body) { display: none; }
+.wl-body[hidden] { display: none; }
+.wl-card { display: flex; flex-direction: column; gap: 10px; padding: 14px 16px; min-height: 0; }
+.wl-head { display: flex; align-items: center; gap: 10px; }
+.wl-head h2 { margin: 0; font-size: 22px; color: var(--orange); white-space: nowrap; }
+.wl-wants, .wl-log { list-style: none; margin: 0; padding: 0; flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
+.wl-none { color: var(--muted); font-size: 16px; font-weight: 700; padding: 8px 4px; }
+.wl-want { flex: none; background: #fff8de; border-radius: 16px; padding: 10px 14px; display: flex; flex-direction: column; gap: 6px; cursor: pointer; }
+.wl-want-row { display: flex; align-items: baseline; gap: 10px; }
+.wl-want .nm { flex: 1; min-width: 0; font-size: 20px; font-weight: 700; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wl-want .pr { flex: none; font-size: 18px; font-weight: 700; color: #b07a00; white-space: nowrap; }
+.wl-track { position: relative; height: 16px; border-radius: 999px; background: #fff; box-shadow: inset 0 0 0 2px #ffd75e; overflow: hidden; }
+.wl-fill { position: absolute; top: 0; bottom: 0; left: 0; background: #ffd75e; border-radius: 999px; }
+.wl-left { font-size: 15px; font-weight: 700; color: #b07a00; text-align: right; }
+.wl-want.can { background: #e8f7ec; }
+.wl-want.can .wl-track { box-shadow: inset 0 0 0 2px #7fd19b; }
+.wl-want.can .wl-fill { background: #7fd19b; }
+.wl-want.can .pr, .wl-want.can .wl-left { color: #2e8b57; }
+.wl-bal { flex: none; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.wl-pocket { border-radius: 16px; padding: 8px 14px; background: #fff3ea; min-width: 0; }
+.wl-pocket.kept { background: #eef4ff; }
+.wl-pocket .lb { font-size: 15px; font-weight: 700; color: var(--muted); }
+.wl-pocket .lb img.ico { width: 1.5em; height: 1.5em; vertical-align: -0.4em; margin-right: 2px; }
+.wl-pocket .v { font-size: 28px; font-weight: 800; color: var(--text); white-space: nowrap; line-height: 1.2; }
+.wl-pocket .v.minus { color: #c45a10; }
+.wl-pocket .nt { font-size: 13px; color: var(--muted); font-weight: 700; }
+.wl-pocket.kept { cursor: pointer; padding-right: 8px; }
+.wl-pocket.kept .lb { display: flex; align-items: center; justify-content: space-between; gap: 6px; white-space: nowrap; }
+.wl-save-btn { flex: none; border: 2px dashed #8fb0e6; border-radius: 999px; padding: 0 6px; background: transparent; color: #3d6fb5; font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap; }
+.wl-log li { flex: none; display: flex; align-items: center; gap: 10px; background: #fffaf2; border-radius: 14px; padding: 6px 12px; font-size: 18px; font-weight: 700; color: var(--text); cursor: pointer; }
+.wl-log li.wl-none { background: none; cursor: default; }
+.wl-log .d { flex: none; width: 46px; color: var(--muted); font-size: 14px; }
+.wl-log .e { flex: none; width: 28px; text-align: center; font-size: 22px; }
+.wl-log .t { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wl-log .a { flex: none; white-space: nowrap; }
+.wl-log .in, .wl-row-view .in { color: #2e8b57; }
+.wl-log .out, .wl-row-view .out { color: #c45a10; }
+.wl-log .tag { font-size: 12px; color: #b07a00; background: #fff3c4; border-radius: 999px; padding: 1px 8px; margin-left: 6px; vertical-align: middle; }
+.wl-log .tag.kept { color: #3d6fb5; background: #e3edff; }
+.wl-btns { flex: none; display: flex; gap: 10px; }
+.wl-btns button { border: none; border-radius: 999px; padding: 10px 14px; font: inherit; font-weight: 800; white-space: nowrap; cursor: pointer; }
+.wl-use { flex: 1; font-size: 20px; background: var(--kid); color: #fff; box-shadow: 0 4px 0 rgba(0, 0, 0, 0.15); }
+.wl-in { flex: none; font-size: 16px; background: #e6f6ea; color: #2e8b57; }
+body.portrait .wl-body { grid-template-columns: 1fr; grid-template-rows: auto minmax(0, 1fr); }
+body.portrait .wl-wants { flex: none; max-height: 250px; }
+body.night .wl-want { background: #3e3826; }
+body.night .wl-want.can { background: #2f4636; }
+body.night .wl-track { background: rgba(255, 255, 255, 0.15); }
+body.night .wl-pocket { background: #43352e; }
+body.night .wl-pocket.kept { background: #2f3a52; }
+body.night .wl-save-btn { border-color: rgba(156, 192, 255, 0.6); color: #9cc0ff; }
+body.night .wl-log li:not(.wl-none) { background: #3a3448; }
+/* 夜: 金額の 字を 明るく、昼の 色の 札・ボタンは ふちだけに（2026-11-18） */
+body.night .wl-want .pr, body.night .wl-left { color: #ffd76a; }
+body.night .wl-want.can .pr, body.night .wl-want.can .wl-left, body.night .wl-log .in, body.night .wl-row-view .in { color: #6fd39b; }
+body.night .wl-log .out, body.night .wl-row-view .out, body.night .wl-pocket .v.minus { color: #f3a06a; }
+body.night .wl-log .tag { background: transparent; color: #ffd76a; box-shadow: inset 0 0 0 1.5px rgba(255, 215, 106, 0.6); }
+body.night .wl-log .tag.kept { background: transparent; color: #9cc0ff; box-shadow: inset 0 0 0 1.5px rgba(156, 192, 255, 0.6); }
+body.night .wl-in { background: transparent; color: #6fd39b; box-shadow: inset 0 0 0 2px #6fd39b; }
+/* おさいふの 入力 */
+.wl-board { width: min(600px, calc(100vw - 24px)); }
+.wl-pop-body { display: flex; flex-direction: column; gap: 10px; margin-top: 8px; }
+.wl-pop .wl-num { width: 150px; font-size: 26px; font-weight: 700; }
+.wl-pop .wl-text { flex: 1; width: 100%; }
+.wl-unit { font-size: 20px; font-weight: 700; }
+.wl-hint { margin: 0; font-size: 16px; color: var(--muted); font-weight: 700; }
+.wl-hint[hidden] { display: none; }
+.wl-modes button { font-size: 16px; }
+.wl-pop-btns { display: flex; gap: 10px; justify-content: flex-end; align-items: center; }
+.wl-pop-btns .qk-ok { align-self: auto; }
+.wl-pop-btns .ghost { font: inherit; font-size: 18px; font-weight: 700; padding: 6px 18px; border-radius: 999px; border: 2px solid var(--kid); background: transparent; color: var(--kid); }
+.wl-pop-btns #wl-bought:not(.ghost) { font: inherit; font-size: 18px; font-weight: 700; padding: 6px 18px; border-radius: 999px; border: 2px solid #2e8b57; background: #2e8b57; color: #fff; }
+.wl-row-view { margin: 4px 0; font-size: 20px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+/* 設定: 使う機能 */
+.settings .s-features { list-style: none; margin: 4px 0 8px; padding: 0; }
+.settings .s-features li { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; padding: 6px 0; border-bottom: 2px dashed #f0dcd4; }
+.settings .s-features .g-name { flex: 1; min-width: 6em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.settings .s-features label.off { opacity: 0.55; }
+.settings .s-features .s-rate { white-space: nowrap; }
+.settings .s-features .s-rate[hidden] { display: none; }
+.settings .s-features .s-rate input { width: 5em; margin: 0 4px; }
+
+/* ---- 押して 覚える ガイド（guide.js。2026-11-20）。見せる ところ だけ 明るく、ほかは 半分 暗く ---- */
+.guide { position: fixed; inset: 0; z-index: 28; pointer-events: none; }
+.guide[hidden] { display: none; }
+.gd-block, .gd-cover { position: fixed; pointer-events: auto; }
+.gd-block { background: rgba(20, 16, 30, 0.62); }
+.gd-cover[hidden] { display: none; }
+/* 枠は 内がわに かく（外に ふとらせると 画面の はしで 切れる） */
+.gd-ring { position: fixed; box-sizing: border-box; border-radius: 16px; box-shadow: inset 0 0 0 4px #ffd76a, inset 0 0 14px 4px rgba(255, 215, 106, 0.5); animation: gd-pulse 1.6s ease-in-out infinite; }
+@keyframes gd-pulse { 50% { box-shadow: inset 0 0 0 5px #ffd76a, inset 0 0 22px 8px rgba(255, 215, 106, 0.3); } }
+.guide.moving .gd-ring, .guide.moving .gd-tip { opacity: 0.4; }
+.guide.waiting .gd-ring, .guide.waiting .gd-tip, .guide.waiting .gd-cover, .guide.waiting #gd-bottom, .guide.waiting #gd-left, .guide.waiting #gd-right { visibility: hidden; }
+.gd-tip { position: fixed; pointer-events: auto; box-sizing: border-box; background: #fff; color: #4a3b35; border-radius: 18px; padding: 12px 16px 10px; box-shadow: 0 6px 0 rgba(0, 0, 0, 0.15); font-weight: 700; transition: top 0.2s, left 0.2s; }
+.gd-title { font-size: clamp(18px, 2.7vmin, 26px); color: #ff8a3d; margin-bottom: 4px; }
+.gd-text { font-size: clamp(15px, 2.2vmin, 21px); line-height: 1.55; }
+.gd-tip.adult .gd-title { color: #3d6fb5; }
+.gd-tip.adult .gd-text { font-weight: 500; }
+.gd-foot { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
+.gd-skip { border: none; background: none; font: inherit; font-size: clamp(14px, 1.9vmin, 18px); color: #9a8a84; padding: 6px 4px; cursor: pointer; }
+.gd-hint { flex: 1; text-align: right; font-size: clamp(14px, 1.9vmin, 18px); color: #ff8a3d; }
+.gd-next { border: none; border-radius: 999px; background: #ff8a3d; color: #fff; font: inherit; font-size: clamp(16px, 2.2vmin, 21px); padding: 6px 18px; cursor: pointer; }
+.gd-next[hidden] { display: none; }
+.gd-ask-note { margin: 0 0 12px; font-size: 15px; line-height: 1.5; color: var(--muted); }
+.settings .s-guide-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-bottom: 8px; }
+.settings .s-guide-row .note { margin: 0; }
+/* 説明の 文の 最後の 1〜2字だけが 次の 行に 落ちないように（対応して いる WebView だけ。11-20） */
+.tu-text, .tu-text p { text-wrap: pretty; }
+/* 子ども向けの ページは 分かち書きの すきまで だけ 折り返す（「おうえん / するよ」のように ことばの 途中で 切れた。11-20） */
+.tu-board:not(.for-parent) .tu-text { word-break: keep-all; overflow-wrap: anywhere; }
