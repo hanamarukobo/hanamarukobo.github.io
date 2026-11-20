@@ -1,12 +1,12 @@
 // 親モードの鍵と、かんたん設定（置いた端末と、つないだ スマホ・ブラウザ）。
-// - ParentLock.ask(ok): 設定画面・「みました」の 前に、鍵が あれば おとなかを 確かめる。鍵は 設定の「使い方」で えらぶ
+// - ParentLock.ask(ok): 設定画面・「みました」の 前に、鍵が あれば おとなかを 確かめる。鍵は 設定の「おうちの人」で えらぶ
 //     easy（計算問題）: いちばん 年上の 子の 年齢の めやすで かえる（その 学年では まだ 習わない もの）:
 //       幼稚園・保育園／小学1〜2年: 2けた×1けたの かけ算（小学3年で 習う）
 //       小学3年〜: x の 方程式（両がわに x が ある 一次方程式。中学1年で 習う）
 //     pin（4桁の番号）: わすれたら「番号を忘れた」→ 24時間 たつと 計算問題で ひらけて、番号は 消える（計算問題に もどる）。
 //       まって いる あいだは ボードに「鍵の入れなおし中」と 出す（子どもが おしても おうちの人が 気づく）。
 //       わすれたら もどせない 仕組みに しない（データも 書き出しも 設定の 中に ある）
-// - かんたん設定: 使い方 → 画面オフ → 天気の場所 → 子どもと ごほうび → やること → 予定（EasySetup.open）
+// - かんたん設定: 使い方 → 画面オフ → 天気の場所 → 子ども → やること → おさいふ → 鍵 → 予定（EasySetup.open）
 (function () {
   "use strict";
 
@@ -146,16 +146,18 @@
 
   // ---- かんたん設定 ----
   // はじめて（説明を 見おわったあと。tutorial.js が ひらく）と、設定画面の「かんたん設定」から ひらく。
-  // よく 使う ものだけ: 使い方 → 画面オフ（スマホだけの ときは とばす）→ 天気の場所 → 子どもと ごほうび → やること → 予定。
+  // よく 使う ものだけ: 使い方 → 画面オフ（スマホだけの ときは とばす）→ 天気の場所 → 子ども → やること → 予定。
   // やりなおす ときは いまの 値を 入れて ひらき、ここに ない 設定（鍵・画面オフまでの 分・服装の 目安 など）は さわらない
-  var STEPS = ["usage", "screen", "area", "kids", "tasks", "calendar"];
+  var STEPS = ["usage", "screen", "area", "kids", "tasks", "wallet", "lock", "calendar"];
   // はじめの 例は すぐ できる もの（さいしょの「できた！」を 早く。api.js の INITIAL_TASKS と おなじ）
   var EASY_TASKS = ["帰ったら手をあらう", "くつをそろえる", "あしたのじゅんび"];
   var POWER_KEY = "screenOff";        // sleep.js と おなじ（この端末だけ。JSON で 入れる）
   var ORIENT_KEY = "orientation";     // app.js と おなじ
   var step = 0, first = true, saving = false, cur = null;
-  var place = null, usage = null, power = "dim", names = [], levels = [], kidIds = [], unit = "point", calPick = null;
+  var place = null, usage = null, power = "dim", names = [], levels = [], rubys = [], kidIds = [], calPick = null;
   var tasks = [], taskNames = [], tasksEditable = true, taskYen = "1", yenMixed = false;
+  // おさいふ（"on"/"off"・使う子の 印（名前の 順）・1ポイント＝○円）と 鍵（"none"/"easy"/"pin"）。2026-11-18
+  var walletPick = "off", walletChecks = [], walletRate = "", walletRate0 = "", lockPick = "none", lockNow = { type: "none" };
 
   // つないだ スマホ・ブラウザ（データが 置いた端末に ある）では、その端末だけの「使い方」「画面オフ」を とばす
   function here() { return Api.local; }
@@ -163,7 +165,8 @@
     return STEPS.filter(function (s) {
       if (!here() && (s === "usage" || s === "screen")) return false;
       if (Api.web && s === "calendar") return false;
-      return s !== "screen" || usage !== "phone";
+      // まだ 選んで いない ときは、スマホなら「スマホだけ」と みて 数える（選んだ とたんに「1 / 8」が「2 / 7」に かわった。2026-11-19）
+      return s !== "screen" || (usage || (Device.phone() ? "phone" : null)) !== "phone";
     });
   }
   function readJson(key) { try { return JSON.parse(localStorage.getItem(key)); } catch (e) { return null; } }
@@ -191,8 +194,15 @@
       var kids = (s.kids || []).filter(function (k) { return k.active !== false; });
       names = kids.length ? kids.map(function (k) { return k.name; }) : ["", ""];
       levels = kids.length ? kids.map(function (k) { return k.level || "lower"; }) : ["lower", "lower"];
+      rubys = kids.length ? kids.map(function (k) { return !!k.ruby; }) : [false, false];
       kidIds = kids.map(function (k) { return k.id; });
-      unit = first ? "point" : st.unit === "point" ? "point" : "yen";
+      walletChecks = kids.map(function (k) { return !!k.wallet; });
+      walletPick = walletChecks.some(Boolean) ? "on" : "off";
+      var rated = kids.filter(function (k) { return k.wallet && k.walletRate > 0; })[0];
+      walletRate = walletRate0 = rated ? String(rated.walletRate) : "";
+      lockNow = st.parentLock || { type: "none" };
+      lockPick = lockNow.type === "pin" || lockNow.type === "easy" ? lockNow.type : "none";
+      $("su-pin").value = "";
       tasks = s.tasks || [];
       tasksEditable = easyShaped(tasks);
       var regular = tasks.filter(function (t) { return (t.repeat || {}).type !== "once"; });
@@ -217,11 +227,11 @@
       });
       window.AreaSelect.fill($("su-office"), $("su-area"), st.location || null);
       $("su-close").hidden = first;
-      // 置いた端末に つなぐ 入口（アプリで、データが この端末に ある とき。設定の「使い方」の 4つめの カードと おなじ）
+      // 置いた端末に つなぐ 入口（アプリで、データが この端末に ある とき。設定の「この端末」の 4つめの カードと おなじ）
       $("su-connect").hidden = !Device.canJoin();
       // 置いて スマホからも（アプリで スマホに 知らせられる とき。いま そう して いれば かならず 出す）
       $("su-board2").hidden = !(Device.canHost() || u === "board2");
-      // ブラウザ（アプリでない）: 2台の カードも 隠さず 出す（usage-cards.js。設定の「使い方」と おなじ）。
+      // ブラウザ（アプリでない）: 2台の カードも 隠さず 出す（usage-cards.js。設定の「この端末」と おなじ）。
       //   理由は カードの 説明に 書く（別の 行に 書くと せまい 画面で スクロールの 先に かくれる）
       var browser = Device.browser();
       $("su-qr-guide").hidden = true;
@@ -256,7 +266,7 @@
     // やりなおす ときは、さいしょの 手順で「いまの 設定を 置きかえる」ことを しらせる（置いた端末でも スマホでも）
     $("su-warn").hidden = first || n !== 0;
     if (!first && n === 0) $("su-warn").textContent = here()
-      ? "いまの設定を、ここで選ぶ内容に置きかえます。いまの値が入っているので、変えないところはそのまま進めてください（鍵・服装の目安・目標などは変わりません）。"
+      ? "いまの設定を、ここで選ぶ内容に置きかえます。いまの値が入っているので、変えないところはそのまま進めてください（服装の目安・もくひょうなどは変わりません）。"
       : "置いてある端末の設定（天気の場所・子ども・やること・予定）を、ここで選ぶ内容に置きかえます。いまの値が入っているので、変えないところはそのまま進めてください。";
     $("su-back").hidden = n === 0;
     $("su-next").textContent = n < list.length - 1 ? "つぎへ" : first ? "はじめる" : "保存する";
@@ -267,8 +277,10 @@
       pick("su-power", power);
       $("su-front-row").hidden = !(Device.canFront() && here());
     }
-    if (name === "kids") { renderNames(); pick("su-unit", unit); }
+    if (name === "kids") renderNames();
     if (name === "tasks") renderTasks();
+    if (name === "wallet") renderWallet();
+    if (name === "lock") renderLock();
     if (name === "calendar") { pick("su-cal", calPick); $("su-cal-box").hidden = calPick !== "ical"; }
   }
 
@@ -304,29 +316,26 @@
       return '<li><span class="swatch" style="background:' + c + '"></span>' +
         '<input type="text" maxlength="12" data-i="' + i + '" placeholder="なまえ" aria-label="' + (i + 1) + 'にんめの なまえ">' +
         // 年齢の めやす。ボードの ことば（ひらがな・漢字）を この子に あわせる
-        '<select data-i="' + i + '" aria-label="ねんれいの めやす">' + window.Words.LEVELS.map(function (l) {
-          return '<option value="' + l + '"' + (levels[i] === l ? " selected" : "") + '>' + window.Words.LABELS[l] + '</option>';
-        }).join("") + '</select></li>';
+        '<select data-i="' + i + '" aria-label="ねんれいの めやす">' + window.Words.levelOptions({ level: levels[i], ruby: rubys[i] }) + '</select></li>';
     }).join("");
     Array.prototype.forEach.call($("su-names").querySelectorAll("input"), function (el, i) { el.value = names[i]; });
-    // 無料の 上限（同梱版だけ）。上限まで 入れたら「＋ ふやす」を 押せなく する
-    var lim = window.BoardApi.limits(), full = names.length >= (lim ? lim.kids : 8);
+    // 表示できる 子どもの 数（8人。無料も Pro も おなじ）まで 入れたら「＋ ふやす」を 押せなく する
+    var max = window.BoardApi.maxKids || 8, full = names.length >= max;
     $("su-add").disabled = full;
-    $("su-free").hidden = !(full && lim);
-    if (full && lim) $("su-free").textContent = window.Words.t("freeKids", "upper", { n: lim.kids, next: lim.kids + 1 });
+    $("su-free").hidden = !full;
+    if (full) $("su-free").textContent = window.Words.t("maxKids", "upper", { n: max });
   }
   // select も input イベントを出すので、名前の欄だけ拾う
   $("su-names").addEventListener("input", function (ev) { if (ev.target.tagName === "INPUT") names[+ev.target.dataset.i] = ev.target.value; });
   $("su-names").addEventListener("change", function (ev) {
-    if (ev.target.tagName === "SELECT") levels[+ev.target.dataset.i] = ev.target.value;
+    if (ev.target.tagName === "SELECT") {
+      var pl = window.Words.parseLevel(ev.target.value);
+      levels[+ev.target.dataset.i] = pl.level;
+      rubys[+ev.target.dataset.i] = pl.ruby;
+    }
   });
   $("su-add").addEventListener("click", function () {
-    var lim = window.BoardApi.limits();
-    if (names.length < (lim ? lim.kids : 8)) { names.push(""); levels.push("lower"); renderNames(); }
-  });
-  $("su-unit").addEventListener("click", function (ev) {
-    var b = ev.target.closest("button");
-    if (b) { unit = b.dataset.value; pick("su-unit", unit); }
+    if (names.length < (window.BoardApi.maxKids || 8)) { names.push(""); levels.push("lower"); rubys.push(false); renderNames(); }
   });
 
   function renderTasks() {
@@ -341,11 +350,62 @@
     // 項目ごとに ちがう 値の ときは「？」。入れると 3つとも その値に なる
     $("su-yen").placeholder = yenMixed ? "？" : "";
     $("su-yen-mixed").hidden = !yenMixed;
-    $("su-yen-unit").textContent = unit === "point" ? "ポイント" : "円";
-    $("su-tasks-note").textContent = "回数や曜日、子どもごとの やることは、あとから設定の「がんばり項目」で変えられます。";
+    $("su-tasks-note").textContent = "回数や曜日、子どもごとの やることは、あとから設定の「やること」で変えられます。";
   }
   $("su-tasks").addEventListener("input", function (ev) { taskNames[+ev.target.dataset.i] = ev.target.value; });
   $("su-yen").addEventListener("input", function () { taskYen = $("su-yen").value; });
+
+  // おさいふ: 使う ときは 使う 子（はじめは みんな）と 1ポイント＝○円
+  function renderWallet() {
+    pick("su-wallet", walletPick);
+    $("su-wallet-box").hidden = walletPick !== "on";
+    var ul = $("su-wallet-kids");
+    ul.innerHTML = "";
+    names.forEach(function (n, i) {
+      if (!n.trim()) return;
+      var li = document.createElement("li"), lb = document.createElement("label"), cb = document.createElement("input");
+      cb.type = "checkbox";
+      cb.dataset.i = i;
+      cb.checked = walletChecks[i] !== false;
+      lb.appendChild(cb);
+      lb.appendChild(document.createTextNode(" " + n.trim()));
+      li.appendChild(lb);
+      ul.appendChild(li);
+    });
+    $("su-rate").value = walletRate;
+  }
+  $("su-wallet").addEventListener("click", function (ev) {
+    var b = ev.target.closest("button");
+    if (!b) return;
+    walletPick = b.dataset.value;
+    // 使うに したら、まだ 決めて いない 子は 印を つけた 状態から
+    if (walletPick === "on" && !walletChecks.some(Boolean)) walletChecks = names.map(function () { return true; });
+    renderWallet();
+  });
+  $("su-wallet-kids").addEventListener("change", function (ev) { walletChecks[+ev.target.dataset.i] = ev.target.checked; });
+  $("su-rate").addEventListener("input", function () { walletRate = $("su-rate").value; });
+  function walletKid(i) { return walletPick === "on" && walletChecks[i] !== false; }
+
+  // 鍵: いまの 鍵を えらんだ 状態から。番号は いま 番号の ときは 空なら そのまま
+  function renderLock() {
+    pick("su-lock", lockPick);
+    $("su-pin-row").hidden = lockPick !== "pin";
+    $("su-pin-keep").hidden = !(lockPick === "pin" && lockNow.type === "pin" && /^\d{4}$/.test(lockNow.pin || ""));
+  }
+  $("su-lock").addEventListener("click", function (ev) {
+    var b = ev.target.closest("button");
+    if (!b) return;
+    lockPick = b.dataset.value;
+    renderLock();
+    if (lockPick === "pin") $("su-pin").focus();
+  });
+  $("su-pin").addEventListener("input", function () { this.value = this.value.replace(/\D/g, "").slice(0, 4); });
+  function readLock() {
+    if (lockPick !== "pin") return { type: lockPick };
+    var pin = $("su-pin").value;
+    if (!pin && lockNow.type === "pin" && /^\d{4}$/.test(lockNow.pin || "")) pin = lockNow.pin;
+    return /^\d{4}$/.test(pin) ? { type: "pin", pin: pin } : null;
+  }
 
   $("su-cal").addEventListener("click", function (ev) {
     var b = ev.target.closest("button");
@@ -387,7 +447,15 @@
   }
 
   function save() {
-    var kids = names.map(function (n, i) { return { name: n.trim(), level: levels[i], id: kidIds[i] }; });
+    var rate = walletRate.trim() === "" ? 0 : parseInt(walletRate, 10) || 0;
+    var kids = names.map(function (n, i) {
+      // おさいふ: 使わない 子は 印を はずす（1ポイント＝○円は のこす）。使う 子は 円も 送る
+      //   やり直しで 金額の 欄を さわらなければ、前から 金額の ある 子は その子の 金額の まま（設定で 子どもごとに 変えた 分を そろえない。2026-11-18）
+      var w = { wallet: walletKid(i), ruby: !!rubys[i] };
+      var had = (cur.kids || []).filter(function (k) { return k.id && k.id === kidIds[i]; })[0];
+      if (w.wallet && !(walletRate === walletRate0 && had && had.walletRate > 0)) w.walletRate = rate;
+      return Object.assign({ name: n.trim(), level: levels[i], id: kidIds[i] }, w);
+    });
     if (saving) return;   // つづけて おしても 2回 とうろく しない
     saving = true;
     // 前から いる 子は id と 色を そのまま。あたらしい 子は まだ つかって いない 色
@@ -395,12 +463,14 @@
     (cur.kids || []).forEach(function (k) { old[k.id] = k; if (k.active !== false) used[k.color] = true; });
     var colors = Object.keys(window.KID_PALETTE);
     var sendKids = kids.filter(function (k) { return k.name; }).map(function (k) {
-      if (k.id && old[k.id]) return Object.assign({}, old[k.id], { name: k.name, level: k.level, active: true });
+      var w = { wallet: k.wallet, ruby: k.ruby };
+      if ("walletRate" in k) w.walletRate = k.walletRate;
+      if (k.id && old[k.id]) return Object.assign({}, old[k.id], { name: k.name, level: k.level, active: true }, w);
       var c = colors.filter(function (x) { return !used[x]; })[0] || colors[0];
       used[c] = true;
-      return { name: k.name, level: k.level, color: c };
+      return Object.assign({ name: k.name, level: k.level, color: c }, w);
     });
-    var next = { unit: unit, location: window.AreaSelect.value($("su-office"), $("su-area")) };
+    var next = { location: window.AreaSelect.value($("su-office"), $("su-area")), parentLock: readLock() };
     if (here()) next.usage = usage;   // つないだ スマホからは 置いた端末の 使い方を かえない
     if (here() && usage !== "phone") {
       next.display = {
@@ -411,11 +481,9 @@
     var url = $("su-cal-url").value.trim();
     if (calPick === "ical" && url) next.calendar = { type: "ical", url: url };
     var oldUsage = first ? null : Api.usage(cur.settings);
-    Api.post("/api/board/kids", { kids: sendKids }).then(function () {
-      return Api.post("/api/board/settings", next);
-    }).then(function () {
-      if (tasksEditable) return Api.post("/api/parent/tasks", { tasks: nextTasks() });
-    }).then(function () {
+    // 子ども → 設定 → やること を まとめて 保存（どれか だめなら なにも かえない。古い 置いた端末には 1つずつ）
+    Api.postAll([{ path: "/api/board/kids", body: { kids: sendKids } }, { path: "/api/board/settings", body: next },
+      tasksEditable ? { path: "/api/parent/tasks", body: { tasks: nextTasks() } } : null]).then(function () {
       // 画面オフ・向きは この端末だけの 設定（つないだ スマホ・ブラウザでは さわらない）
       if (here() && usage !== "phone") writeJson(POWER_KEY, power);
       if (here() && usage !== "phone" && Device.canFront()) {
@@ -430,6 +498,8 @@
       }
       $("setup").hidden = true;
       window.dispatchEvent(new Event("board:reload"));
+      // 子どもと いっしょに 使い方を ためすかを 聞く（guide.js。まだ やって いない 置いた 端末だけ）
+      if (window.Guide) window.Guide.afterSetup();
     }).catch(function (e) {
       saving = false;
       $("su-error").textContent = "保存できませんでした（" + e.message + "）";
@@ -447,8 +517,13 @@
     }
     if (name === "kids" && !names.some(function (n) { return n.trim(); })) { $("su-error").textContent = "名前を1人以上入れてください"; return; }
     if (name === "tasks" && tasksEditable && String(taskYen).trim() !== "" && !/^\d{1,3}$/.test(String(taskYen).trim())) {
-      $("su-error").textContent = "ポイント（円）は 0〜999 の数字で入れてください"; return;
+      $("su-error").textContent = "ポイントは 0〜999 の数字で入れてください"; return;
     }
+    if (name === "wallet" && walletPick === "on") {
+      if (!names.some(function (n, i) { return n.trim() && walletKid(i); })) { $("su-error").textContent = "おさいふを使う子を選んでください"; return; }
+      if (walletRate.trim() !== "" && !/^\d{1,5}$/.test(walletRate.trim())) { $("su-error").textContent = "1ポイントの金額は数字で入れてください"; return; }
+    }
+    if (name === "lock" && !readLock()) { $("su-error").textContent = "鍵の4桁の番号を入れてください"; $("su-pin").focus(); return; }
     if (name === "calendar" && calPick === "ical") {
       var url = $("su-cal-url").value.trim();
       if (url && !/^(https|webcal):\/\/\S+$/i.test(url)) { $("su-error").textContent = "URL は https:// で始まるものを入れてください"; return; }

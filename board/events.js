@@ -121,7 +121,7 @@
     var offset = shownOffset();
     var day = new Date(now.getFullYear(), now.getMonth(), now.getDate() + offset);
     $("nav-day").innerHTML = offset < 3 ? W(["today", "tomorrow", "dayAfter"][offset]) : W("nthDay", { d: day.getDate() });
-    $("nav-wd").textContent = W("weekdays")[day.getDay()];
+    $("nav-wd").innerHTML = W("weekdays")[day.getDay()];
     setHtml("schedule-title", W("schedule"));
     $("nav-wd").style.color = WEEKDAY_COLORS[B.holidays[ymd(day)] ? 0 : day.getDay()];
     $("prev-day").disabled = offset <= 0;
@@ -154,15 +154,26 @@
     });
 
     if (!list.length) { el.innerHTML = '<li class="empty">' + W("noEvents") + '</li>'; return; }
+    // 時刻を出す設定なら、終日でない予定は 印の かわりに「10:30〜11:30」。日を またぐ ぶんは かたほうだけ
+    var showTime = !!B.settings.eventTime;
+    function hm(d) { return d.getHours() + ":" + B.pad(d.getMinutes()); }
+    function timeText(e) {
+      var from = e.start.getTime() >= dayStart ? hm(e.start) : "", to = e.end.getTime() <= dayEnd && e.end > e.start ? hm(e.end) : "";
+      if (to === "0:00" && e.end.getTime() === dayEnd) to = "24:00";
+      return from && to ? (from === to ? from : from + "〜" + to) : from ? from + "〜" : "〜" + to;
+    }
     el.innerHTML = list.map(function (e) {
       return '<li>' +
-        '<span class="mark">' + window.Words.icon(e.allDay ? "point-star" : "event") + '</span>' +
+        (showTime && !e.allDay ? '<span class="time">' + timeText(e) + '</span>'
+          : '<span class="mark">' + window.Words.icon("event") + '</span>') +
         '<span class="title">' + escapeHtml(e.title) + '</span>' +
         '</li>';
     }).join("");
   }
 
   B.calSource = calSource;
+  // 予定を 読めて いるか（guide.js。つないで いても 読めて いなければ「家族の 予定を 見よう」は 出さない）
+  B.calReady = function () { return !!calSource() && !!calendar && !calError; };
   B.fetchCalendar = fetchCalendar;
   B.renderEvents = renderEvents;
 })();

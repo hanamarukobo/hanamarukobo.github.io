@@ -14,7 +14,6 @@
     // ---- ひにち・とけい ----
     month: { kinder: "{m}がつ", lower: "{m}がつ", upper: "{m}月" },
     tallyToday: { kinder: "きょう", lower: "きょう", upper: "今日" },
-    tallyMonth: { kinder: "こんげつ", lower: "こんげつ", upper: "今月" },
     yearMonth: { kinder: "{y}ねん {m}がつ", lower: "{y}ねん {m}がつ", upper: "{y}年{m}月" },
     // ホームの 大きな 日にちの よこ。ようちえん・小学1〜2年は「日」に ふりがな（Words.dayUnit）
     dayUnit: { kinder: "日", lower: "日", upper: "日" },
@@ -44,7 +43,6 @@
     slotNoon: { kinder: "ひる", lower: "ひる", upper: "昼" },
     slotEvening: { kinder: "ゆうがた", lower: "ゆうがた", upper: "夕方" },
     deg: { kinder: "{t}ど", lower: "{t}ど", upper: "{t}度" },
-    lo: { kinder: "さむい ときで {t}ど", lower: "さいてい {t}ど", upper: "最低 {t}度" },
     hiShort: { kinder: "{i:hot}{t}ど", lower: "さいこう {t}ど", upper: "最高 {t}度" },
     loShort: { kinder: "{i:cold}{t}ど", lower: "さいてい {t}ど", upper: "最低 {t}度" },
     noArea: { kinder: "せっていで ばしょを えらんでね", lower: "せっていで てんきの ちいきを えらんでね", upper: "設定で 天気の地域を えらんでね" },
@@ -85,7 +83,6 @@
     // ---- よてい ----
     schedule: { kinder: "{i:calendar} よてい", lower: "{i:calendar} よてい", upper: "{i:calendar} 予定" },
     noEvents: { kinder: "なにも ないよ", lower: "よていは ないよ", upper: "予定は ないよ" },
-    calNone: { kinder: "カレンダーは まだだよ", lower: "カレンダーは せっていで つなげられるよ", upper: "カレンダーは 設定で つなげられるよ" },
     calError: { kinder: "よていが わからないよ", lower: "よていが よめませんでした", upper: "予定を 読みこめませんでした" },
 
     // ---- トップの ボタン ----
@@ -99,10 +96,10 @@
     stDone: { kinder: "{n}こ できた！", lower: "{n}こ できたね", upper: "{n}こ できたね" },
 
     // ---- がんばりカレンダー ----
-    kvTitle: { kinder: "{name}の がんばり", lower: "{name}の がんばりカレンダー", upper: "{name}の がんばりカレンダー" },
-    streak: { kinder: "{n}かい つづいてる！", lower: "{days:n} れんぞく！", upper: "{days:n} れんぞく！" },
-    streakNext: { kinder: "", lower: " あと{days:k}で {days:m}", upper: " あと{days:k}で {days:m}" },
-    streakStart: { kinder: "{i:sprout} きょうから はじめよう！", lower: "{i:sprout} きょうから れんぞく チャレンジ！", upper: "{i:sprout} 今日から れんぞくチャレンジ！" },
+    // 見出しの きりかえ［がんばり｜おさいふ］の 左（2026-11-19。見出しは 名前だけ、れんぞくの 札は なくした）
+    //   2026-11-20: 「がんばり」だけだと ホームの「がんばりカレンダー」と つながらないので 名前を まるごと（「カレンダー」だけは 予定と まざる）。
+    //   おさいふを 使わない 子は これ 1つで 題に なる。名前が 入らない ときは kids.js の fitTabs が 字を 小さく する
+    kvTabCal: { kinder: "{i:hanamaru} がんばりカレンダー", lower: "{i:hanamaru} がんばりカレンダー", upper: "{i:hanamaru} がんばりカレンダー" },
     // ---- できるようになったこと（「もう できる」に まとめた やること）。しるしは kids.js の STAIRS（img/title-stairs.svg） ----
     gradBtn: { kinder: "{n}", lower: "{n}", upper: "{n}" },
     gradTitle: { kinder: "{name}が できるように なったこと", lower: "{name}が できるように なったこと", upper: "{name}が できるようになったこと" },
@@ -124,11 +121,6 @@
     bundleNew: { kinder: "あたらしい", lower: "あたらしい", upper: "新しい" },
     bundleAll: { kinder: "ぜんぶ できた！", lower: "ぜんぶ できた！", upper: "ぜんぶ できた！" },
     bundleUndo: { kinder: "まだ だった", lower: "まだ だった", upper: "まだ だった" },
-    monthReward: { kinder: "{i:gift} こんげつ {x}", lower: "{i:gift} こんげつの ごほうび {x}", upper: "{i:gift} 今月の ごほうび {x}" },
-    monthPoint: { kinder: "{i:point-star} こんげつ {x}", lower: "{i:point-star} こんげつ {x}", upper: "{i:point-star} 今月 {x}" },
-    pastReward: { kinder: "{i:gift} {m}がつ {x}", lower: "{i:gift} {m}がつの ごほうび {x}", upper: "{i:gift} {m}月の ごほうび {x}" },
-    pastPoint: { kinder: "{i:point-star} {m}がつ {x}", lower: "{i:point-star} {m}がつ {x}", upper: "{i:point-star} {m}月 {x}" },
-    flowerCount: { kinder: "{i:hanamaru} {n}こ", lower: "{i:hanamaru} {n}こ", upper: "{i:hanamaru} {n}こ" },
     dayTitle: { kinder: "{m}がつ{date:d}の きろく", lower: "{m}がつ{date:d}の きろく", upper: "{m}月{date:d}の きろく" },
     backToday: { kinder: "きょうに もどる", lower: "きょうに もどる", upper: "今日に もどる" },
     pastWaiting: { kinder: "{i:hourglass} {parent}に みてもらって ないよ", lower: "{i:hourglass} {parent}に まだ みてもらって ないよ", upper: "{i:hourglass} {parent}に まだ 見てもらって いないよ" },
@@ -152,32 +144,155 @@
     stOk: { kinder: "{parent} みたよ！ +{x}", lower: "{parent} みたよ！ +{x}", upper: "{parent} 見たよ！ +{x}" },
     stAll: { kinder: "ぜんぶ できた！{i:party}<br>{parent}に おしえてね", lower: "ぜんぶ できたね！{i:party}<br>ねるまえに {parent}に おはなし しよう", upper: "全部できたね！{i:party}<br>ねる前に {parent}に 話そう" },
     stCheer: { kinder: "あと {n}こ！", lower: "あと {n}こ！ がんばれ〜", upper: "あと {n}こ！ がんばれ" },
-    addOnce: { kinder: "＋ 1かいだけの やること", lower: "＋ 1かいだけの やること", upper: "＋ 1回だけの やること" },
+    // 1回だけの やることを 足す（「きょうの やること」の 見出しの 右。見ている 日に あわせる。11-18 に 入口を 1つに した）
+    addToday: { kinder: "＋ きょうだけ", lower: "＋ きょうだけ", upper: "＋ 今日だけ" },
+    addThisDay: { kinder: "＋ このひだけ", lower: "＋ このひだけ", upper: "＋ この日だけ" },
     approveBtn: { kinder: "{i:eyes} {parent} みました", lower: "{i:eyes} {parent} みました", upper: "{i:eyes} {parent} 見ました" },
     approveUndo: { kinder: "とりけす", lower: "とりけす", upper: "取り消す" },
     stStart: { kinder: "きょうも がんばろう！", lower: "きょうも がんばろう！", upper: "今日も がんばろう！" },
-    yen: { kinder: "{n}えん", lower: "{n}えん", upper: "{n}円" },
     point: { kinder: "{n}ポイント", lower: "{n}ポイント", upper: "{n}ポイント" },
 
-    // ---- ごほうび・もくひょう ----
-    saved: { kinder: "{i:gift} {x}", lower: "{i:gift} {x}", upper: "{i:gift} {x}" },
-    savedTitle: { kinder: "{i:gift} ためた {x}", lower: "{i:gift} ためた {x}", upper: "{i:gift} ためた {x}" },
-    toCalendar: { kinder: "{i:calendar} もどる", lower: "{i:calendar} カレンダー", upper: "{i:calendar} カレンダー" },
-    canExchange: { kinder: "もらえるよ！ {parent}に いってね", lower: "こうかん できるよ！ {parent}に いってね", upper: "交かん できるよ！ {parent}に 言ってね" },
-    needMore: { kinder: "あと {x}", lower: "あと {x}", upper: "あと {x}" },
-    goalTitle: { kinder: "みんなで {title}", lower: "みんなで {title}", upper: "みんなで {title}" },
+    // ---- もくひょう（子どもごと。ポイントが たまったら たっせい。50・100・150…と くりかえす） ----
+    // ホームの ゲージには 数字を 出さない（💮の 数と ポイントの 数が まざらないように）。数字は がんばりカレンダーの 中だけ
+    goalNear: { kinder: "もうすこし！", lower: "もうすこし！", upper: "もう少し！" },
+    goalReached: { kinder: "たっせい！", lower: "たっせい！", upper: "達成！" },
+    goalBox: { kinder: "もくひょう", lower: "もくひょう", upper: "目標" },
+    // おさいふ（wallet.js。2026-11-18）。お金は ようちえん・小1〜2 は「えん」、小3〜 は「円」
+    wlOpen: { kinder: "{i:wallet} おさいふ", lower: "{i:wallet} おさいふ", upper: "{i:wallet} おさいふ" },
+    wlYen: { kinder: "{x}えん", lower: "{x}えん", upper: "{x}円" },
+    wlWants: { kinder: "ほしいもの", lower: "ほしいもの", upper: "ほしいもの" },
+    wlWantAdd: { kinder: "＋ たす", lower: "＋ たす", upper: "＋ 足す" },
+    wlWantNone: { kinder: "ほしいものが あったら「＋ たす」で かいてね", lower: "ほしいものが あったら「＋ たす」で かいてね", upper: "ほしいものが あったら「＋ 足す」で 書いてね" },
+    wlLeft: { kinder: "あと {x}", lower: "あと {x}", upper: "あと {x}" },
+    wlCan: { kinder: "いまの おかねで かえるよ！", lower: "いまの おかねで かえるよ！", upper: "いまの お金で 買えるよ！" },
+    wlWallet: { kinder: "{i:wallet} おさいふ", lower: "{i:wallet} おさいふ", upper: "{i:wallet} おさいふ" },
+    wlWalletNote: { kinder: "いま つかえる おかね", lower: "いま つかえる おかね", upper: "いま 使える お金" },
+    // ちょきん（2026-11-18 に「あずけてる」から 名前を かえた。とっておく お金。データは pocket: "kept" の まま）
+    wlKept: { kinder: "{i:piggy} ちょきん", lower: "{i:piggy} ちょきん", upper: "{i:piggy} ちょきん" },
+    wlKeptNote: { kinder: "とっておく おかね", lower: "とっておく おかね", upper: "とっておく お金" },
+    wlSaveBtn: { kinder: "＋ ちょきんする", lower: "＋ ちょきんする", upper: "＋ ちょきんする" },
+    wlSaveTitle: { kinder: "ちょきんする", lower: "ちょきんする", upper: "ちょきんする" },
+    wlSaveNote: { kinder: "おさいふから ちょきんに うつすよ", lower: "おさいふから ちょきんに うつすよ", upper: "おさいふから ちょきんに うつすよ" },
+    wlSaveOver: { kinder: "おさいふの おかねより おおいよ", lower: "おさいふの おかねより おおいよ", upper: "おさいふの お金より 多いよ" },
+    wlLog: { kinder: "おかねの きろく", lower: "おかねの きろく", upper: "お金の きろく" },
+    wlLogNone: { kinder: "まだ なにも ないよ", lower: "まだ なにも ないよ", upper: "まだ 何も ないよ" },
+    wlFromKept: { kinder: "ちょきんから", lower: "ちょきんから", upper: "ちょきんから" },
+    wlToSave: { kinder: "ちょきんに", lower: "ちょきんに", upper: "ちょきんに" },
+    wlToKept: { kinder: "ちょきん", lower: "ちょきん", upper: "ちょきん" },
+    wlUse: { kinder: "− つかった", lower: "− つかった", upper: "− 使った" },
+    wlIn: { kinder: "{parent} いれる", lower: "{parent} いれる", upper: "{parent} 入れる" },
+    wlUseTitle: { kinder: "つかった おかね", lower: "つかった おかね", upper: "使った お金" },
+    wlHowMuch: { kinder: "いくら", lower: "いくら", upper: "いくら" },
+    wlWhat: { kinder: "なにに", lower: "なにに", upper: "何に" },
+    wlWhatHint: { kinder: "れい：シール", lower: "れい：シール", upper: "れい：シール" },
+    wlWhats: { kinder: ["おかし", "ゲームセンター", "まんが・ほん", "おもちゃ", "ゲーム"], lower: ["おかし", "ゲームセンター", "まんが・ほん", "おもちゃ", "ゲーム"], upper: ["おかし", "ゲームセンター", "まんが・本", "おもちゃ", "ゲーム"] },
+    wlSave: { kinder: "かく", lower: "かく", upper: "書く" },
+    wlWantTitle: { kinder: "ほしいもの", lower: "ほしいもの", upper: "ほしいもの" },
+    wlWantName: { kinder: "なに", lower: "なに", upper: "何" },
+    wlWantHint: { kinder: "れい：ゲームソフト", lower: "れい：ゲームソフト", upper: "れい：ゲームソフト" },
+    wlPrice: { kinder: "ねだん", lower: "ねだん", upper: "ねだん" },
+    wlBought: { kinder: "かえた！", lower: "かえた！", upper: "買えた！" },
+    wlBoughtAsk: { kinder: "おさいふから {x} つかった ことに するよ", lower: "おさいふから {x} つかった ことに するよ", upper: "おさいふから {x} 使った ことに するよ" },
+    wlRemove: { kinder: "けす", lower: "けす", upper: "消す" },
+    wlNeedYen: { kinder: "いくらか まだ はいっていません", lower: "いくらか まだ はいっていません", upper: "いくらか まだ 入っていません" },
+    wlNeedWant: { kinder: "ほしいものが まだ はいっていません", lower: "ほしいものが まだ はいっていません", upper: "ほしいものが まだ 入っていません" },
+    wlFail: { kinder: "かけませんでした", lower: "かけませんでした", upper: "書けませんでした" },
     goalLeft: { kinder: "あと {x}", lower: "あと {x}", upper: "あと {x}" },
-    goalDone: { kinder: "{i:party} やったね！", lower: "{i:party} たっせい！ みんな よく がんばったね！", upper: "{i:party} 達成！ みんな よく がんばったね！" },
-    goalDoneShort: { kinder: "やったね！{i:party}", lower: "たっせい！{i:party}", upper: "達成！{i:party}" },
+    // できたけど まだ「みました」して いない ポイント（がんばりカレンダーの もくひょうの はこ。低い 画面は 数だけ）
+    goalWaitNum: { kinder: "{i:hourglass} +{x}", lower: "{i:hourglass} +{x}", upper: "{i:hourglass} +{x}" },
+    goalWaitText: { kinder: "は {parent}が みたら たまるよ", lower: "は {parent}が みたら たまるよ", upper: "は {parent}が 見たら たまるよ" },
+    goalTotal: { kinder: "{i:point-star} これまで {x}", lower: "{i:point-star} これまで {x}", upper: "{i:point-star} これまで {x}" },
+    goalExchange: { kinder: "{i:gift} {parent} こうかんした", lower: "{i:gift} {parent} こうかんした", upper: "{i:gift} {parent} 交かんした" },
+    monthFlowers: { kinder: "{i:hanamaru} {m}がつ {n}こ", lower: "{i:hanamaru} {m}がつ {n}こ", upper: "{i:hanamaru} {m}月 {n}こ" },
 
-    // ---- 無料の 上限（おうちの人向けの 画面だけ。だんかいで かえない） ----
     // ---- 予定の URL の まちがい（おうちの人向け。BoardApi.calUrlProblem が "share" の とき） ----
     privacyNote: { kinder: "記録や設定は、この端末の中だけに保存し、外部に送りません。くわしくは、スマホのカメラで QR コードを読み取るか、下の URL を開いてご覧ください。", lower: "記録や設定は、この端末の中だけに保存し、外部に送りません。くわしくは、スマホのカメラで QR コードを読み取るか、下の URL を開いてご覧ください。", upper: "記録や設定は、この端末の中だけに保存し、外部に送りません。くわしくは、スマホのカメラで QR コードを読み取るか、下の URL を開いてご覧ください。" },
     calShareLink: { kinder: "これは Google カレンダーの共有リンクで、予定は読めません。設定 → 予定を出したいカレンダー →「カレンダーの統合」の「iCal 形式の非公開 URL」（https://calendar.google.com/calendar/ical/ で始まり、basic.ics で終わる URL）を貼ってください。「一般公開」にする必要はありません。", lower: "これは Google カレンダーの共有リンクで、予定は読めません。設定 → 予定を出したいカレンダー →「カレンダーの統合」の「iCal 形式の非公開 URL」（https://calendar.google.com/calendar/ical/ で始まり、basic.ics で終わる URL）を貼ってください。「一般公開」にする必要はありません。", upper: "これは Google カレンダーの共有リンクで、予定は読めません。設定 → 予定を出したいカレンダー →「カレンダーの統合」の「iCal 形式の非公開 URL」（https://calendar.google.com/calendar/ical/ で始まり、basic.ics で終わる URL）を貼ってください。「一般公開」にする必要はありません。" },
-    freeKids: { kinder: "無料版で表示できる子どもは{n}人までです。{next}人目からは Pro（準備中）の予定です。", lower: "無料版で表示できる子どもは{n}人までです。{next}人目からは Pro（準備中）の予定です。", upper: "無料版で表示できる子どもは{n}人までです。{next}人目からは Pro（準備中）の予定です。" },
+    // ---- 表示できる 子どもの 数（おうちの人向けの 画面だけ。無料も Pro も おなじ。2026-11-19 に 無料の 2人の 上限を なくした） ----
+    maxKids: { kinder: "表示できる子どもは{n}人までです。", lower: "表示できる子どもは{n}人までです。", upper: "表示できる子どもは{n}人までです。" },
+    // ---- 押して 覚える ガイド（guide.js。2026-11-20）。子どもと いっしょに 見る。いちばん 小さい 子に あわせる ----
+    gdWeatherT: { kinder: "てんきを みよう", lower: "てんきを みよう", upper: "天気を 見よう" },
+    gdWeather: { kinder: "きょうは なにを きる？ かさは いる？", lower: "きょうは なにを きる？ かさは いる？", upper: "今日は 何を 着る？ かさは いる？" },
+    gdEventsT: { kinder: "かぞくの よていを みよう", lower: "かぞくの よていを みよう", upper: "家族の 予定を 見よう" },
+    gdEvents: { kinder: "きょうは だれが なにを する ひかな？", lower: "きょう {parent}は おしごと？ だれが おくって くれる？", upper: "今日 {parent}は 仕事？ だれが 送って くれる？" },
+    gdNameT: { kinder: "じぶんの なまえを おそう", lower: "じぶんの なまえを おそう", upper: "自分の 名前を おそう" },
+    gdName: { kinder: "きょうの やることが でてくるよ", lower: "きょうの やることが でてくるよ", upper: "今日の やることが 出てくるよ" },
+    gdTaskT: { kinder: "できたら おそう", lower: "できたら おそう", upper: "できたら おそう" },
+    gdTask: { kinder: "まちがえたら もういちど おすと もどるよ", lower: "まちがえたら もういちど おすと もどせるよ", upper: "まちがえたら もう一度 おすと もどせるよ" },
+    gdShowT: { kinder: "ねるまえに {parent}に みせよう", lower: "ねるまえに {parent}に みせよう", upper: "ねる前に {parent}に 見せよう" },
+    gdShow: { kinder: "「みました」で はなまるに なるよ", lower: "「みました」で はなまる。ポイントが たまって、もくひょうに とどくと たっせい！", upper: "「みました」で はなまる。ポイントが たまって、もくひょうに とどくと たっせい！" },
+    gdWalletT: { kinder: "おさいふも あるよ", lower: "おさいふも みられるよ", upper: "おさいふも 見られるよ" },
+    gdWallet: { kinder: "ここを おすと おさいふに かわるよ", lower: "ここを おすと おさいふに かわるよ", upper: "ここを おすと おさいふに かわるよ" },
+    gdGradT: { kinder: "できるように なったこと", lower: "できるように なったこと", upper: "できるように なったこと" },
+    gdGrad: { kinder: "まいにち つづけて、いわれなくても できるように なると、ここが ふえるよ", lower: "まいにち つづけて、いわれなくても できるように なったら、ここに ふえて いくよ", upper: "毎日 続けて、言われなくても できるように なったら、ここに ふえて いくよ" },
+    gdCloseT: { kinder: "おわったら ✕ で もどろう", lower: "おわったら ✕ で もどろう", upper: "終わったら ✕ で もどろう" },
+    gdClose: { kinder: "あさ これを みて、じぶんで できるかな？", lower: "あさ これを みて、じぶんで うごけるかな？", upper: "朝 これを 見て、自分で 動けるかな？" },
+    gdTap: { kinder: "ひかって いる ところを おしてね", lower: "ひかって いる ところを おしてね", upper: "光って いる ところを おしてね" },
+    gdNext: { kinder: "つぎへ", lower: "つぎへ", upper: "つぎへ" },
+    gdSkip: { kinder: "とばす", lower: "とばす", upper: "とばす" },
   };
 
-  function lv(level) { return LEVELS.indexOf(level) >= 0 ? level : "lower"; }
+  // 文の だんかいには もう1つ "ruby"（漢字に ふりがな。子どもごとの kid.ruby。2026-11-18 テスターの 要望「漢字を 学べるように」）。
+  //   文は 小学3年〜（upper）の 漢字で、読みは 小学1〜2年（lower）の 文と つきあわせて 自動で つける（autoRuby）。
+  //   つきあわせ られない 文は RUBY に 手で 書く（[漢字|よみ]）。どちらも ない ときは ひらがな（lower）。年齢の めやすは かえない
+  function lv(level) { return level === "ruby" || LEVELS.indexOf(level) >= 0 ? level : "lower"; }
+
+  // 自動で つきあわせ られない 文の ふりがな（upper の 文に [漢字|よみ]）。upper を かえたら ここも 直す
+  var RUBY = {
+    dayUnit: "[日|にち]",
+    wxError: "[天気|てんき]を [読|よ]みこめませんでした",
+    rainNow: "いま [雨|あめ]が ふっている",
+    noRainToday: "[今日|きょう]は ふらない[予報|よほう]",
+    noRainUntil: "{h}[時|じ]まで ふらない[予報|よほう]",
+    calError: "[予定|よてい]を [読|よ]みこめませんでした",
+    pastWaiting: "{i:hourglass} {parent}に まだ [見|み]てもらって いないよ",
+    pastNone: "この[日|ひ]は [記録|きろく]が ないよ",
+    pastLocked: "この[日|ひ]は [見|み]るだけ だよ",
+    futureLook: "まだ[先|さき]の[日|ひ]だよ。その[日|ひ]に なったら おしてね",
+    progress: "{t}こ[中|ちゅう] {d}こ できた",
+    stAll: "[全部|ぜんぶ]できたね！{i:party}<br>ねる[前|まえ]に {parent}に [話|はな]そう",
+    // 自動では まちがう もの（言いかえて いる 文）
+    rainSoon: "もうすぐ [雨|あめ]",
+    maxAt: "[日中|にっちゅう]は{t}[度|ど]まで",
+  };
+  var KANJI = /[一-鿿々]/;
+  function escRe(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); }
+  // upper の 文の 漢字に lower の 文から 読みを つける → "[天気|てんき]の…"（つきあわせ られなければ null）。
+  //   スペースの あるなしは 見ない（ひらがなの 文は ことばの 区切りに スペースが ある）。{name}・<img> は そのまま
+  function autoRuby(upper, lower) {
+    if (typeof upper !== "string" || typeof lower !== "string" || !KANJI.test(upper)) return typeof upper === "string" ? upper : null;
+    var segs = upper.match(/\{[^}]*\}|<[^>]*>|[一-鿿々]+|[\s\S]/g) || [];
+    var kanji = [];
+    var re = "^\\s*" + segs.map(function (s) {
+      if (/^\s$/.test(s)) return "";
+      if (KANJI.test(s) && s.charAt(0) !== "{" && s.charAt(0) !== "<") { kanji.push(s); return "([\\u3041-\\u309f\\u30fc]+?)\\s*"; }
+      return escRe(s) + "\\s*";
+    }).join("") + "$";
+    var m = new RegExp(re).exec(lower);
+    if (!m) return null;
+    var i = 0;
+    return segs.map(function (s) {
+      return KANJI.test(s) && s.charAt(0) !== "{" && s.charAt(0) !== "<" ? "[" + s + "|" + m[++i] + "]" : s;
+    }).join("");
+  }
+  // ふりがなの ある 文は 1つの span に つつむ（flex の 箱の 中で 漢字と かなが ばらばらに ならんで すきまが できた）
+  function wrapRuby(html) { return html.indexOf("<ruby>") >= 0 ? '<span class="rb">' + html + '</span>' : html; }
+  function rubyHtml(markup) {
+    return markup.replace(/\[([^|\]]+)\|([^\]]+)\]/g, '<ruby>$1<rt>$2</rt></ruby>');
+  }
+  var rubyCache = {};
+  function rubyEntry(key) {
+    if (rubyCache.hasOwnProperty(key)) return rubyCache[key];
+    var e = T[key], v;
+    if (RUBY.hasOwnProperty(key)) v = RUBY[key];
+    else if (Array.isArray(e.upper)) v = e.upper.map(function (u, i) { var r = autoRuby(u, e.lower[i]); return r === null ? e.lower[i] : r; });
+    else { v = autoRuby(e.upper, e.lower); if (v === null) v = e.lower; }
+    v = Array.isArray(v) ? v.map(function (x) { return wrapRuby(rubyHtml(x)); }) : rubyHtml(v);
+    rubyCache[key] = v;
+    return v;
+  }
+  // ふりがなが 入れられない ところ（入力欄の 見本・ボタンの 値）用に タグを はずす
+  function plain(s) { return String(s).replace(/<rt>[\s\S]*?<\/rt>/g, "").replace(/<[^>]*>/g, ""); }
 
   // 日にち: 「1にち」「2にち」は 読みと あわないので、数字＋「日」に ふりがなを つける（カレンダーや 教科書と おなじ）。
   //   読みが かわる 日（ついたち・ふつか…とおか・じゅうよっか・はつか・にじゅうよっか）は 数字と 日の 上に まとめて、
@@ -197,22 +312,112 @@
     // 毎日の お知らせ（通知。device.js の setNotice が アプリに わたす）
     noticeTitle: "はなまるボード",
     noticeBody: "今日の予定とやること、いっしょに見てみませんか",
+    // 新しい版の知らせ（update.js。設定の いちばん上）。つないだ スマホ・ブラウザには 本体で 更新して もらう
+    updateSelf: "新しい版があります",
+    updateBoard: "置いてある端末（本体）に新しい版があります。本体で更新してください",
+    // つないだ スマホの アプリと 置いた端末の 版の ずれ（update.js。設定の いちばん上）
+    verBoardOld: "置いてある端末のアプリ（{board}）が、このスマホ（{me}）より古い版です。置いてある端末を更新してください",
+    verMeOld: "このスマホのアプリ（{me}）が、置いてある端末（{board}）より古い版です。このスマホのアプリを更新してください",
+    verOld: "0.1.19 以前",
+    // 歯車の 横の 札（update.js。おうちの人に して ほしい ことが ある とき）
+    gearUpdate: "更新",
+    gearAddress: "アドレス",
+    // つないだ スマホで 置いた端末に つながらない 理由（api.js の connWhy。ホーム・がんばりチェック・設定の 保存）
+    connPair: "つなぐための番号が合いません。置いてある端末で番号が変わったようです。「つなぎ直す」で番号を入れ直してください",
+    connMissing: "置いてある端末が見つかりません。置いてある端末でアプリが開いているか、同じ Wi-Fi につながっているかを確かめてください",
+    connNoReply: "置いてある端末から返事がありません。置いてある端末でアプリが開いているかを確かめてください",
+    connWait: "つなぐための番号を何回もまちがえました。30秒ほど待ってから、もう一度ためしてください",
+    // 招待コード（settings.js の renderPro。設定の「ヘルプ」の いちばん 下。2026-11-20）。FAQ には 書かない
+    proCodeTitle: "招待コード",
+    proCodeOpen: "開く",
+    proCodeEmpty: "招待コードを入れてください",
+    proCodeWrong: "招待コードが違うようです。もう一度確かめてください",
+    proCodeFail: "開けませんでした",
+    proCodeDone: "Pro が使えるようになりました",
+    proCodeOn: "Pro をお使いいただけます",
+    // おさいふ（wallet.js。鍵の あとの 入力は 大人向け）
+    wlInTitle: "お金の記録",
+    wlModeIn: "おさいふに入れる",
+    wlModeKeep: "貯金に入れる",
+    wlModeGive: "貯金からおさいふへ",
+    wlAmount: "金額",
+    wlWhatAdult: "内容",
+    wlWhatsAdult: ["おこづかい", "お年玉", "ポイントの交換", "お祝い"],
+    wlWhatHintAdult: "例：おじいちゃんから",
+    wlGiveWhat: "貯金から",
+    wlSaveAdult: "記録する",
+    wlRowTitle: "この記録",
+    wlRowRemove: "消す",
+    wlKeptNow: "いまの貯金：{x}円",
+    // もくひょうの「こうかんした」の あと（wallet.js の openExchange。2026-11-18）
+    wlExTitle: "おさいふに入れますか？",
+    wlExNote: "{p}ポイント × {r}円です。金額は変えられます。",
+    wlExYes: "入れる",
+    wlExNo: "入れない",
+    wlExFail: "交換できませんでした",
+    // 新しい版の更新（update.js。{when} は「明日 4:00〜5:00」）
+    updAsk: "新しい版があります。{when} に更新します",
+    updWait: "{when} に新しい版に更新します",
+    updDownloading: "新しい版をダウンロードしています",
+    updReady: "新しい版の準備ができました",
+    updToday: "今日",
+    updTomorrow: "明日",
+    updOpenSettings: "設定を開く",
+    updClose: "閉じる",
+    updChecking: "確認しています…",
+    updCheckFail: "確認できませんでした。Wi-Fi を確かめてください",
+    updNoPlay: "Google Play から入れたアプリで確認できます",
+    updLatest: "最新の版です",
     // 使い方の カード（usage-cards.js）。ブラウザでは 2台の 使い方を 隠さず、理由・手順を 出す
     usageAppOnly: "ブラウザでは使えません。Android のアプリで使えます。",
     usageQrHowto: "置いてある端末の QR コードを読み取ってつなぎます。",
-    usageQrGuide: "<b>ブラウザでつなぐ手順</b>① 置いてある端末（Android のアプリ）の設定の「使い方」で「この端末を置いて、別の端末からつなぐ」にすると、QR コードが出ます。<br>" +
+    // Google ドライブの 控え（Web 版だけ。drive.js・settings.js の「おうちの人」。2026-11-20）
+    driveTitle: "Google ドライブの控え",
+    driveSave: "Google ドライブに控える",
+    driveRestore: "ドライブから戻す",
+    driveSaving: "控えています…",
+    driveSaved: "控えました",
+    driveFinding: "控えを探しています…",
+    driveRestored: "戻しました",
+    driveNone: "ドライブに控えが見つかりませんでした",
+    driveLast: "最後に控えた日：{d}",
+    driveNever: "まだ控えていません",
+    driveStale: "前に控えてから1週間たちました。ときどき控えておくと安心です",
+    driveFrom: "{d} に控えた、",
+    driveReplace: "ドライブに {d} の控えがあります。この端末の内容で上書きしますか？（前の記録を戻すときは「キャンセル」を押し、「ドライブから戻す」を押してください）",
+    driveNote: "記録と設定を、お使いの Google ドライブに1つのファイルで控えます。はなまる工房には送りません。ブラウザが記録を消してしまったときも、ここから戻せます。",
+    driveErrCancel: "Google の画面が閉じられました。もう一度お試しください",
+    driveErrPopup: "Google の画面を開けませんでした。ポップアップを許可して、もう一度お試しください",
+    driveErrDenied: "ドライブへの保存が許可されませんでした。もう一度押して、許可してください",
+    driveErrLoad: "Google につながりませんでした。インターネットを確かめて、もう一度お試しください",
+    driveErrOffline: "つながりませんでした。インターネットを確かめて、もう一度お試しください",
+    driveErrFull: "ドライブの空きが足りないようです。空きを作ってから、もう一度お試しください",
+    driveErrBusy: "混み合っているようです。少し待ってから、もう一度お試しください",
+    driveErrBroken: "控えのファイルを読めませんでした",
+    driveErr: "うまくいきませんでした。少し待ってから、もう一度お試しください",
+    usageQrGuide: "<b>ブラウザでつなぐ手順</b>① 置いてある端末（Android のアプリ）の設定の「この端末」で「この端末を置いて、別の端末からつなぐ」にすると、QR コードが出ます。<br>" +
       "② この端末のカメラで読み取ると、置いてある端末のページが開き、つながります（同じ Wi-Fi の中だけ）。",
   };
 
   // 自前の 絵（dashboard/img/。docs/design/chatgpt-requests.md で 作った もの）。字の 大きさに あわせる（style.css の .ico）
   function icon(name) {
-    return '<img class="ico" src="img/' + name + (name === "hanamaru" ? ".svg" : ".png") + '" alt="" draggable="false">';
+    return '<img class="ico" src="img/' + name + (name === "hanamaru" || name === "goal-flag" ? ".svg" : ".png") + '" alt="" draggable="false">';
   }
 
   window.Words = {
     LEVELS: LEVELS,
     adult: function (key) { return ADULT.hasOwnProperty(key) ? ADULT[key] : key; },
     LABELS: { kinder: "幼稚園・保育園", lower: "小学1〜2年", upper: "小学3年〜" },
+    // 設定・かんたん設定の「年齢の目安」の 選択肢。「＋ふりがな」は 漢字に ふりがな（kid.ruby）。値は "lower" / "lower+ruby"
+    levelOptions: function (kid) {
+      var cur = lv(kid && kid.level) + (kid && kid.ruby ? "+ruby" : ""), L = this.LABELS;
+      return LEVELS.map(function (l) {
+        return [l, L[l]];
+      }).concat(LEVELS.map(function (l) { return [l + "+ruby", L[l] + "＋ふりがな"]; })).map(function (o) {
+        return '<option value="' + o[0] + '"' + (o[0] === cur ? " selected" : "") + '>' + o[1] + '</option>';
+      }).join("");
+    },
+    parseLevel: function (v) { var p = String(v || "").split("+"); return { level: lv(p[0]) === "ruby" ? "lower" : lv(p[0]), ruby: p[1] === "ruby" }; },
     // いちばん小さい子の だんかい（みんなで見る ところ用）
     youngest: function (kids) {
       var i = Math.min.apply(null, (kids || []).filter(function (k) { return k.active !== false; })
@@ -224,16 +429,36 @@
     t: function (key, level, vars) {
       var e = T[key];
       if (!e) return key;
-      var s = e[lv(level)];
+      var s = lv(level) === "ruby" ? rubyEntry(key) : e[lv(level)];
       if (typeof s !== "string") return s;
       vars = vars || {};
-      return s.replace(/\{(?:(date|days|i):)?([\w-]+)\}/g, function (m, as, k) {
+      var out = s.replace(/\{(?:(date|days|i):)?([\w-]+)\}/g, function (m, as, k) {
         if (as === "i") return icon(k);
         if (!(k in vars)) return m;
         return as ? dayHtml(vars[k], level, as === "days") : vars[k];
       });
+      return lv(level) === "ruby" ? wrapRuby(out) : out;
     },
     dayHtml: function (d, level, count) { return dayHtml(d, level, count); },
+    // タグの ない 文（入力欄の 見本など）。ふりがなの 子には ひらがなの 文
+    text: function (key, level, vars) { return plain(this.t(key, lv(level) === "ruby" ? "lower" : level, vars)); },
+    plain: plain,
+    // その 子の 文の だんかい（ふりがなを えらんだ 子は "ruby"）
+    textLevel: function (kid) { return kid && kid.ruby ? "ruby" : lv(kid && kid.level); },
+    // みんなで 見る ところ: いちばん 小さい 子に あわせる。その だんかいの 子に ふりがなの 子が いれば ふりがな
+    youngestText: function (kids) {
+      var y = this.youngest(kids);
+      return (kids || []).some(function (k) { return k.active !== false && lv(k.level) === y && k.ruby; }) ? "ruby" : y;
+    },
+    // 名前（やること・地域）と よみがなから ふりがなの HTML（html を エスケープ して から つける）。つきあわせ られなければ 全体の 上に
+    rubyName: function (name, kana, esc) {
+      var n = esc ? esc(name) : name;
+      if (!kana || !KANJI.test(name)) return n;
+      var m = autoRuby(name, kana);
+      if (m !== null && !/[<>&"']/.test(name)) return rubyHtml(m);
+      return '<ruby>' + n + '<rt>' + (esc ? esc(kana) : kana) + '</rt></ruby>';
+    },
+    autoRuby: autoRuby,
     icon: icon,
     // ホームの 大きな 日にちの よこの「日」（ふりがなは その日の 読み）。ふりがなは 幅に かぞえない（ほかの 文字を おしださない。
     //   ながい 読みは「日」の 左はしから 右へ のばして 2行に おる）

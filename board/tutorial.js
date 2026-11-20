@@ -13,38 +13,22 @@
   function $(id) { return document.getElementById(id); }
   var ICON = window.Words.icon;   // 自前の 絵（img/）
 
+  // 2026-11-20（0.1.23）に 10まいから 3まい（ようこそ・子どもへ・おうちの人へ）に した。天気・名前・みせよう・歯車（操作）は 押して 覚える ガイド（guide.js）へ、
+  //   もくひょう・おさいふは かんたん設定で 聞くので けした。天気の 注意・電池の 注意は よくある質問だけ（設定の「ヘルプ」）
   function slides() {
     return [
       // はじめの 1まいは ようこその 絵（img/welcome.webp。元は docs/design/raw/splash.png）
       { title: "はなまるボードへ ようこそ！", preview: "welcome",
-        text: "きょうが わかる。じぶんで できる。<br>まいにちの「できた！」を かぞくで みまもる ボードだよ。" },
-      { icon: ICON("sunny"), title: "あさは てんきを みよう", preview: "weather",
-        text: "きょうの てんきを みて、きる ふくや かさを じぶんで きめよう。<br>ゆうがたからは あしたの てんきに かわるよ。" },
-      { icon: ICON("bell"), title: "じぶんの なまえを おしてね", preview: "kids",
-        text: "きょうの やることが でてくるよ。<br>できたら おして、はなまるに しよう！" },
-      { icon: ICON("hanamaru"), title: "ねるまえに " + parent + "に みせよう", preview: "check",
-        text: parent + "が「みました」を おすと、その日が はなまるに なって、ごほうびが つくよ。<br>はなまるが つづくと れんぞく！" },
-      // ここから 大人むけ。絵は つけない（大人の 画面は 絵が なくても わかる）。子どもに わたす あいずの ページと「このボードについて」を 1つに
-      { title: "ここからは おうちの人へ", parent: true,
-        text: "<p>はなまるボードは、子どもが毎日の習慣を自分で進められるように支えるためのツールです。</p>" +
-          "<p>楽をするための道具ではありません。ゲームのような楽しさは残しつつ、やることはきちんとやれる子に育ってほしい。そんな願いで作りました。</p>" },
-      // 大人むけは 短く（くわしくは 設定の 中と よくある質問）
-      { title: "天気について", parent: true, preview: "weather",
-        text: "<p>天気は地域の予報から出しているため、詳しくは天気アプリなどでご確認ください。</p>" +
-          "<p>服装の目安の気温は、設定の「天気」で変えられます。</p>" },
-      { title: "操作について", parent: true, preview: "today",
-        text: "<p>画面の左上の歯車を押すと、設定が開きます。</p>" +
-          (usage === "board2"
-            ? "<p>「みました」や設定は、つないだスマホからもできます。</p>"
-            : "<p>「みました」は、子どもの画面の下にあります。</p>") +
-          // スマホ（アプリ）は 毎日の お知らせ（かんたん設定で 聞く。2026-11-05）
-          (usage === "phone" && window.Device && Device.canNotice() ? "<p>毎日のお知らせ（はじめは朝7時）は、設定の「使い方」で変えられます。</p>" : "") +
-          (usage === "phone" ? "" : web
-            ? "<p>置いて使うときは、ブラウザの共有ボタンから「ホーム画面に追加」して開いてください。</p>"
-            : "<p>決めた時間のほかは、しばらく触らないと画面が消えます（設定の「使い方」）。</p>") },
-      { title: "安全に使うために", parent: true, preview: "battery",
-        text: "<p>端末の背面が膨らんでいたり、熱くなっていたりしたときは、使うのをやめてください。</p>" +
-          "<p>電池の異常が分かったときは、ボードの左下でお知らせします。</p>" },
+        text: "きょうが わかる。じぶんで できる。<br>まいにちの「できた！」を かぞくで みまもる ボードだよ。<br>おうちの ひとと いっしょに みてね。" },
+      // 子どもへ（11-20 ユーザー: 2まいめで いきなり「おうちの人へ」だと「いっしょに」に ならない。じぶんで やる ことが 大事だと つたえる）
+      //   絵は 子どもが じぶんで ボードを おして いる ところ（img/kid-tap.webp。元は docs/design/raw/kid-tap.png。11-20）
+      { title: "じぶんで できる ことを ふやそう", preview: "kid-tap",
+        text: "はなまるボードは、じぶんで できる<br>すてきな おにいさん・おねえさんを おうえんするよ。<br>やる ことは じぶんで たしかめて、すすんで やって みよう！" },
+      // おうちの人へ。絵は つけない（大人の 画面は 絵が なくても わかる）
+      { title: "おうちの人へ", parent: true,
+        text: "<p>はなまるボードは、子どもが毎日の習慣を自分で進められるように支えるツールです。</p>" +
+          "<p>楽をするための道具ではありません。ゲームのような楽しさは残しつつ、やることはきちんとやれる子に育ってほしい。そんな願いで作りました。</p>" +
+          "<p>このあと、かんたん設定で使い始める準備をします。終わったら、お子さんと一緒に画面を押しながら使い方を試せます。</p>" },
     ];
   }
 
@@ -56,7 +40,7 @@
     $("tu-text").innerHTML = s.text;
     $("tu-board").classList.toggle("for-parent", !!s.parent);
     $("tu-board").classList.toggle("has-preview", !!s.preview);
-    $("tu-board").classList.toggle("hero", s.preview === "welcome");
+    $("tu-board").classList.toggle("hero", !!HERO[s.preview]);
     $("tu-dots").innerHTML = list.map(function (x, i) { return '<span class="' + (i === page ? "on" : "") + '"></span>'; }).join("");
     $("tu-back").disabled = page === 0;
     $("tu-next").textContent = page < list.length - 1 ? "つぎへ" : window.BoardApi.needsSetup() ? "かんたん設定へ" : "はじめる";
@@ -65,15 +49,17 @@
 
   // ボードの その場所を 小さく うつして 見せる（いまの 表示を コピーする）。おうちの人むけの ページは 文に 出てくる ところだけ
   //   today: 日付の 欄（設定の 歯車に しるし）、battery: ボード全体と 左下の「電池に注意」
+  // 大きな 絵の ページ（img/<名前>.webp）
+  var HERO = { welcome: 1, "kid-tap": 1 };
   var SHOTS = { board: ".board", weather: ".card.weather", kids: ".card.kids-card", today: ".card.today", battery: ".board" };
   function preview(kind) {
     var box = $("tu-preview");
     box.innerHTML = "";
     box.hidden = !kind;
-    box.classList.toggle("hero", kind === "welcome");
+    box.classList.toggle("hero", !!HERO[kind]);
     if (!kind || $("tutorial").hidden) return;
-    if (kind === "welcome") {
-      box.innerHTML = '<img class="tu-hero" src="img/welcome.webp" alt="">';
+    if (HERO[kind]) {
+      box.innerHTML = '<img class="tu-hero" src="img/' + kind + '.webp" alt="">';
       return;
     }
     var node;
@@ -130,7 +116,7 @@
       node.className = "tu-mock";
       node.innerHTML = '<div class="tm-list">' +
         ["ふくを きる", "はみがき", "かばんの じゅんび"].map(function (t) { return '<div class="tm-row"><span class="tm-check">' + ICON("hanamaru") + '</span>' + t + '</div>'; }).join("") +
-        '</div><div class="tm-side"><div class="tm-stamp">' + ICON("hanamaru") + '</div><div class="tm-ok">みました</div><div class="tm-streak">' + window.Words.dayHtml(3, "lower", true) + ' れんぞく</div></div>';
+        '</div><div class="tm-side"><div class="tm-stamp">' + ICON("hanamaru") + '</div><div class="tm-ok">みました</div></div>';
     }
     node.classList.add("tu-shot");
     box.appendChild(node);
@@ -201,6 +187,7 @@
 
   // はじめては 説明 → かんたん設定（どちらも とばせない。かんたん設定の ✕ も はじめては 出ない）。「つぎから ひょうじしない」に して いれば かんたん設定から。
   // 置いた端末に つないだ おうちの人の 端末（アプリ・QR の ブラウザ）は 設定から はじめるので 出さない（設定の「説明を見る」で 見られる）
-  if (!hidden() && !window.BoardApi.paired && !window.BoardApi.remote) open(window.BoardApi.needsSetup());
+  // 2026-11-20: 自分から 出すのは はじめて（まだ 設定して いない）ときだけ。前は 開くたびに 出て、朝の ボードに かぶさった（歩き通しで 見つけた）
+  if (window.BoardApi.needsSetup() && !hidden() && !window.BoardApi.paired && !window.BoardApi.remote) open(true);
   else afterTutorial();
 })();

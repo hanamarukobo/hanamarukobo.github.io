@@ -10,14 +10,14 @@
   function renderDate(now) {
     B.curSec = "clock";
     var dow = now.getDay();
-    setText("month", W("month", { m: now.getMonth() + 1 }));
+    setHtml("month", W("month", { m: now.getMonth() + 1 }));
     // 「日」に その日の 読みの ふりがな（1日 = ついたち）。かわった ときだけ かきかえる
     var unit = window.Words.dayUnit(now.getDate(), levelFor(B.curSec));
     if ($("day-unit").innerHTML !== unit) $("day-unit").innerHTML = unit;
     setText("day", now.getDate());
-    setText("weekday", W("weekdays")[dow]);
-    setText("wd-prev", W("weekdays")[(dow + 6) % 7]);
-    setText("wd-next", W("weekdays")[(dow + 1) % 7]);
+    setHtml("weekday", W("weekdays")[dow]);
+    setHtml("wd-prev", W("weekdays")[(dow + 6) % 7]);
+    setHtml("wd-next", W("weekdays")[(dow + 1) % 7]);
     var color = WEEKDAY_COLORS[B.holidays[ymd(now)] ? 0 : dow];
     if (document.body.style.getPropertyValue("--wd") !== color) document.body.style.setProperty("--wd", color);
 

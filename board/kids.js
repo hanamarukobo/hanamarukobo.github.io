@@ -1,17 +1,15 @@
 // ホームの 子どもの ボタンと「がんばりカレンダー」（子どもの 画面）。データは BoardApi（api.js）。
 // 子どもは やることを チェック（かいすうの やることは ＋−）する。きょうだけで なく 先月1日 からの すぎた日も なおせる
-// ママ・パパが「みました」にすると、1つでも できた日は はなまると ごほうびが つく。
+// ママ・パパが「みました」にすると、1つでも できた日は はなまると ポイントが つく。
 // 「みました」の あとに 子どもが かえたら とりけし（もういちど みてもらう まで たさない）。
 (function () {
   "use strict";
 
   // 子どもごとの色は せっていで えらぶ（palette.js）
   var PALETTE = window.KID_PALETTE;
-  var MILESTONES = [3, 7, 14, 30, 50, 100];
   var IDLE_CLOSE_MS = 2 * 60 * 1000;
 
   var state = null;      // /api/state のレスポンス
-  var showRewards = false; // がんばりカレンダーの 左がわに ごほうびを だしているか
   var viewDate = null;     // カレンダーで えらんだ すぎた日（null なら きょう）
   var openKid = null;    // ひらいている子の id
   // カレンダーで 見ている 月（null なら こんげつ）。さかのぼれるのは FIRST_MONTH まで
@@ -39,8 +37,12 @@
         console.error(e);
         if (state) return;
         // QR で ひらいた ブラウザ（iPhone など）は、番号が かわったか 置いた端末の IP が かわった とき
-        $("kids").innerHTML = '<div class="offline">' + (window.BoardApi.paired || e.status === 401
-          ? "置いてある端末につながりませんでした。置いてある端末の設定「使い方」の QR コードを、もう一度読み取ってください。"
+        // つないだ スマホの アプリは「つなぎ直す」を 出す（番号が かわった・置いた 端末が 見つからない。11-18）
+        $("kids").innerHTML = '<div class="offline">' + (window.BoardApi.remote
+          ? esc(window.BoardApi.connWhy(e) || "置いてある端末につながりませんでした。") + "<br><button class=\"ghost small reconnect\">つなぎ直す</button>"
+          : e.status === 429 ? esc(e.message)
+          : window.BoardApi.paired || e.status === 401
+          ? "置いてある端末につながりませんでした。置いてある端末の設定「この端末」の QR コードを、もう一度読み取ってください。"
           : "がんばりカレンダーに つながらないよ") + '</div>';
       });
   }
@@ -50,6 +52,8 @@
   function yenOf(t, kid) { return window.BoardApi.yenOf(t, kid); }
   // 小さい子（ようちえん・小学1〜2年）には ひらがなの なまえが あれば そちらを みせる
   function taskName(t, kid) { return t.kana && levelOf(kid) !== "upper" ? t.kana : t.name; }
+  // 画面に 出す 名前（エスケープ 済みの HTML）。ふりがなの 子は 漢字の 名前に よみがなを ふる
+  function taskHtml(t, kid) { return levelOf(kid) === "ruby" ? window.Words.rubyName(t.name, t.kana, esc) : esc(taskName(t, kid)); }
   function timeSlots() { return !!(state.settings && state.settings.timeSlots); }
   // ごぜん・ごご に わけるときは その じゅんに ならべ、見出しを はさむ
   function slotted(tasks, render) {
@@ -59,17 +63,9 @@
       return list.length ? '<li class="slot-head">' + W(g[1]) + '</li>' + list.map(render).join("") : "";
     }).join("");
   }
-  function entry(date, kid) {
-    var e = (state.days[date] || {})[kid] || { checks: [], approved: false };
-    e.counts = e.counts || {};
-    return e;
-  }
-
-  // そのやることを なんかい やったか（チェックは 0 か 1、かいすうは ＋− の数）
-  function taskCount(t, e) {
-    if (t.kind === "count") return e.counts[t.id] || 0;
-    return e.checks.indexOf(t.id) >= 0 ? 1 : 0;
-  }
+  // その日の 記録と、そのやることを なんかい やったか（チェックは 0 か 1、かいすうは ＋− の数）。決まりは api.js
+  function entry(date, kid) { return window.BoardApi.entry(state, date, kid); }
+  function taskCount(t, e) { return window.BoardApi.taskCount(t, e); }
 
   // その日の すすみぐあい。かいすうは 1かい いじょうで「やった」。
   // 週に何回は、やった 日だけ 数に 入れる（api.js の required）
@@ -78,12 +74,12 @@
     var done = tasks.filter(function (t) { return taskCount(t, e) > 0; }).length;
     return { done: done, total: tasks.length };
   }
-  // ボタンの「きょう」「こんげつ」の 行。できた 数だけ はなまるを ならべる。
+  // ボタンの「きょう」の 行。できた 数だけ はなまるを ならべる。
   // 1行に はいらない ときは fitDone が 数字（💮×4）に かえる（data-num）
   function tally(label, n) {
     var marks = "";
     for (var i = 0; i < n; i++) marks += '<i class="on">' + ICON("hanamaru") + '</i>';
-    return '<span class="tally' + (label === "tallyMonth" ? " tally-month" : "") + '" data-num="' + n + '"><span class="tl">' + W(label) + '</span><span class="dots">' +
+    return '<span class="tally" data-num="' + n + '"><span class="tl">' + W(label) + '</span><span class="dots">' +
       (n ? marks : '<b class="num">0</b>') + '</span></span>';
   }
   // きょう: できた やること 1つに はなまる 1こ（「みました」の あとは その ときの けっか）
@@ -92,7 +88,7 @@
     return tally("tallyToday", r ? r.done : progress(kid, e, date).done);
   }
   // 1行に はいらない しるしは 数字に（💮×4）、はみだす ときは 字を 小さく。
-  // それでも ボタンに おさまらない ときは、みんなの ボタンを そろえて 行を 小さく → こんげつ → きょう の じゅんに けす
+  // それでも ボタンに おさまらない ときは、みんなの ボタンを そろえて 行を 小さく → もくひょう → きょう の じゅんに けす
   function fitDone(box) {
     var btns = Array.prototype.slice.call(box.querySelectorAll(".kid-btn"));
     function over() {
@@ -109,7 +105,7 @@
     if (!over()) return;
     box.classList.add("tally-small");
     fitRows();
-    [".tally.tally-month", ".tally"].forEach(function (sel) {
+    [".kid-goal", ".tally"].forEach(function (sel) {
       if (over()) Array.prototype.forEach.call(box.querySelectorAll(sel), function (t) { t.remove(); });
     });
   }
@@ -121,9 +117,8 @@
   function visibleKids() { return state.kids.filter(function (k) { return k.active !== false; }); }
   function colors(id) { return PALETTE[findKid(id).color] || PALETTE.purple; }
 
-  // ごほうびの たんい（せっていで 円 / ポイント を えらぶ。なかの かずは おなじ）
-  function isPoint() { return !!(state && state.settings && state.settings.unit === "point"); }
-  function unit(n) { return W(isPoint() ? "point" : "yen", { n: n }); }
+  // やることの 値の たんいは ポイント（2026-11-12 に 円を やめた。前の「円」の 数は そのまま ポイントとして よむ）
+  function unit(n) { return W("point", { n: n }); }
 
   // 子どもに見せる ことば（words.js）。L は いま かいている ところの だんかい
   //   トップの ボタン・がんばりカレンダー: その子 / みんなの もくひょう: いちばん小さい子
@@ -133,42 +128,29 @@
     return window.Words.t(key, L, Object.assign({ parent: parent }, vars || {}));
   }
   function ICON(name) { return window.Words.icon(name); }
-  function levelOf(id) { return findKid(id).level || "lower"; }
-  function boardLevel() { return window.Words.youngest(state.kids); }
-  function activeRewards() { return (state.rewards || []).filter(function (r) { return r.active; }); }
+  // 文の だんかい（ふりがなを えらんだ 子は "ruby"。words.js の textLevel）。年齢の めやすは findKid(id).level
+  function levelOf(id) { return window.Words.textLevel(findKid(id)); }
+  function boardLevel() { return window.Words.youngestText(state.kids); }
 
-  // ママ・パパが みた日の ごほうびの ごうけい（since いこうの日だけ）
-  function earned(kid, since) {
-    var total = 0;
-    Object.keys(state.days).forEach(function (d) {
-      if (since && d < since) return;
-      var r = result(d, kid);
-      if (r) total += r.yen;
-    });
-    return total;
-  }
-  // ためた ポイント ＝ もらった ぶん − こうかんした ぶん
-  function balance(kid) {
-    return (state.exchanges || []).reduce(function (sum, x) {
-      return x.kid === kid ? sum - x.points : sum;
-    }, earned(kid));
+  // もくひょう（api.js の goalInfo。子どもごとに ポイントが たまったら たっせい。おうちの人が「こうかんした」を 押すと 1回分 へる）
+  //   ホームの ゲージは 数字なし（💮の 数と まざらないように）。8割で「もうすこし！」、とどいて いる 間は カードが 金色で「たっせい！」
+  //   （こうかん するまで 金色の まま。まだ こうかん して もらって いないと わかる）
+  function goalOf(kid) { return window.BoardApi.goalInfo(state, kid, ymd(new Date())); }
+  function goalGauge(g, cls) {
+    var pct = Math.min(100, Math.floor(g.progress / g.size * 100));
+    var word = g.reached ? W("goalReached") : pct >= 80 ? W("goalNear") : "";
+    // 「みました」を まって いる ぶんは うすい しまで（数には 入れない。2026-11-20 テスターの 声）
+    var wait = g.waiting && !g.reached ? Math.min(100, Math.ceil((g.progress + g.waiting) / g.size * 100)) : 0;
+    return '<span class="' + cls + '"><span class="kg-star">' + ICON("point-star") + '</span>' +
+      '<span class="kg-track">' + (wait > pct ? '<span class="kg-wait" style="width:' + wait + '%"></span>' : "") +
+      '<span class="kg-fill" style="width:' + pct + '%"></span>' + (word ? '<span class="kg-word">' + word + '</span>' : "") + '</span>' +
+      '<span class="kg-flag">' + ICON("goal-flag") + '</span></span>';
   }
 
-  // いま めざしている みんなの もくひょう（たっせい していない さいしょの もの）
-  function currentGoal() {
-    return (state.goals || []).filter(function (g) { return !g.done; })[0] || null;
-  }
-  function goalProgress(g) {
-    var parts = state.kids.map(function (k) { return { kid: k, n: earned(k.id, g.start) }; });
-    var sum = parts.reduce(function (a, p) { return a + p.n; }, 0);
-    return { parts: parts, sum: sum, reached: sum >= g.target };
-  }
-
-  // 子どもが チェックを なおせる 日: きょうと、先月1日 からの すぎた日（api.js の kidDate と おなじ）。
+  // 子どもが チェックを なおせる 日: きょうと、先月1日 からの すぎた日（決まりは api.js の kidEditable）。
   //   みました の あとに 直したら、みました は 取り消し（api.js の unapprove）
-  function editFrom() { var n = new Date(); return ymd(new Date(n.getFullYear(), n.getMonth() - 1, 1)); }
   function kidEditable(kid, day, e) {
-    return day >= editFrom() && day <= ymd(new Date());
+    return window.BoardApi.kidEditable(day, ymd(new Date()));
   }
 
   // ママ・パパが みた日の けっか
@@ -243,10 +225,11 @@
     var now = new Date(), today = ymd(now), kids = visibleKids();
     var html = kids.map(function (k) {
       L = levelOf(k.id);
-      var c = colors(k.id), e = entry(today, k.id), r = result(today, k.id), m = monthStats(k.id, now);
+      var c = colors(k.id), e = entry(today, k.id), r = result(today, k.id), goal = goalOf(k.id);
       var p = progress(k.id, e, today);
       var nGrad = gradsOf(k.id).length, badge, text, cls = "kid-btn", tier = gradTier(nGrad);
       if (tier) cls += " grad-" + tier;
+      if (goal.reached) cls += " goal-reached";
       if (r) {
         badge = r.flower ? ICON("hanamaru") : "⭕";
         // はなまるが つづいた 日数（きょうを ふくむ）で ことばを かえる
@@ -266,7 +249,7 @@
         '<span class="name">' + esc(k.name) + (k.honor ? '<small class="honor">' + esc(k.honor) + '</small>' : "") + '</span>' +
         '<span class="state">' + text + '</span>' +
         todayDone(k.id, e, r, today) +
-        tally("tallyMonth", m.done) +
+        goalGauge(goal, "kid-goal") +
         '</button>';
     }).join("");
     // 30びょうごとの よみなおしで かわっていなければ かきなおさない（でんきを へらす）
@@ -276,9 +259,7 @@
       layoutKids($("kids"), kids.length);
       fitDone($("kids"));
     }
-    renderGoalPill();
     if (openKid) renderKidView();
-    if (!$("goal-view").hidden) renderGoalView();
   }
 
   // ---- できるようになったこと（「もう できる」に まとめた やること）----
@@ -295,6 +276,7 @@
   // ホームの ボタンの 枠: 1〜2こ / 3〜5こ / 6こ いじょう
   function gradTier(n) { return n >= 6 ? 3 : n >= 3 ? 2 : n >= 1 ? 1 : 0; }
   function gradName(g) { return g.kana && levelOf(g.kid) !== "upper" ? g.kana : g.name; }
+  function gradHtml(g) { return levelOf(g.kid) === "ruby" ? window.Words.rubyName(g.name, g.kana, esc) : esc(gradName(g)); }
   function seenGrads() {
     try { return JSON.parse(localStorage.getItem(SEEN_KEY)) || []; } catch (e) { return []; }
   }
@@ -303,7 +285,7 @@
     try { localStorage.setItem(SEEN_KEY, JSON.stringify(s.slice(-200))); } catch (e) { /* おぼえられなくても よい */ }
   }
   // Pro は 段の 地図（stairs.js）。無料は 段の 一覧（まとめた ときの おいわいだけ 出る）
-  function isPro() { return window.BoardApi.isPro(); }
+  function isPro() { return window.BoardApi.isPro(state); }
   var gradMap = null;
   function openGradView(kid, hello) {
     gradKid = kid;
@@ -327,7 +309,7 @@
     var gs = gradsOf(gradKid);
     $("grv-hello").hidden = true;
     $("grv-title").innerHTML = W("gradTitle", { name: name });
-    $("grv-count").textContent = gs.length ? W("gradSteps", { n: gs.length }) : "";   // 0こ のときは 地図の 空の カードに「できる ことを ふやそう！」
+    $("grv-count").innerHTML = gs.length ? W("gradSteps", { n: gs.length }) : "";   // 0こ のときは 地図の 空の カードに「できる ことを ふやそう！」
     var fresh = hello ? gs.map(function (g) { return g.id; }).indexOf(hello.id) : -1;
     if (gradMap) gradMap.stop();
     gradMap = null;
@@ -354,64 +336,28 @@
     var k0 = findKid(gradKid), name = esc(k0.name) + (k0.honor ? '<small class="honor">' + esc(k0.honor) + '</small>' : "");
     var gs = gradsOf(gradKid).reverse(), top = Math.min(gs.length - 1, 6);
     $("grv-hello").hidden = !hello;
-    if (hello) $("grv-hello").innerHTML = '<b>' + W("gradCongrats") + '</b>' + W("gradNew", { task: esc(gradName(hello)) });
+    if (hello) $("grv-hello").innerHTML = '<b>' + W("gradCongrats") + '</b>' + W("gradNew", { task: gradHtml(hello) });
     $("grv-title").innerHTML = W("gradTitle", { name: name });
-    $("grv-count").textContent = gs.length ? W("gradSteps", { n: gs.length }) : W("gradEmpty");
+    $("grv-count").innerHTML = gs.length ? W("gradSteps", { n: gs.length }) : W("gradEmpty");
     $("grv-steps").innerHTML = gs.map(function (g, i) {
       return '<li style="--i:' + Math.max(0, top - i) + '"' + (hello && g.id === hello.id ? ' class="new"' : '') + '>' +
         '<span class="st-date">' + W("gradDate", { m: +g.date.slice(5, 7), d: +g.date.slice(8, 10) }) + '</span>' +
-        '<span class="st-name">' + esc(gradName(g)) + '</span></li>';
+        '<span class="st-name">' + gradHtml(g) + '</span></li>';
     }).join("");
   }
-  // 無料は 数を 見せる バッジ（押しても なにも おきない）。Pro は 段の 地図を ひらく
-  $("kv-grad").addEventListener("click", function () { if (isPro()) openGradView(openKid, null); });
+  // 無料は 数を 見せる バッジ（押すと 階段が はねるだけ。Pro の 案内は 出さない）。Pro は 段の 地図を ひらく
+  $("kv-grad").addEventListener("click", function () {
+    if (isPro()) return openGradView(openKid, null);
+    var b = $("kv-grad");
+    b.classList.remove("hop");
+    void b.offsetWidth;   // 続けて 押しても もう一度 はねる
+    b.classList.add("hop");
+  });
   $("grv-close").addEventListener("click", closeGradView);
   $("grad-view").addEventListener("click", function (ev) { if (ev.target === $("grad-view")) closeGradView(); });
 
-  // ---- みんなの もくひょう ----
-  function renderGoalPill() {
-    var g = currentGoal(), pill = $("goal-pill");
-    L = boardLevel();
-    pill.hidden = !g;
-    if (!g) return;
-    var p = goalProgress(g), pct = Math.min(100, Math.round(p.sum / g.target * 100));
-    var html = '<span class="gp-icon">' + ICON("family-goal") + '</span>' +
-      (p.reached ? '<span class="gp-text">' + W("goalDoneShort") + '</span>'
-        : '<span class="gp-bar"><span style="width:' + pct + '%"></span></span><span class="gp-text">' + pct + '%</span>');
-    if (pill.innerHTML !== html) pill.innerHTML = html;
-    pill.classList.toggle("reached", p.reached);
-  }
-  $("goal-pill").addEventListener("click", function () {
-    $("goal-view").hidden = false;
-    renderGoalView();
-  });
-  $("gv-close").addEventListener("click", function () { $("goal-view").hidden = true; });
-  // まわりの くらい ところを タップしても とじる
-  $("goal-view").addEventListener("click", function (ev) {
-    if (ev.target === $("goal-view")) $("goal-view").hidden = true;
-  });
-
-  function renderGoalView() {
-    var g = currentGoal();
-    if (!g) { $("goal-view").hidden = true; return; }
-    var p = goalProgress(g);
-    L = boardLevel();
-    $("gv-icon").innerHTML = ICON("family-goal");
-    $("gv-title").textContent = W("goalTitle", { title: g.title });
-    // バーは 子どもごとの いろで つみあげる
-    $("gv-bar").innerHTML = p.parts.filter(function (x) { return x.n > 0; }).map(function (x) {
-      return '<span style="width:' + Math.min(100, x.n / g.target * 100) + '%;background:' + colors(x.kid.id).main + '"></span>';
-    }).join("");
-    $("gv-left").innerHTML = p.reached
-      ? W("goalDone")
-      : unit(p.sum) + ' / ' + unit(g.target) + '<br><b>' + W("goalLeft", { x: unit(g.target - p.sum) }) + '</b>';
-    $("gv-kids").innerHTML = p.parts.filter(function (x) { return x.kid.active !== false || x.n > 0; }).map(function (x) {
-      return '<li style="--kid:' + colors(x.kid.id).main + '"><span class="dot"></span>' + esc(x.kid.name) +
-        '<b>' + unit(x.n) + '</b></li>';
-    }).join("");
-  }
-
   $("kids").addEventListener("click", function (ev) {
+    if (ev.target.closest(".reconnect")) { window.Remote.open(); return; }
     var btn = ev.target.closest(".kid-btn");
     if (!btn) return;
     // 名前の 左上の 称号（かいだん）は「できるようになったこと」へ じかに とぶ
@@ -446,8 +392,8 @@
 
   function closeKidView() {
     closeBundle();
+    if (window.Wallet) window.Wallet.exit();
     openKid = null;
-    showRewards = false;
     viewDate = null;
     viewMonth = null;
     $("kid-view").hidden = true;
@@ -470,7 +416,7 @@
     void g.offsetWidth;
     g.classList.add(step > 0 ? "slide-next" : "slide-prev");
   }
-  function canMoveMonth(step) { return !showRewards && !$(step > 0 ? "kv-next" : "kv-prev").disabled; }
+  function canMoveMonth(step) { return !$(step > 0 ? "kv-next" : "kv-prev").disabled; }
   function stepMonth(step) {
     if (!canMoveMonth(step)) return;
     moveMonth(step);
@@ -484,29 +430,27 @@
   function renderKidView() {
     var kid = openKid, now = new Date(), today = ymd(now);
     var k0 = findKid(kid), name = esc(k0.name) + (k0.honor ? '<small class="honor">' + esc(k0.honor) + '</small>' : "");
-    // ごほうびの こうかんは ポイントの ときだけ
-    var hasRewards = isPoint() && activeRewards().length > 0;
-    if (!hasRewards) showRewards = false;
     L = levelOf(kid);
-    $("kv-title").innerHTML = W("kvTitle", { name: name });
-
-    var s = streak(kid, now), next = MILESTONES.filter(function (m) { return m > s; })[0];
-    $("kv-streak").innerHTML = s > 0
-      ? '<span class="hot">' + W("streak", { n: s }) + '</span>' + (next ? W("streakNext", { k: next - s, m: next }) : '')
-      : W("streakStart");
+    // 見出しは 名前と［がんばり｜おさいふ］だけ（れんぞくの 札は 2026-11-19 に なくした。カレンダーの 💮 で 見える）
+    $("kv-title").innerHTML = name;
     var gs = gradsOf(kid);
     $("kv-grad").hidden = false;   // 0この ときも かいだんだけ 出す
     $("kv-grad").innerHTML = STAIRS + (gs.length ? W("gradBtn", { n: gs.length }) : "");
     $("kv-grad").classList.toggle("badge", !isPro());
     $("kv-grad").tabIndex = isPro() ? 0 : -1;
+    // がんばり｜おさいふ（おさいふは 設定で 使うと きめた 子だけ。中身と きりかえは wallet.js）
+    $("kv-tab-cal").innerHTML = W("kvTabCal");
+    $("kv-wallet").hidden = !k0.wallet;
+    $("kv-wallet").innerHTML = W("wlOpen");
+    fitTabs();
+    if (window.Wallet) window.Wallet.render();
 
     // カレンダー
     var y = viewMonth ? viewMonth.y : now.getFullYear(), mo = viewMonth ? viewMonth.mo : now.getMonth();
     var past = !!viewMonth;
-    $("kv-month").textContent = y !== now.getFullYear() ? W("yearMonth", { y: y, m: mo + 1 }) : W("month", { m: mo + 1 });
+    $("kv-month").innerHTML = y !== now.getFullYear() ? W("yearMonth", { y: y, m: mo + 1 }) : W("month", { m: mo + 1 });
     $("kv-prev").disabled = y * 12 + mo <= FIRST_MONTH.y * 12 + FIRST_MONTH.mo;
     $("kv-next").disabled = y * 12 + mo > now.getFullYear() * 12 + now.getMonth();
-    $("kv-add").hidden = past;
     // 週の始まり（0=日曜, 1=月曜）は ママ・パパの設定ページで かえられる
     var ws = (state.settings && state.settings.weekStart) === 1 ? 1 : 0;
     var html = "";
@@ -525,26 +469,26 @@
       html += '<div class="' + cls + '" data-date="' + key + '"><span class="d">' + d + '</span>' + mark + '</div>';
     }
     $("kv-grid").innerHTML = html;
-    var m = monthStats(kid, new Date(y, mo, 1));
-    $("kv-total").classList.toggle("point", isPoint());
-    if (isPoint()) {
-      $("kv-total").innerHTML = '<span class="yen">' + W(past ? "pastPoint" : "monthPoint", { m: mo + 1, x: unit(m.yen) }) + '</span>' +
-        (hasRewards
-          ? '<button class="kv-reward-btn" id="kv-reward-btn">' + (showRewards ? W("toCalendar") : W("saved", { x: unit(balance(kid)) })) + '</button>'
-          : '<span class="count">' + W("flowerCount", { n: m.flowers }) + '</span>');
-    } else {
-      $("kv-total").innerHTML = '<span class="yen">' + W(past ? "pastReward" : "monthReward", { m: mo + 1, x: unit(m.yen) }) + '</span>' +
-        '<span class="count">' + W("flowerCount", { n: m.flowers }) + '</span>';
-    }
-    if (showRewards) $("kv-month").innerHTML = W("savedTitle", { x: unit(balance(kid)) });
-    $("kv-prev").hidden = $("kv-next").hidden = showRewards;
-    $("kv-grid").hidden = showRewards;
-    $("kv-rewards").hidden = !showRewards;
-    if (showRewards) renderRewards(kid);
+    // 左の 下: もくひょうの はこ（数字は ここだけ）と、これまでの 合計・その月の はなまる（こうかんの 回数は 出さない。ふりかえりは Pro の レポート）
+    var m = monthStats(kid, new Date(y, mo, 1)), g = goalOf(kid);
+    $("kv-total").innerHTML =
+      '<div class="kv-goal"><div class="kv-goal-head"><span>' + W("goalBox") + ' ' + ICON("point-star") + ' ' + g.progress + ' / ' + g.size + '</span>' +
+      '<span>' + (g.reached
+        // とどいたら おうちの人が「こうかんした」（鍵を たしかめてから）。取り消しは ない（2026-11-18。ずれたら おうちで おさいふの 記録などで 合わせる）
+        ? '<button class="kv-exchange" id="kv-exchange">' + W("goalExchange") + '</button>'
+        : W("goalLeft", { x: g.size - g.progress })) +
+      '</span></div>' + goalGauge(g, "kv-gauge") +
+      // できたけど まだ みて もらって いない ポイント（ふえる しくみを 子どもにも わかるように）
+      (g.waiting ? '<div class="kv-wait"><b>' + W("goalWaitNum", { x: g.waiting }) + '</b><span>' + W("goalWaitText") + '</span></div>' : "") +
+      '</div>' +
+      '<div class="kv-sums"><span class="yen">' + W("goalTotal", { x: unit(g.total) }) + '</span>' +
+      '<span class="count">' + W("monthFlowers", { m: mo + 1, n: m.flowers }) + '</span></div>';
 
-    $("kv-add").textContent = W("addOnce");
     // きょう、または カレンダーで えらんだ 日の やること（あしたから さきは みるだけ）
     var day = viewDate || today, isToday = day === today, future = day > today;
+    // 1回だけの やることを 足す: 今日は「＋ きょうだけ」、さきの 日は「＋ このひだけ」、すぎた 日は 出さない
+    $("kv-add2").hidden = day < today;
+    $("kv-add2").innerHTML = W(isToday ? "addToday" : "addThisDay");
     var e0 = entry(day, kid), r0 = result(day, kid), tasks = dayTasks(kid, day), p0 = progress(kid, e0, day);
     var edit = kidEditable(kid, day, e0), lock = edit ? "" : " locked";
     var dt = new Date(+day.slice(0, 4), +day.slice(5, 7) - 1, +day.slice(8, 10));
@@ -564,13 +508,13 @@
     }
     function listHtml() { return slotted(tasks, function (t) {
       var n = taskCount(t, e0), cls = (n > 0 ? "done" : "") + lock, yen = yenOf(t, kid);
-      var name = esc(taskName(t, kid)) + (t.repeat.type === "once" ? '<span class="once">' + W("todayOnly") + '</span>' : "");
+      var name = taskHtml(t, kid) + (t.repeat.type === "once" ? '<span class="once">' + W("todayOnly") + '</span>' : "");
       if (t.repeat.type === "perweek") {
         // 週に何回: のこりの 回数。ほかの 日で とどいた 週は「こんしゅう できた」で おせない
         var other = window.BoardApi.weekDone(state, t, kid, day, day), left = t.repeat.n - other - n;
         if (!n && other >= t.repeat.n) {
           return '<li class="done locked weekdone" data-task="' + t.id + '"><span class="box">' + ICON("hanamaru") + '</span>' +
-            '<span class="name">' + esc(taskName(t, kid)) + '<span class="once week">' + W("weekDone") + '</span></span>' +
+            '<span class="name">' + taskHtml(t, kid) + '<span class="once week">' + W("weekDone") + '</span></span>' +
             '<span class="money"></span></li>';
         }
         name += '<span class="once week">' + (left > 0 ? W("weekLeft", { n: left }) : W("weekDone")) + '</span>';
@@ -581,7 +525,7 @@
         cls += " bundle";
       }
       if (t.kind === "count") {
-        // かいすう: ＋− で かぞえる。ごほうびは きんがく × かいすう
+        // かいすう: ＋− で かぞえる。ポイントは 1回の ポイント × かいすう
         return '<li class="count ' + cls + '" data-task="' + t.id + '">' +
           '<span class="name">' + name + '<span class="per">' + unit(yen) + ' × ' + n + ' = ' + unit(yen * n) + '</span></span>' +
           '<span class="stepper">' +
@@ -607,8 +551,8 @@
     else if (future) msg = W("futureLook");
     else if (!isToday) msg = W(p0.done ? "pastWaiting" : edit ? "pastNone" : "pastLocked");
     else if (p0.total && left <= 0) msg = W("stAll");
-    else if (p0.done) msg = esc(W("stCheer", { n: left }));
-    else msg = esc(W("stStart"));
+    else if (p0.done) msg = W("stCheer", { n: left });
+    else msg = W("stStart");
     var act = "";
     // 1台で 使うときは、ここで おうちの人が「みました」を おす（鍵を たしかめてから）。1つも できていない ときは 出さない
     if (e0.approved || (p0.total && p0.done)) {
@@ -623,8 +567,11 @@
   }
 
   // やることの 一覧の 上・下に まだ ある ときは 矢印を 出す（スクロール できる ことを 子どもにも わかるように）
+  //   2026-11-20: 前は 一覧の 上に うかべて いて、行の まんなかの「いまから やる」に かさなった（ユーザー）。
+  //   はみだす ときだけ 上と 下に 帯の 場所を とり（.scrolls）、矢印は そこに 出す。帯の 場所は 一覧の 高さで きめ、スクロールでは かえない（がたつかない）
   function moreArrows() {
-    var l = $("kv-list");
+    var l = $("kv-list"), wrap = l.parentNode;
+    wrap.classList.toggle("scrolls", l.scrollHeight > wrap.clientHeight + 4);
     $("kv-more-up").hidden = l.scrollTop <= 4;
     $("kv-more-down").hidden = l.scrollTop + l.clientHeight >= l.scrollHeight - 4;
   }
@@ -646,6 +593,22 @@
     });
   }
 
+  // もくひょうの「こうかんした」（おうちの人。鍵を たしかめてから）
+  $("kv-total").addEventListener("click", function (ev) {
+    if (!ev.target.closest("#kv-exchange")) return;
+    var kid = openKid;
+    window.ParentLock.ask(function () {
+      // おさいふを 使い、1ポイント＝○円を 決めて いる 子は「おさいふに 入れますか？」を 聞く（入れない・金額を 直すも できる。wallet.js）
+      var k = state.kids.filter(function (x) { return x.id === kid; })[0];
+      if (k && k.wallet && k.walletRate > 0 && window.Wallet) {
+        return window.Wallet.askExchange(window.BoardApi.goalInfo(state, kid, ymd(new Date())).size, k.walletRate);
+      }
+      window.BoardApi.post("/api/parent/goal-exchange", { kid: kid })
+        .then(function () { confetti(); return load(); })
+        .catch(function (err) { console.error(err); });
+    });
+  });
+
   $("kv-grid").addEventListener("click", function (ev) {
     var cell = ev.target.closest("[data-date]");
     if (!cell || !openKid) return;
@@ -659,27 +622,6 @@
     if (!ev.target.closest("#kv-back-today")) return;
     viewDate = null;
     viewMonth = null;
-    renderKidView();
-  });
-
-  // ためた ポイントで こうかん できる ごほうび。こうかんは ママ・パパが きろくする。
-  // 絵は どれも ごほうびの 箱（端末で 絵が かわる 絵文字は つかわない。前の データの icon は 出さない）
-  function renderRewards(kid) {
-    var bal = balance(kid);
-    $("kv-rewards").innerHTML = activeRewards().map(function (r) {
-      var ok = bal >= r.points, pct = Math.max(0, Math.min(100, Math.round(bal / r.points * 100)));
-      return '<li class="' + (ok ? "ok" : "") + '">' +
-        '<span class="icon">' + ICON("gift") + '</span>' +
-        '<span class="body"><span class="name">' + esc(r.name) + '<small>' + unit(r.points) + '</small></span>' +
-        '<span class="bar"><span style="width:' + pct + '%"></span></span>' +
-        '<span class="hint">' + (ok ? W("canExchange") : W("needMore", { x: unit(r.points - bal) })) + '</span></span>' +
-        '</li>';
-    }).join("");
-  }
-
-  $("kv-total").addEventListener("click", function (ev) {
-    if (!ev.target.closest("#kv-reward-btn")) return;
-    showRewards = !showRewards;
     renderKidView();
   });
 
@@ -783,13 +725,13 @@
     gradsOf(kid).forEach(function (g) { since[g.taskId] = g.date; });
     var items = window.BoardApi.bundleItems(state.tasks, kid, day);
     var fresh = items.some(function (t) { return since[t.id] >= from; });
-    $("bdv-title").innerHTML = STAIRS + esc(taskName(b, kid));
+    $("bdv-title").innerHTML = STAIRS + taskHtml(b, kid);
     $("bdv-cheer").className = "bdv-cheer" + (fresh ? " big" : "");
     $("bdv-cheer").innerHTML = fresh
       ? '<span class="bdv-ic">' + STAIRS + ICON("hanamaru") + '</span><span>' + W("bundleCheer", { name: name }) + '<br><b>' + W("bundleNext") + '</b></span>'
       : '<span>' + W("bundleSteady") + '</span>';
     $("bdv-items").innerHTML = items.map(function (t) {
-      return '<li>' + ICON("hanamaru") + '<span>' + esc(taskName(t, kid)) + '</span>' +
+      return '<li>' + ICON("hanamaru") + '<span>' + taskHtml(t, kid) + '</span>' +
         (since[t.id] >= from ? '<small class="bdv-new">' + W("bundleNew") + '</small>' : "") + '</li>';
     }).join("");
     var done = e.checks.indexOf(b.id) >= 0;
@@ -812,26 +754,33 @@
   function addDays(n) { var d = new Date(); d.setDate(d.getDate() + n); return ymd(d); }
   function md(date) { return +date.slice(5, 7) + "/" + +date.slice(8, 10); }
 
-  $("kv-add").addEventListener("click", function () {
+  // 「＋ きょうだけ」「＋ このひだけ」（きょうの やることの 見出しの 右。11-18 テスターの 声で ここに 1つに した。
+  // 前は カレンダーの 見出しの「＋ 1回だけの やること」）
+  $("kv-add2").addEventListener("click", function () {
     if (window.ParentLock) window.ParentLock.ask(openQuick);
+  });
+  $("qk-name").addEventListener("input", function () {
+    if ($("qk-name").value.trim()) { $("qk-name").classList.remove("need"); $("qk-error").textContent = ""; }
   });
 
   function openQuick() {
     quickKids = openKid ? [openKid] : [];
-    quickDate = addDays(0);
-    // ごほうびは いちばん おおく つかっている 金額から はじめる
+    // 見て いる 日（さきの 日を えらんで いれば その 日）
+    quickDate = viewDate && viewDate > addDays(0) ? viewDate : addDays(0);
+    // ポイントは いちばん おおく つかっている 数から はじめる
     var votes = {};
     state.tasks.forEach(function (t) { if (t.active) votes[t.yen] = (votes[t.yen] || 0) + 1; });
     var keys = Object.keys(votes).sort(function (a, b) { return votes[b] - votes[a]; });
     $("qk-name").value = "";
     $("qk-yen").value = keys.length ? keys[0] : 0;
-    $("qk-unit").textContent = isPoint() ? "ポイント" : "円";
     $("qk-error").textContent = "";
+    $("qk-name").classList.remove("need");
     setQuickEdit(null);
     // アプリでは 音声で 入れられる（端末に 音声認識が あるとき）
     $("qk-voice").hidden = !(Device.canVoice() && window.EchoBoard.canVoice && window.EchoBoard.canVoice());
     renderQuick();
     $("quick").hidden = false;
+    window.Board.fitLine($("qk-title"));
   }
 
   function renderQuick() {
@@ -881,6 +830,7 @@
     $("qk-title").textContent = id ? "1回だけの やることを なおす" : "1回だけの やることを たす";
     $("qk-ok").textContent = id ? "なおす" : "たす";
     $("qk-new").hidden = !id;
+    window.Board.fitLine($("qk-title"));
   }
   $("qk-list").addEventListener("click", function (ev) {
     var el = ev.target.closest("[data-remove],[data-edit]");
@@ -910,12 +860,22 @@
   window.addEventListener("board:voice", function (ev) {
     $("qk-voice").classList.remove("on");
     var text = String(ev.detail || "").trim();
-    if (text && !$("quick").hidden) $("qk-name").value = text.slice(0, 30);
+    if ($("quick").hidden) return;
+    // 聞きとれなかった・とちゅうで やめた ときも だまらずに しらせる（11-18。前は 何も おきず「すすまない」に 見えた）
+    if (!text) { $("qk-error").textContent = "きこえませんでした。もういちど おすか、もじで いれてください"; return; }
+    $("qk-name").value = text.slice(0, 30);
+    $("qk-name").classList.remove("need");
+    $("qk-error").textContent = "";
   });
   $("qk-close").addEventListener("click", function () { $("quick").hidden = true; });
   $("qk-ok").addEventListener("click", function () {
     var name = $("qk-name").value.trim();
-    if (!name) { $("qk-error").textContent = "なまえを いれてください"; return; }
+    if (!name) {
+      $("qk-error").textContent = "やることが まだ はいっていません";
+      $("qk-name").classList.add("need");
+      $("qk-name").focus();
+      return;
+    }
     if (!quickKids.length) { $("qk-error").textContent = "だれが やるか えらんでください"; return; }
     if (quickDate < ymd(new Date())) { $("qk-error").textContent = "きょうより まえの 日には " + (quickEdit ? "できません" : "たせません"); return; }
     var body = { name: name, kids: quickKids, date: quickDate, yen: parseInt($("qk-yen").value, 10) || 0 };
@@ -943,7 +903,6 @@
   setInterval(function () {
     var idle = Date.now() - lastTouch > IDLE_CLOSE_MS || !$("sleep").hidden;
     if (openKid && idle) closeKidView();
-    if (!$("goal-view").hidden && idle) $("goal-view").hidden = true;
     if (gradKid && idle) closeGradView();
     if (!$("quick").hidden && idle) $("quick").hidden = true;
   }, 1000);
@@ -958,6 +917,29 @@
     gradMap.stop();
     drawGradMap(gradsOf(gradKid), -1, false);
   });
+
+  // 見出しの 名前が 入らない ときは、名前を「…」に する 前に［がんばりカレンダー｜おさいふ］の 字を 小さく する（12px まで）
+  function fitTabs() {
+    var title = $("kv-title"), tabs = Array.prototype.slice.call(document.querySelectorAll(".kv-tab"));
+    tabs.forEach(function (t) { t.style.fontSize = ""; t.style.paddingLeft = t.style.paddingRight = ""; });
+    if (!title.clientWidth) return;
+    var size = parseFloat(getComputedStyle(tabs[0]).fontSize);
+    while (title.scrollWidth > title.clientWidth + 1 && size > 12) {
+      size -= 1;
+      tabs.forEach(function (t) { t.style.fontSize = size + "px"; t.style.paddingLeft = t.style.paddingRight = Math.round(size * 0.55) + "px"; });
+    }
+  }
+
+  // おさいふ（wallet.js）が 使う
+  window.KidView = {
+    kid: function () { return openKid; },
+    state: function () { return state; },
+    reload: load,
+    // その子の だんかいの ことば
+    W: function (key, vars) { if (openKid) L = levelOf(openKid); return W(key, vars); },
+    level: function () { return openKid ? levelOf(openKid) : "lower"; },
+    confetti: function () { confetti(); },
+  };
 
   load();
   setInterval(load, 30 * 1000);
