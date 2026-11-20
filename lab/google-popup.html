@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Google の窓の試し</title>
+<!-- iPhone・iPad で「ホーム画面に追加」したときに、Safari と別のアプリとして開くため -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="窓の試し">
+<link rel="manifest" href="google-popup.webmanifest">
+<link rel="apple-touch-icon" href="../img/icon.png">
+<link rel="icon" href="../img/icon.png">
+<style>
+  :root { color-scheme: light dark; --bg: #fff7ee; --fg: #4a3e3e; --muted: #7a6a6a; --card: #ffffff; --line: #f0dcd4; --btn: #f08a3c; --btn-fg: #ffffff; --ok: #2e8b57; --ng: #c0392b; }
+  @media (prefers-color-scheme: dark) { :root { --bg: #1d1c1a; --fg: #ece9e3; --muted: #a8a49c; --card: #2a2722; --line: #3a3833; --btn: #ff9a52; --btn-fg: #1d1c1a; --ok: #6fcf97; --ng: #ff8a80; } }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--fg); font-family: system-ui, -apple-system, "Hiragino Sans", "Noto Sans JP", sans-serif; line-height: 1.7; font-size: 16px; -webkit-text-size-adjust: 100%; }
+  main { max-width: 640px; margin: 0 auto; padding: max(20px, env(safe-area-inset-top)) 16px 40px; }
+  h1 { font-size: 1.3em; margin: 0 0 4px; }
+  h2 { font-size: 1.05em; margin: 0 0 6px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; margin: 14px 0; }
+  .muted { color: var(--muted); font-size: 0.92em; }
+  button { font: inherit; font-weight: 700; border: 0; border-radius: 999px; padding: 10px 18px; margin: 6px 6px 0 0; background: var(--btn); color: var(--btn-fg); cursor: pointer; }
+  button.sub { background: transparent; color: var(--fg); border: 1px solid var(--line); }
+  button:disabled { opacity: 0.4; cursor: default; }
+  input { font: inherit; width: 100%; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--fg); }
+  .ok { color: var(--ok); font-weight: 700; }
+  .ng { color: var(--ng); font-weight: 700; }
+  #log { white-space: pre-wrap; font-family: ui-monospace, Menlo, monospace; font-size: 0.82em; background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 8px; max-height: 320px; overflow: auto; margin-top: 8px; }
+  ol { padding-left: 1.3em; margin: 6px 0; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Google の窓の試し</h1>
+  <p class="muted">はなまるボードのブラウザ版で、Google ドライブに控えるときの「Google の画面」が、iPhone・iPad のホーム画面のアプリからでも戻ってくるかを試すページです。家族の記録は使いません。</p>
+
+  <div class="card">
+    <h2>いまの開き方</h2>
+    <div id="env"></div>
+  </div>
+
+  <div class="card" id="id-card">
+    <h2>クライアント ID</h2>
+    <p class="muted">Google Cloud で作った ID（…apps.googleusercontent.com）。このブラウザにだけ覚えます。ホーム画面のアプリは Safari と別なので、もう一度入れます（アドレスの最後に ?id=… を付けて開いても入ります）。</p>
+    <input id="cid" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="xxxx.apps.googleusercontent.com">
+    <button id="save" class="sub">覚える</button>
+  </div>
+
+  <div class="card">
+    <h2>A: 窓（ポップアップ）で許可</h2>
+    <p class="muted">アプリと同じ方式。押すと Google の画面が開き、許可すると ここに戻ります。</p>
+    <button id="a-run">A を試す</button>
+    <div id="a-out"></div>
+  </div>
+
+  <div class="card">
+    <h2>B: ページを移って戻る</h2>
+    <p class="muted">A がだめだったときの代わりの方式。Google のページへ移り、許可すると このページに戻ります。Google Cloud のクライアントの「承認済みのリダイレクト URI」に <b id="b-uri"></b> を入れてあるときだけ使えます。</p>
+    <button id="b-run">B を試す</button>
+    <div id="b-out"></div>
+  </div>
+
+  <div class="card">
+    <h2>ドライブに書けるか</h2>
+    <p class="muted">A か B で許可が取れたあとに押します。「はなまるボードの試し.txt」を作り、読み直してから消します（ドライブには残りません）。</p>
+    <button id="d-run" disabled>書いて読んで消す</button>
+    <div id="d-out"></div>
+  </div>
+
+  <div class="card">
+    <h2>結果を送る</h2>
+    <p class="muted">下の記録をコピーして送ってください（許可の中身（トークン）は記録に入れていません）。</p>
+    <button id="copy" class="sub">記録をコピー</button>
+    <div id="log"></div>
+  </div>
+
+  <div class="card">
+    <h2>試す順番</h2>
+    <ol>
+      <li>Safari のタブのまま A → ドライブに書けるか</li>
+      <li>共有 → 「ホーム画面に追加」→ ホーム画面のアイコンから開く → ID を入れる → A → ドライブに書けるか</li>
+      <li>A がだめなら、ホーム画面のアプリで B → ドライブに書けるか</li>
+      <li>記録をコピーして送る</li>
+    </ol>
+  </div>
+</main>
+<script>
+(function () {
+  "use strict";
+  var SCOPE = "https://www.googleapis.com/auth/drive.file";
+  var GSI = "https://accounts.google.com/gsi/client";
+  var KEY = "lab:google-popup:id";
+  var HERE = location.origin + location.pathname;
+  var token = null; // { value, exp }。画面にも記録にも出さない
+  var $ = function (id) { return document.getElementById(id); };
+
+  // 記録
+  var lines = [];
+  function log(s) {
+    var t = new Date();
+    var hh = ("0" + t.getHours()).slice(-2) + ":" + ("0" + t.getMinutes()).slice(-2) + ":" + ("0" + t.getSeconds()).slice(-2);
+    lines.push(hh + " " + s);
+    $("log").textContent = lines.join("\n");
+    try { sessionStorage.setItem("lab:log", JSON.stringify(lines.slice(-80))); } catch (e) {}
+  }
+  try { var old = JSON.parse(sessionStorage.getItem("lab:log") || "[]"); if (old.length) { lines = old; lines.push("--- ページを読み直した ---"); $("log").textContent = lines.join("\n"); } } catch (e) {}
+  function show(id, ok, text) { $(id).innerHTML = '<p class="' + (ok ? "ok" : "ng") + '">' + text + "</p>"; }
+
+  // 開き方
+  var standalone = window.navigator.standalone === true || (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches);
+  var ios = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  $("env").innerHTML = "<p>" + (standalone ? '<span class="ok">ホーム画面のアプリとして開いています</span>' : "ブラウザのタブで開いています") + "</p>" +
+    '<p class="muted">' + (ios ? "iPhone・iPad" : "iPhone・iPad 以外") + " / " + navigator.userAgent.replace(/[<>&]/g, "") + "</p>";
+  log("開いた: " + (standalone ? "ホーム画面のアプリ" : "タブ") + " / " + (ios ? "iOS" : "iOS 以外") + " / " + navigator.userAgent);
+  $("b-uri").textContent = HERE;
+
+  // ID（?id= があれば覚える。アドレスからは消す）
+  function getId() { try { return localStorage.getItem(KEY) || ""; } catch (e) { return ""; } }
+  function setId(v) { try { localStorage.setItem(KEY, v); } catch (e) { log("ID を覚えられない（このブラウザの保存が使えない）"); } }
+  var q = new URLSearchParams(location.search);
+  if (q.get("id")) { setId(q.get("id").trim()); history.replaceState(null, "", HERE + location.hash); log("アドレスの ID を覚えた"); }
+  $("cid").value = getId();
+  $("save").onclick = function () {
+    var v = $("cid").value.trim();
+    if (!/\.apps\.googleusercontent\.com$/.test(v)) { show("a-out", false, "ID の形が違うようです（…apps.googleusercontent.com で終わるもの）"); return; }
+    setId(v); $("save").textContent = "覚えました"; log("ID を覚えた");
+    setTimeout(function () { $("save").textContent = "覚える"; }, 1500);
+  };
+  function needId(out) { var v = getId(); if (!v) show(out, false, "先にクライアント ID を入れてください"); return v; }
+
+  function gotToken(how, value, expiresIn, out) {
+    token = { value: value, exp: Date.now() + (Number(expiresIn) || 3600) * 1000 };
+    $("d-run").disabled = false;
+    show(out, true, "許可が取れました（" + how + "）。続けて「ドライブに書けるか」を押してください");
+    log(how + ": 許可が取れた（有効 " + (Number(expiresIn) || "?") + " 秒）");
+  }
+
+  // A: Google Identity Services の トークンモデル（アプリの drive.js と同じ呼び方）。ページを開いたときに読んでおく（押してから読むと Safari が窓を止めることがあるため）
+  var gsiReady = null;
+  function loadGsi() {
+    if (gsiReady) return gsiReady;
+    gsiReady = new Promise(function (resolve, reject) {
+      if (window.google && google.accounts && google.accounts.oauth2) return resolve(google);
+      var s = document.createElement("script");
+      s.src = GSI; s.async = true;
+      s.onload = function () { resolve(window.google); };
+      s.onerror = function () { gsiReady = null; reject(new Error("load")); };
+      document.head.appendChild(s);
+    });
+    return gsiReady;
+  }
+  var t0 = Date.now();
+  loadGsi().then(function () { log("Google の窓口を読んだ（" + (Date.now() - t0) + " ms）"); }, function () { log("Google の窓口を読めない"); });
+
+  var client = null, clientId = null, waitTimer = null;
+  $("a-run").onclick = function () {
+    var id = needId("a-out"); if (!id) return;
+    if (!(window.google && google.accounts && google.accounts.oauth2)) { show("a-out", false, "Google の窓口をまだ読めていません。少し待ってもう一度押してください"); log("A: 窓口がまだ"); loadGsi(); return; }
+    if (!client || clientId !== id) {
+      clientId = id;
+      client = google.accounts.oauth2.initTokenClient({
+        client_id: id,
+        scope: SCOPE,
+        callback: function (r) {
+          clearTimeout(waitTimer);
+          if (!r || r.error || !r.access_token) { show("a-out", false, "許可が取れませんでした（" + ((r && r.error) || "不明") + "）"); log("A: callback のエラー " + ((r && r.error) || "不明") + " " + ((r && r.error_description) || "")); return; }
+          var all = google.accounts.oauth2.hasGrantedAllScopes;
+          if (typeof all === "function" && !all(r, SCOPE)) { show("a-out", false, "ドライブのチェックが外されました"); log("A: スコープが足りない"); return; }
+          gotToken("A 窓", r.access_token, r.expires_in, "a-out");
+        },
+        error_callback: function (e) {
+          clearTimeout(waitTimer);
+          var t = (e && e.type) || "不明";
+          var why = t === "popup_closed" ? "Google の画面が閉じられた（戻ってこなかった）" : t === "popup_failed_to_open" ? "Google の画面が開けなかった（ポップアップを止められた）" : t;
+          show("a-out", false, why); log("A: error_callback " + t + (e && e.message ? " " + e.message : ""));
+        },
+      });
+    }
+    $("a-out").innerHTML = '<p class="muted">Google の画面を待っています…（戻ってきたら結果が出ます）</p>';
+    log("A: 押した");
+    var pressed = Date.now();
+    clearTimeout(waitTimer);
+    waitTimer = setTimeout(function () { show("a-out", false, "2分たっても知らせが来ません（窓が戻ってこない）"); log("A: 2分待っても知らせなし"); }, 120000);
+    document.addEventListener("visibilitychange", function once() {
+      log("A: 画面が " + (document.hidden ? "裏に回った" : "表に戻った") + "（押してから " + Math.round((Date.now() - pressed) / 1000) + " 秒）");
+      if (!document.hidden) document.removeEventListener("visibilitychange", once);
+    });
+    try { client.requestAccessToken({ prompt: "" }); } catch (e) { clearTimeout(waitTimer); show("a-out", false, "呼べませんでした: " + e.message); log("A: 例外 " + e.message); }
+  };
+
+  // B: OAuth 2.0 の暗黙のフロー（ページを移って #access_token で戻る）。サーバーは要らない
+  $("b-run").onclick = function () {
+    var id = needId("b-out"); if (!id) return;
+    var state = Math.random().toString(36).slice(2) + Date.now().toString(36);
+    try { sessionStorage.setItem("lab:state", state); localStorage.setItem("lab:state", state); } catch (e) {}
+    log("B: Google のページへ移る");
+    location.href = "https://accounts.google.com/o/oauth2/v2/auth?" + new URLSearchParams({
+      client_id: id, redirect_uri: HERE, response_type: "token", scope: SCOPE, state: state, include_granted_scopes: "true",
+    }).toString();
+  };
+  if (location.hash.length > 1) {
+    var h = new URLSearchParams(location.hash.slice(1));
+    history.replaceState(null, "", HERE); // トークンをアドレスに残さない
+    var want = null; try { want = sessionStorage.getItem("lab:state") || localStorage.getItem("lab:state"); } catch (e) {}
+    if (h.get("error")) { show("b-out", false, "許可が取れませんでした（" + h.get("error") + "）"); log("B: 戻った・エラー " + h.get("error")); }
+    else if (h.get("access_token")) {
+      if (!want || h.get("state") !== want) { show("b-out", false, "戻ってきましたが、合言葉（state）が合いません"); log("B: state が合わない（保存が " + (want ? "あった" : "なかった") + "）"); }
+      else gotToken("B 移って戻る", h.get("access_token"), h.get("expires_in"), "b-out");
+    }
+    log("B: 戻ってきた開き方 = " + (standalone ? "ホーム画面のアプリ" : "タブ"));
+  }
+
+  // ドライブ: 書く → 読む → 消す
+  function drive(method, url, init) {
+    init = init || {}; init.method = method;
+    init.headers = Object.assign({ Authorization: "Bearer " + token.value }, init.headers || {});
+    return fetch(url, init).then(function (r) { if (!r.ok) throw new Error(method + " " + r.status); return r; });
+  }
+  $("d-run").onclick = function () {
+    if (!token || token.exp < Date.now()) { show("d-out", false, "許可が切れています。A か B をもう一度"); return; }
+    $("d-run").disabled = true;
+    var body = "はなまるボードの試し " + new Date().toISOString();
+    var b = "lab" + Date.now();
+    var multipart = "--" + b + "\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n" +
+      JSON.stringify({ name: "はなまるボードの試し.txt", mimeType: "text/plain" }) +
+      "\r\n--" + b + "\r\nContent-Type: text/plain; charset=UTF-8\r\n\r\n" + body + "\r\n--" + b + "--";
+    var fid = null;
+    log("ドライブ: 書く");
+    drive("POST", "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id", { headers: { "Content-Type": "multipart/related; boundary=" + b }, body: multipart })
+      .then(function (r) { return r.json(); })
+      .then(function (j) { fid = j.id; log("ドライブ: 書けた"); return drive("GET", "https://www.googleapis.com/drive/v3/files/" + fid + "?alt=media"); })
+      .then(function (r) { return r.text(); })
+      .then(function (t) { if (t !== body) throw new Error("読んだ中身が違う"); log("ドライブ: 読めた（中身も同じ）"); return drive("DELETE", "https://www.googleapis.com/drive/v3/files/" + fid); })
+      .then(function () { log("ドライブ: 消せた"); show("d-out", true, "書けた・読めた・消せた。ドライブは使えます"); })
+      .catch(function (e) { log("ドライブ: 失敗 " + e.message); show("d-out", false, "失敗しました（" + e.message + "）" + (fid ? "。ドライブに「はなまるボードの試し.txt」が残っていたら消してください" : "")); })
+      .then(function () { $("d-run").disabled = false; });
+  };
+
+  $("copy").onclick = function () {
+    var text = lines.join("\n");
+    var done = function () { $("copy").textContent = "コピーしました"; setTimeout(function () { $("copy").textContent = "記録をコピー"; }, 1500); };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, function () { fallback(); });
+    else fallback();
+    function fallback() { var ta = document.createElement("textarea"); ta.value = text; document.body.appendChild(ta); ta.select(); try { document.execCommand("copy"); done(); } catch (e) {} ta.remove(); }
+  };
+})();
+</script>
+</body>
+</html>
