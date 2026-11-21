@@ -795,7 +795,9 @@
     $("s-drive-stale").hidden = linked || !c.stale();
     // つないで いる 間の 状態。止まって いる ときは 先頭に ボタン（つなぎ直す・この内容で上書き）
     $("s-drive-state").hidden = !linked;
-    $("s-drive-state").textContent = held ? driveHeldText(st) : reconnect ? AW("driveStopped") : AW("driveLinked");
+    var who = c.account ? c.account() : "";
+    $("s-drive-state").textContent = (held ? driveHeldText(st) : reconnect ? AW("driveStopped") : AW("driveLinked")) +
+      (who ? AW("driveWho").replace("{who}", who) : "");
     $("s-drive-state").classList.toggle("warn", held || reconnect);
     $("s-drive-fix").hidden = !(linked && (held || reconnect));
     $("s-drive-reconnect").textContent = AW("driveReconnect");

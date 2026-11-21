@@ -411,6 +411,8 @@
     driveErr: "うまくいきませんでした。少し待ってから、もう一度お試しください",
     // つないで 自動で 控える（Web 版だけ。2026-11-21）。「ログイン」「同期」と 言わない
     driveLinked: "Google ドライブとつないでいます。記録が変わると自動で控えます",
+    // つないだ アカウント（drive.js の account。Google の 窓に 伝えて、選ぶ 画面を 出さない）
+    driveWho: "（{who}）",
     driveStopped: "控えが止まっています",
     driveReconnect: "つなぎ直す",
     driveUnlink: "つなぐのをやめる",

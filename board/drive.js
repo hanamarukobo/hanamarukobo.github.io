@@ -24,6 +24,10 @@
   var LINK_KEY = "drive:link";
   // 「新しく 始める」を 選んだ 印（"1"）。つぎの 控えは 前の 控えを 残して 別の ファイルに 作る
   var FRESH_KEY = "drive:fresh";
+  // つないだ Google アカウント（メールアドレス）。Google の 窓に 伝えて、アカウントを 選ぶ 画面を 出さない（2026-11-22。
+  //   iPad に 2人ぶんの アカウントが あると 毎回 選ばされた）。この ブラウザの 中だけ。控えの ファイルには 入れない
+  var WHO_KEY = "drive:who";
+  var ABOUT = "https://www.googleapis.com/drive/v3/about?fields=user(emailAddress)";
 
   // 失敗は code を もった Error（画面は code で 文を えらぶ。Words.adult の driveErr…）
   //   cancel（Google の 画面を 閉じた）・popup（開けない）・denied（許可されない）・auth・load（gsi を 読めない）・
@@ -65,6 +69,7 @@
           if (typeof ok === "function" && !ok(r, SCOPE)) return p.reject(fail("denied"));
           tok = { value: r.access_token, exp: now() + (Number(r.expires_in) || 3600) * 1000 };
           p.resolve(tok.value);
+          remember(tok.value);
         },
         error_callback: function (e) {
           var p = pending;
@@ -83,9 +88,23 @@
         var me = pending = { resolve: resolve, reject: reject };
         // Google の 画面が 閉じられたのに 知らせが 来ない ときに 待ちつづけない（2分）
         setTimeout(function () { if (pending === me) { pending = null; reject(fail("cancel")); } }, 120000);
-        client.requestAccessToken({ prompt: "" });
+        var who = account();
+        client.requestAccessToken(who ? { prompt: "", login_hint: who, hint: who } : { prompt: "" });
       });
     }
+    // 取れた トークンで、どの アカウントか（メールアドレス）を 聞いて おぼえる。失敗しても 控えには 関係ない
+    function remember(t) {
+      if (!o.remember) return;  // 本物の クライアントだけ（確かめの にせの fetch の 回数を かえない）
+      Promise.resolve().then(function () {
+        return o.fetch(ABOUT, { method: "GET", headers: { Authorization: "Bearer " + t } });
+      }).then(function (r) {
+        return r && r.ok ? r.json() : null;
+      }).then(function (j) {
+        var mail = j && j.user && j.user.emailAddress;
+        if (mail) store.set(WHO_KEY, String(mail));
+      }).catch(function () { /* おぼえられなくても よい（つぎも 選ぶ 画面が 出るだけ） */ });
+    }
+    function account() { return store.get(WHO_KEY) || ""; }
 
     function ready() { return !!tok && tok.exp - 60000 > now(); }
     // アクセストークン（1時間）。のこりが 1分を 切ったら 取りなおす。はじめては Google の 画面で 許可を もらう。
@@ -221,6 +240,7 @@
       var t = tok && tok.value;
       tok = null;
       setLinked(false);
+      store.set(WHO_KEY, "");
       var o2 = gsi && gsi.accounts && gsi.accounts.oauth2;
       if (t && o2 && typeof o2.revoke === "function") { try { o2.revoke(t, function () {}); } catch (e) { /* 取り消せなくても 印は 消えて いる */ } }
     }
@@ -228,7 +248,7 @@
     function forget() { tok = null; }
 
     return { prepare: prepare, token: token, tokenNow: tokenNow, ready: ready, latest: latest, backup: backup, read: read, last: last, stale: stale,
-      linked: linked, setLinked: setLinked, adopt: adopt, startFresh: startFresh, unlink: unlink, forget: forget };
+      linked: linked, setLinked: setLinked, account: account, adopt: adopt, startFresh: startFresh, unlink: unlink, forget: forget };
   }
 
   // ---- 自動で 控える（つないで いる 間。2026-11-21 社長）----
@@ -394,7 +414,7 @@
     on: on,
     // 画面が 使う もの（開発の 確かめでは use で 差し替える。tools/dev/drive-on.js）
     client: function () {
-      return current || (current = make({ clientId: clientId(), fetch: function (u, i) { return window.fetch(u, i); }, loadGsi: loadGsi, storage: storage }));
+      return current || (current = make({ clientId: clientId(), fetch: function (u, i) { return window.fetch(u, i); }, loadGsi: loadGsi, storage: storage, remember: true }));
     },
     use: function (c) { current = c; },
     // 失敗の 文（Words.adult の driveErr…。設定と 入口で 同じ 文）
