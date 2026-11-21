@@ -2236,3 +2236,87 @@ body.night .wl-in { background: transparent; color: #6fd39b; box-shadow: inset 0
 .tu-text, .tu-text p { text-wrap: pretty; }
 /* 子ども向けの ページは 分かち書きの すきまで だけ 折り返す（「おうえん / するよ」のように ことばの 途中で 切れた。11-20） */
 .tu-board:not(.for-parent) .tu-text { word-break: keep-all; overflow-wrap: anywhere; }
+
+/* ---- スマホの 形（2026-11-21。app.js が body に tall／wide を つける。くわしくは docs/handover/phone-home.md）----
+   縦に 長い（tall）: 高さが たっぷり あるので、天気を 細く・がんばりカレンダーを 2列（3人から 2段）で 大きく。並びは そのまま（手に 持つので 押す ところは 下）
+   横に 長い（wide）: 日付の カードを 細く・低く して、天気を 広く、がんばりカレンダーと 予定を 縦に 広く
+   日付の カードは どちらも「11月21日」の 下に 曜日（左右に きのう・あしたを うすく）、右に 時計。何月何日・何時何分を それぞれ ひとかたまりに 見せる */
+body.tall .today, body.wide .today { grid-template-columns: auto auto auto; grid-template-areas: "month day clock" "wd wd clock"; justify-content: center; align-content: center; align-items: center; column-gap: 4px; }
+body.tall .month, body.wide .month { grid-area: month; align-self: end; justify-self: end; white-space: nowrap; }
+body.tall .day, body.wide .day { grid-area: day; justify-self: start; margin: 0; line-height: 1; }
+body.tall .wd-row, body.wide .wd-row { grid-area: wd; width: 100%; overflow: hidden; }
+body.tall .clock, body.wide .clock { grid-area: clock; align-self: center; justify-self: start; line-height: 1; }
+body.tall .greeting { display: none; }
+body.tall .wd-side { display: block; flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; font-size: 17px; font-weight: 700; color: var(--muted); opacity: 0.6; }
+body.tall .wd-side.prev { text-align: right; -webkit-mask-image: linear-gradient(to left, #000 40%, transparent); mask-image: linear-gradient(to left, #000 40%, transparent); }
+body.tall .wd-side.next { text-align: left; -webkit-mask-image: linear-gradient(to right, #000 40%, transparent); mask-image: linear-gradient(to right, #000 40%, transparent); }
+
+/* 縦に 長い スマホ */
+body.tall .board { grid-template-rows: min-content auto minmax(0, 1fr); }
+body.tall.no-cal .board { grid-template-rows: min-content minmax(0, 1fr); }
+body.tall .kids-card { flex: none; min-height: 0; }
+body.tall.no-cal .kids-card { flex: 1; }
+body.tall .today { row-gap: 6px; padding: 10px 16px; }
+body.tall .month { font-size: 34px; margin: 0 0 12px; }
+body.tall .day #day { font-size: 84px; }
+body.tall .weekday { font-size: 22px; margin: 0; }
+body.tall .clock { font-size: 78px; margin: 0 0 0 48px; }
+body.tall .slot .label { font-size: 17px; }
+body.tall .slot .icon { font-size: 30px; line-height: 1; }
+body.tall .slot .temp { font-size: 24px; }
+body.tall .slot .rain { font-size: 15px; }
+body.tall .kids { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-rows: minmax(190px, auto); gap: 14px; }
+body.tall .kids:not(:has(> .kid-btn:nth-child(2))) { grid-template-columns: minmax(0, 1fr); }
+body.tall .kids .kid-btn { padding: 16px 22px 12px; border-radius: 24px; gap: 8px; }
+body.tall .kids .kid-btn .name { font-size: 32px !important; } /* kids.js の fitNames は 横 4列の ときの 大きさで はかるので 上書き */
+body.tall .kids .kid-btn .state { display: inline-block; font-size: 19px; }
+body.tall .kids.mode-row .kid-btn .badge { width: 54px; height: 54px; font-size: 32px; top: -10px; right: -8px; }
+body.tall .kids.mode-row .kid-btn .title-badge { height: 32px; top: -12px; left: -8px; font-size: 18px; }
+
+/* 横に 長い スマホ（上の だんは 24に わけて 9:15、下は 14:10） */
+body.wide .board {
+  grid-template-columns: repeat(24, minmax(0, 1fr));
+  grid-template-areas:
+    "today today today today today today today today today weather weather weather weather weather weather weather weather weather weather weather weather weather weather weather"
+    "kids kids kids kids kids kids kids kids kids kids kids kids kids kids schedule schedule schedule schedule schedule schedule schedule schedule schedule schedule";
+}
+body.wide.no-cal .board {
+  grid-template-columns: repeat(24, minmax(0, 1fr));
+  grid-template-areas:
+    "today today today today today today today today today weather weather weather weather weather weather weather weather weather weather weather weather weather weather weather"
+    "kids kids kids kids kids kids kids kids kids kids kids kids kids kids kids kids kids kids kids kids kids kids kids kids";
+}
+body.wide .today { row-gap: 10px; padding: 8px 12px; }
+body.wide .month { margin: 0 0 10px; font-size: 24px; }
+body.wide .day #day { font-size: 64px; }
+body.wide .day .unit { font-size: 22px; }
+body.wide .weekday { font-size: 18px; padding: 2px 12px; }
+body.wide .clock { margin-left: 16px; font-size: 68px; }
+body.wide .slots { gap: 6px; }
+body.wide .slot { border-radius: 14px; }
+body.wide .slot .label { font-size: 14px; }
+body.wide .slot .icon { font-size: 24px; line-height: 1; }
+body.wide .slot .temp { font-size: 20px; }
+body.wide .slot .rain { font-size: 13px; }
+body.wide .advice { gap: 6px; margin-top: 6px; }
+body.wide .advice .tile { padding: 4px 10px; gap: 8px; }
+body.wide .advice .icon > .ico, body.wide .advice .icon > .ico-stack { width: 32px; height: 32px; }
+body.wide .advice .main { font-size: 17px; }
+body.wide .advice .sub { font-size: 12px; }
+body.wide .kids.mode-row .kid-btn { gap: 6px; }
+body.wide .kids.mode-row .kid-btn .state { display: inline-block; font-size: 13px; padding: 1px 8px; }
+body.wide .kids.mode-big .kid-btn .state { font-size: 14px; padding: 2px 10px; }
+body.wide .kid-goal .kg-word { font-size: 11px; }
+body.wide .kid-goal .kg-track { height: 18px; }
+
+/* 天気の 時間帯（スマホの 形）: 2×2（上に「あさ｜7ど」、下に「絵｜降水確率」）。「ゆうがた」の ような 長い ラベルでも 折れない */
+body.tall .slots .slot, body.wide .slots .slot { display: grid; grid-template-columns: auto auto; grid-template-areas: "label temp" "icon rain"; justify-content: center; align-items: center; justify-items: center; column-gap: 10px; row-gap: 2px; padding: 6px 4px; }
+body.tall .slot .label, body.wide .slot .label { grid-area: label; white-space: nowrap; }
+body.tall .slot .icon, body.wide .slot .icon { grid-area: icon; }
+body.tall .slot .temp, body.wide .slot .temp { grid-area: temp; white-space: nowrap; }
+body.tall .slot .rain, body.wide .slot .rain { grid-area: rain; white-space: nowrap; min-height: 0; }
+
+/* カードの 中の 白い 楕円（毎日 はなまる！ など）が カードの 幅を こえない（字は kids.js の fitStates が 小さく する） */
+.kid-btn .state { max-width: 100%; overflow: hidden; text-overflow: ellipsis; box-sizing: border-box; }
+body.wide .wd-side { font-size: 14px; }
+body.wide .wd-row { gap: 6px; }

@@ -44,6 +44,11 @@
     document.documentElement.style.setProperty("--bw", bw + "px");
     document.documentElement.style.setProperty("--bh", bh + "px");
     document.body.classList.toggle("portrait", portrait);
+    // スマホの 形（2026-11-21。docs/handover/phone-home.md）: 縦に 長い（tall）・横に 長い（wide）ときは ホームの 並びを かえる。
+    //   タブレット・.8（960×480 は 2.0）・.9 は 入らない。ブラウザの 帯で 縦横比が かわるので、スマホと わかって いれば それでも 入れる
+    var phone = Device.phone();
+    document.body.classList.toggle("tall", portrait && (h / w > 1.7 || phone));
+    document.body.classList.toggle("wide", !portrait && (w / h > 2.1 || phone));
     // 同じ 形の 画面が 2つ ある（かんたん設定と ブラウザ版の 入口の .su-board）ので、ぜんぶに かける
     [".board", ".settings .panel", ".kv-board", ".grv-board", ".lk-board", ".su-board", ".tu-board", ".cn-board"].forEach(function (sel) {
       Array.prototype.forEach.call(document.querySelectorAll(sel), function (el) { el.style.zoom = scale; });
