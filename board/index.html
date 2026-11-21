@@ -12,6 +12,8 @@
 <meta name="apple-mobile-web-app-title" content="はなまるボード">
 <link rel="apple-touch-icon" href="icon-512.png">
 <link rel="stylesheet" href="style.css">
+<!-- 大きさを 合わせる まで ボードを 隠す（app.js の fit が はずす。動かなくても 5秒で 出す） -->
+<script>document.documentElement.classList.add("unfit"); setTimeout(function () { document.documentElement.classList.remove("unfit"); }, 5000);</script>
 <script>window.goatcounter = { path: function () { return /[?&]pair=/.test(location.search) ? null : location.pathname || "/"; } };</script>
 <script data-goatcounter="https://hanamaru-board.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 </head>
@@ -212,6 +214,8 @@
     <button class="s-battery-warn" id="s-battery-warn" hidden></button>
     <!-- 新しい版の おしらせ（update.js）。つないだ スマホでは ボタンを 出さず「本体で更新してください」 -->
     <div class="s-update" id="s-update" hidden><span class="s-update-text"></span><button type="button" id="s-update-btn" hidden>更新する</button></div>
+    <!-- Web 版で Google ドライブと つないで いて、切れた・控えて いない 変更が ある ときだけ（settings.js。ホームや 子どもの 画面には 出さない） -->
+    <div class="s-update s-drive-band" id="s-drive-band" hidden><span class="s-update-text" id="s-drive-band-text"></span><button type="button" id="s-drive-band-btn"></button></div>
     <div class="s-pages">
       <!-- ボードの表示: 時計・天気・予定（カレンダー連携）・みんなで見るところの文字・週の始まり（入れたあとは ほぼ 触らない ものを 1つに） -->
       <section class="s-page" id="s-page-board" hidden>
@@ -327,6 +331,12 @@
         <!-- Google ドライブの 控え（Web 版だけ。drive.js・settings.js。アプリ・つないだ スマホ・クライアント ID が ない ときは 出さない）。文は Words.adult の drive… -->
         <div class="s-group" id="s-drive-group" hidden>
           <h3 id="s-drive-title"></h3>
+          <!-- つないで いる 間の 状態と、止まって いる ときの ボタン（つなぎ直す・この内容で上書き。2026-11-21） -->
+          <p class="note s-drive-state" id="s-drive-state" hidden></p>
+          <div class="row s-drive-row" id="s-drive-fix" hidden>
+            <button type="button" class="small" id="s-drive-reconnect"></button>
+            <button type="button" class="ghost small" id="s-drive-overwrite"></button>
+          </div>
           <div class="row s-drive-row">
             <button type="button" class="ghost small" id="s-drive-save"></button>
             <button type="button" class="ghost small" id="s-drive-restore"></button>
@@ -335,6 +345,7 @@
           <p class="note s-drive-stale" id="s-drive-stale" hidden></p>
           <p class="note" id="s-drive-result" aria-live="polite"></p>
           <p class="note" id="s-drive-note"></p>
+          <button type="button" class="ghost small" id="s-drive-unlink" hidden></button>
         </div>
         <!-- データの 書き出し・読み込み（datafile.js。がんばり管理の ページと おなじ 処理） -->
         <h3>データの書き出し・読み込み</h3>
@@ -500,7 +511,7 @@
         <div class="faq">
           <details class="faq-cat"><summary>画面・表示</summary>
             <details><summary>画面が暗くなる・消えてしまう</summary>
-              <p>設定の「この端末」の「画面をつけておく時間」のほかは、しばらく触らないと画面オフになります。オフになるまでの時間は「画面オフまで」で変えられます。</p></details>
+              <p>設定の「この端末」の「画面をつけておく時間」のほかは、しばらく触らないと画面オフになります。オフになるまでの時間は「画面オフまで」で変えられます。ブラウザ版では、画面オフは端末の設定（自動ロックなど）にまかせます。</p></details>
             <details><summary>朝、自動で画面がつかない</summary>
               <p>アプリなら「画面をつけておく時間」になると自動で表示します。端末の省電力でアプリが止められているときは、端末の設定でこのアプリを最適化の対象から外してください。ほかのアプリを開いたままになるときは、設定の「この端末」で「ボードを自動で開く」をオンにしてください。</p></details>
             <details><summary>電源を入れたら、ボードが開くようにしたい</summary>
@@ -622,7 +633,8 @@
               <p>記録や設定は、この端末の中に保存し、外には送りません。くわしくは、このページのいちばん下の「プライバシーポリシー」をご覧ください。</p></details>
             <!-- Web 版で Google ドライブの 控えが ある ときだけ 出す（settings.js。Drive.on） -->
             <details id="faq-web-drive" hidden><summary>iPhone・iPad で使いたい・データが消えないか心配</summary>
-              <p>iPhone・iPad では、このブラウザの Web 版を「ホーム画面に追加」して使ってください。記録はブラウザの中に保存するため、しばらく開かないと消えることがあります。設定の「おうちの人」→「Google ドライブに控える」で控えておくと、消えても「ドライブから戻す」で戻せます。控えはお使いの Google ドライブに保存し、はなまる工房には送りません。</p></details>
+              <p>iPhone・iPad では、このブラウザの Web 版を「ホーム画面に追加」して使ってください。記録はブラウザの中に保存するため、しばらく開かないと消えることがあります。Google ドライブとつないでおくと、記録が変わるたびに自動で控え、消えても「ドライブから戻す」で戻せます（はじめに「つないではじめる」を選ぶか、設定の「おうちの人」→「Google ドライブに控える」）。控えはお使いの Google ドライブに保存し、はなまる工房には送りません。</p>
+              <p>つながりは1時間ほどで切れることがあります。切れているあいだに記録が変わると、設定の上に「控えが止まっています」と出るので「つなぎ直す」を押してください。2台で同じドライブにつなぐと、ほかの端末があとから控えたときは自動の控えを止めてお知らせします（同じ内容にそろえる仕組みではありません）。やめるときは、設定の「おうちの人」→「つなぐのをやめる」（ドライブの控えは残ります）。</p></details>
             <details><summary>機種変更・アプリの入れ直しをしたい</summary>
               <p>設定の「おうちの人」→「データの書き出し・読み込み」で、前もって書き出しておくと、新しい端末で「ファイルから戻す」で元に戻せます。</p></details>
             <details><summary>はじめの設定をやり直したい</summary>
@@ -879,6 +891,38 @@
   </div>
 </div>
 
+<!-- ブラウザ版の 入口（Web 版で Drive.on、まだ データが ない ときだけ。drive-start.js。2026-11-21）。文は Words.adult の driveStart… -->
+<div class="setup drive-start" id="drive-start" hidden>
+  <div class="su-board">
+    <section class="su-step" id="ds-first">
+      <h2 id="ds-title"></h2>
+      <div class="su-cards">
+        <button type="button" id="ds-link"><b></b><small></small></button>
+        <button type="button" id="ds-local"><b></b><small></small></button>
+      </div>
+      <p class="su-note" id="ds-note"></p>
+      <p class="ds-more"><button type="button" class="ghost small" id="ds-restore"></button></p>
+    </section>
+    <section class="su-step" id="ds-found" hidden>
+      <h2 id="ds-found-text"></h2>
+      <div class="su-cards small">
+        <button type="button" id="ds-use"></button>
+        <button type="button" id="ds-new"><span></span><small></small></button>
+      </div>
+    </section>
+    <section class="su-step" id="ds-from" hidden>
+      <h2 id="ds-from-title"></h2>
+      <div class="su-cards small">
+        <button type="button" id="ds-from-drive"></button>
+        <button type="button" id="ds-from-file"></button>
+      </div>
+      <input type="file" id="ds-file" accept=".json,application/json" hidden>
+      <p class="ds-more"><button type="button" class="ghost small" id="ds-back"></button></p>
+    </section>
+    <p class="su-error" id="ds-msg" aria-live="polite"></p>
+  </div>
+</div>
+
 <script src="config.js"></script>
 <script src="version.js"></script>
 <script src="palette.js"></script>
@@ -906,6 +950,7 @@
 <script src="wallet.js"></script>
 <script src="usage-cards.js"></script>
 <script src="setup.js"></script>
+<script src="drive-start.js"></script>
 <script src="tutorial.js"></script>
 <script src="guide.js"></script>
 <script src="qrcode.js"></script>

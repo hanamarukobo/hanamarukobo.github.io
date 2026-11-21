@@ -57,7 +57,9 @@
   }
 
   function updateSleep(now) {
-    if (window.BoardApi.usage(B.settings) === "phone" || window.BoardApi.remote) {
+    // Web 版も 同じ（ブラウザは 画面を つけて おけず 明るさも 変えられないので、黒い 画面を かぶせる だけに なって しまう。
+    //   説明の 途中で 急に 真っ暗に なった。2026-11-21 社長）
+    if (window.BoardApi.usage(B.settings) === "phone" || window.BoardApi.remote || window.BoardApi.web) {
       // スマホだけ・置いた端末に つないだ スマホは ふつうの アプリと おなじ（画面オフは 端末に まかせる。黒い画面も 出さない）。
       //   明るさも 端末に まかせる（-1）。前は 起動の たびに 180 に 固定して、暗い 部屋で まぶしく なっていた（2026-11-11 の 問い合わせ、Pixel 9 Pro XL）
       setKeepOn(false);

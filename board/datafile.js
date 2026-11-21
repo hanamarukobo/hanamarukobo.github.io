@@ -49,10 +49,11 @@
 
   // 読んだ データで 置きかえる（ファイル・Google ドライブの 控え）。置きかえて よいか 聞いてから。
   //   from は 確かめの 文の 頭（ドライブなら「11月20日 9:05 に控えた、」）。戻す 前の 状態は バックアップに のこる（api.js の import）
-  function apply(data, from) {
+  //   asked: 画面で もう 確かめた（ブラウザ版の 入口で 日時と 件数を 見せて「この控えを戻す」を 押した）ときは 聞きなおさない
+  function apply(data, from, asked) {
     if (!data || !Array.isArray(data.kids) || !data.days || typeof data.days !== "object") return Promise.reject(new Error("はなまるボードのファイルではありません"));
     var days = Object.keys(data.days).length;
-    if (!confirm((from || "") + "子ども " + data.kids.length + "人・記録 " + days + "日ぶんの内容に置き換えます。よろしいですか？")) return Promise.resolve(false);
+    if (!asked && !confirm((from || "") + "子ども " + data.kids.length + "人・記録 " + days + "日ぶんの内容に置き換えます。よろしいですか？")) return Promise.resolve(false);
     return window.BoardApi.post("/api/parent/import", { data: data }).then(function () { return true; }, function (err) {
       throw new Error("戻せませんでした: " + (err && err.message || ""));
     });

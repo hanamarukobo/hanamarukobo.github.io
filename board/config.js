@@ -22,3 +22,4 @@ window.CONFIG = {
   brightness: { on: -1, off: 0 },
 };
 window.CONFIG.web = true;
+window.CONFIG.googleClientId = "731541172735-mgsk4iu5beolfg0bomul6m3frksjvq0q.apps.googleusercontent.com";

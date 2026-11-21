@@ -191,8 +191,9 @@
   // 手に もつ ときは 画面を つけておく 時間・画面オフの 設定を 出さない
   function usageChanged() {
     var r = document.querySelector("input[name=s-usage]:checked");
-    $("s-hold-row").hidden = !r || r.value !== "solo" || r.disabled;
-    $("s-screen-group").hidden = pickedUsage() === "phone" || window.BoardApi.remote;
+    // Web 版は 置いても 画面の つけ消しは 端末に まかせるので、置き方は 聞かない
+    $("s-hold-row").hidden = !r || r.value !== "solo" || r.disabled || window.BoardApi.web;
+    $("s-screen-group").hidden = pickedUsage() === "phone" || window.BoardApi.remote || window.BoardApi.web;
     renderAutoGroup();
     renderLanGroup();
   }
@@ -505,6 +506,8 @@
     showTab("day");
     $("settings").hidden = false;
     renderLockHint();
+    // つないで いる 間は 設定を 開いた ときにも Google の 窓口を 読んで おく（帯の「つなぎ直す」の ため）
+    if (driveOn() && window.Drive.client().linked()) window.Drive.client().prepare();
     setText("s-procode-msg", "");
     renderPro();
     fitTabs();
@@ -513,9 +516,15 @@
   // 鍵が「なし」の あいだは「おうちの人」の タブに 小さな しるし（保存して いない ● とは 別の 見た目。2026-11-19 ユーザー）。
   //   鍵が あると 気づかず「みました を 子どもが 押せてしまう」と 言われた（11-18）
   //   Web 版で Google ドライブに 控えてから 7日を すぎた ときも 同じ しるし（中に 一言。drive.js の stale）
+  //   つないで いる 人は 7日の 代わりに「止まって いる」とき（切れた・前の 控えが ある・空きが ない）
+  function driveHint() {
+    if (!driveOn()) return false;
+    var c = window.Drive.client(), a = window.Drive.auto();
+    return c.linked() ? a.needsReconnect() || /^(held-|full)/.test(a.status()) : c.stale();
+  }
   function renderLockHint() {
     var lock = B.settings.parentLock || {}, b = document.querySelector('#s-nav [data-page="parent"]');
-    if (b) b.classList.toggle("hint", !lock.type || lock.type === "none" || (driveOn() && window.Drive.client().stale()));
+    if (b) b.classList.toggle("hint", !lock.type || lock.type === "none" || driveHint());
   }
   // 横で タブが 1行に 入らない ときは 字を 小さく（端末の 字の 形で 幅が かわる。iPlay などは 字の 幅が 広い）。
   // 2だんかいまで 小さく して、それでも 入らなければ 2行に。縦は もとから 2行
@@ -735,27 +744,50 @@
     var d = new Date(iso);
     return (d.getMonth() + 1) + "月" + d.getDate() + "日 " + d.getHours() + ":" + String(d.getMinutes()).padStart(2, "0");
   }
-  function driveErr(e) {
-    var key = { cancel: "driveErrCancel", popup: "driveErrPopup", denied: "driveErrDenied", auth: "driveErrDenied", load: "driveErrLoad",
-      offline: "driveErrOffline", full: "driveErrFull", busy: "driveErrBusy", broken: "driveErrBroken" }[e && e.code];
-    return key ? AW(key) : e && e.message && !e.code ? e.message : AW("driveErr");
-  }
+  function driveErr(e) { return window.Drive.errText(e); }
   var driveBusy = false;
+  // 止まって いる わけ（held・full）の 文。日時は 見つけた 控えの 日時（読みなおした あとは 分からないので 日時なしの 文）
+  function driveHeldText(st) {
+    if (st === "full") return AW("driveHeldFull");
+    var at = window.Drive.auto().heldAt(), d = at ? driveWhen(at) : "";
+    return AW(st === "held-other" ? "driveHeldOther" : "driveHeldAsk").replace(d ? "{d}" : / ?\{d\} ?/, d);
+  }
   // msg: 結果の 文（"" なら 消す。null なら そのまま）
   function renderDrive(msg) {
     var on = driveOn();
     $("s-drive-group").hidden = !on;
     $("faq-web-drive").hidden = !on;
+    $("s-drive-band").hidden = true;
     if (!on) return;
-    var c = window.Drive.client(), last = c.last();
+    var c = window.Drive.client(), a = window.Drive.auto(), last = c.last(), linked = c.linked(), st = a.status();
+    var held = /^(held-|full)/.test(st), reconnect = a.needsReconnect();
     $("s-drive-title").textContent = AW("driveTitle");
     $("s-drive-save").textContent = AW("driveSave");
     $("s-drive-restore").textContent = AW("driveRestore");
     $("s-drive-note").textContent = AW("driveNote");
     $("s-drive-last").textContent = last ? AW("driveLast").replace("{d}", driveWhen(last)) : AW("driveNever");
+    // 7日の 一言は つながずに 手で 控える 人だけ（つないで いる 人には 止まった ときの 帯）
     $("s-drive-stale").textContent = AW("driveStale");
-    $("s-drive-stale").hidden = !c.stale();
-    $("s-drive-save").disabled = $("s-drive-restore").disabled = driveBusy;
+    $("s-drive-stale").hidden = linked || !c.stale();
+    // つないで いる 間の 状態。止まって いる ときは 先頭に ボタン（つなぎ直す・この内容で上書き）
+    $("s-drive-state").hidden = !linked;
+    $("s-drive-state").textContent = held ? driveHeldText(st) : reconnect ? AW("driveStopped") : AW("driveLinked");
+    $("s-drive-state").classList.toggle("warn", held || reconnect);
+    $("s-drive-fix").hidden = !(linked && (held || reconnect));
+    $("s-drive-reconnect").textContent = AW("driveReconnect");
+    $("s-drive-reconnect").hidden = !reconnect;
+    $("s-drive-overwrite").textContent = AW("driveOverwrite");
+    $("s-drive-overwrite").hidden = !/^held-/.test(st);
+    $("s-drive-unlink").textContent = AW("driveUnlink");
+    $("s-drive-unlink").hidden = !linked;
+    // 設定の タブの 上の 細い 帯（つないで いる・切れた・控えて いない 変更が ある ときだけ）
+    $("s-drive-band").hidden = !reconnect;
+    $("s-drive-band-text").textContent = AW("driveStopped");
+    $("s-drive-band-btn").textContent = AW("driveReconnect");
+    $("s-drive-save").disabled = $("s-drive-restore").disabled = $("s-drive-reconnect").disabled =
+      $("s-drive-overwrite").disabled = $("s-drive-unlink").disabled = $("s-drive-band-btn").disabled = driveBusy;
+    // 止まった ときは 前の「控えました」を 残さない（「止まって います」と 食い違って 見える）
+    if (msg === null && (held || reconnect)) msg = "";
     if (msg !== null) $("s-drive-result").textContent = msg || "";
   }
   // 押して いる 間は ボタンを 押せなく して、いま している ことを 出す
@@ -778,23 +810,84 @@
       // 先に Google の 許可（押した すぐ あとで ないと Safari が 画面を 止める）
       return c.token().then(function () { return window.DataFile.text(); }).then(function (f) {
         return c.backup(f.text, { replace: function (old) { return confirm(AW("driveReplace").replace("{d}", driveWhen(old.at))); } });
-      }).then(function (r) { return r ? AW("driveSaved") : null; });
+      }).then(function (r) {
+        if (!r) return null;
+        // 手で 控えたら つないだ ことに する（つぎからは 自動で 控える）
+        c.setLinked(true);
+        window.Drive.auto().clearHeld();
+        window.Drive.auto().clearDirty();
+        return AW("driveSaved");
+      });
     });
   });
   $("s-drive-restore").addEventListener("click", function () {
     var c = window.Drive.client();
     driveRun(AW("driveFinding"), function () {
-      return c.token().then(function () { return c.latest(); }).then(function (f) {
+      return c.token().then(function () { c.setLinked(true); return c.latest(); }).then(function (f) {
         if (!f) return AW("driveNone");
         return c.read(f.id).then(function (data) {
           return window.DataFile.apply(data, AW("driveFrom").replace("{d}", driveWhen(f.at)));
         }).then(function (done) {
           if (!done) return null;
+          // 戻した 控えを「最後に 控えた」に して、自動の 控えが 止まらない ように
+          c.adopt(f.at);
+          window.Drive.auto().clearHeld();
+          window.Drive.auto().clearDirty();
           return new Promise(function (resolve) { afterRestore(function () { resolve(AW("driveRestored")); }); });
         });
       });
     });
   });
+  // つなぎ直す（帯・ドライブの 欄）: 押した その場で Google の 窓 → 止まって いた 控えを すぐ 送る
+  function driveReconnect() {
+    var c = window.Drive.client();
+    driveRun(AW("driveSaving"), function () {
+      return c.token().then(function () { return window.Drive.auto().run(); }).then(function (st) {
+        return st === "" ? AW("driveSaved") : /^(held-|full)/.test(st) ? null : driveErr({ code: st });
+      });
+    });
+  }
+  $("s-drive-reconnect").addEventListener("click", driveReconnect);
+  $("s-drive-band-btn").addEventListener("click", driveReconnect);
+  // 止まって いる とき（前の 控え・ほかの 端末の 控えが ある）: この 内容で 上書き
+  $("s-drive-overwrite").addEventListener("click", function () {
+    var c = window.Drive.client();
+    if (!confirm(AW("driveOverwriteAsk"))) return;
+    driveRun(AW("driveSaving"), function () {
+      return c.token().then(function () { return window.DataFile.text(); }).then(function (f) {
+        return c.backup(f.text, { force: true });
+      }).then(function () {
+        window.Drive.auto().clearHeld();
+        window.Drive.auto().clearDirty();
+        return AW("driveSaved");
+      });
+    });
+  });
+  // つなぐのを やめる（ドライブの 控えは 残る。7日の 一言に もどる）
+  $("s-drive-unlink").addEventListener("click", function () {
+    if (driveBusy || !confirm(AW("driveUnlinkAsk"))) return;
+    window.Drive.client().unlink();
+    window.Drive.auto().clearHeld();
+    window.Drive.auto().clearDirty();
+    renderDrive(AW("driveUnlinked"));
+    renderLockHint();
+  });
+  // 自動で 控える（つないで いる 間）。保存の たび（admin.html の 中の 保存も 親に 知らせが 来る）・隠れた とき・つながった とき
+  if (driveOn()) {
+    var auto = window.Drive.auto();
+    window.addEventListener("board:saved", function () { auto.changed(); });
+    document.addEventListener("visibilitychange", function () { if (document.hidden) auto.run(); });
+    window.addEventListener("online", function () { auto.run(); });
+    auto.onChange(function () {
+      if ($("settings").hidden || driveBusy) return;
+      renderDrive(null);
+      renderLockHint();
+    });
+    // つないで いる 間は 起動した ときにも Google の 窓口を 読んで おく（つなぎ直すを 押した すぐ あとに 窓を 出せる ように）
+    if (window.Drive.client().linked()) window.Drive.client().prepare();
+    // 前に 控えきれなかった 変更が あれば（読みなおした あと）、状態を 決めて おく（トークンが ないので 送らずに 帯）
+    auto.run();
+  }
 
   // 説明は 設定の 上に ひらく（とじると 設定に もどる。はじめての ときの 説明は 設定を とおらないので、とじると そのまま ボード）
   $("s-help").addEventListener("click", function () { window.Tutorial.open(); });
