@@ -2310,7 +2310,7 @@ body.wide .kid-goal .kg-word { font-size: 11px; }
 body.wide .kid-goal .kg-track { height: 18px; }
 
 /* 天気の 時間帯（スマホの 形）: 2×2（上に「あさ｜7ど」、下に「絵｜降水確率」）。「ゆうがた」の ような 長い ラベルでも 折れない */
-body.tall .slots .slot, body.wide .slots .slot { display: grid; grid-template-columns: auto auto; grid-template-areas: "label temp" "icon rain"; justify-content: center; align-items: center; justify-items: center; column-gap: 10px; row-gap: 2px; padding: 6px 4px; }
+body.tall .slots .slot, body.wide .slots .slot { display: grid; grid-template-columns: auto auto; grid-template-areas: "label icon" "temp rain"; justify-content: center; align-items: center; justify-items: center; column-gap: 10px; row-gap: 2px; padding: 6px 4px; }
 body.tall .slot .label, body.wide .slot .label { grid-area: label; white-space: nowrap; }
 body.tall .slot .icon, body.wide .slot .icon { grid-area: icon; }
 body.tall .slot .temp, body.wide .slot .temp { grid-area: temp; white-space: nowrap; }
@@ -2320,3 +2320,40 @@ body.tall .slot .rain, body.wide .slot .rain { grid-area: rain; white-space: now
 .kid-btn .state { max-width: 100%; overflow: hidden; text-overflow: ellipsis; box-sizing: border-box; }
 body.wide .wd-side { font-size: 14px; }
 body.wide .wd-row { gap: 6px; }
+
+/* ---- タブレット・.9・.8 の ホームを つめる（2026-11-22 案。社長が 選ぶ 前。docs/handover/layout.md の「タブレットの ホーム」）----
+   iPad の Safari（アドレスバーの 分 たてが みじかい）で がんばりカレンダーが せまかった。
+   天気の 時間帯は 2×2（上「あさ｜絵」・下「8ど｜降水確率」。数字を 横に そろえる。11-22 社長）に して 低く し、空いた 高さを がんばりカレンダーへ。
+   横: 上の だんの 高さは 天気で きまるので、日付の カードも それに あわせて すこし 小さく（遠くから 読める 大きさは のこす）
+   縦: 日付の カードは 1行の 帯（「11がつ 22日」に 曜日を 添え、時刻は 右に 別の かたまり）。予定の 欄は 3件ぶんまで、のこりは がんばりカレンダー。
+       いつもの 日に 予定が ない ときは（events.js が body に ev-none）予定の 欄を 中身の 高さに して、その 分も がんばりカレンダーへ */
+body:not(.tall):not(.wide) .slots .slot:not(.wx-day) { display: grid; grid-template-columns: auto auto; grid-template-areas: "label icon" "temp rain"; justify-content: center; align-items: center; justify-items: center; column-gap: 12px; row-gap: 2px; padding: 6px 4px; }
+body:not(.tall):not(.wide) .slot:not(.wx-day) .label { grid-area: label; white-space: nowrap; font-size: 18px; }
+body:not(.tall):not(.wide) .slot:not(.wx-day) .icon { grid-area: icon; font-size: 30px; line-height: 1; }
+body:not(.tall):not(.wide) .slot:not(.wx-day) .temp { grid-area: temp; white-space: nowrap; font-size: 26px; }
+body:not(.tall):not(.wide) .slot:not(.wx-day) .rain { grid-area: rain; white-space: nowrap; min-height: 0; font-size: 16px; }
+body:not(.tall):not(.wide) .slot.wx-day .icon { font-size: 40px; line-height: 1; }
+
+/* 横（.9・.8・横の タブレット） */
+body:not(.portrait):not(.wide) .today { row-gap: 2px; padding: 4px 8px; }
+body:not(.portrait):not(.wide) .month { font-size: 28px; margin-bottom: 10px; }
+body:not(.portrait):not(.wide) .day #day { font-size: 84px; }
+body:not(.portrait):not(.wide) .day .unit { font-size: 28px; }
+body:not(.portrait):not(.wide) .weekday { font-size: 17px; padding: 2px 12px; }
+body:not(.portrait):not(.wide) .wd-side { font-size: 15px; }
+body:not(.portrait):not(.wide) .clock { font-size: 64px; }
+
+/* 縦の タブレット: 日付の 帯 */
+body.portrait:not(.tall) .today { grid-template-columns: auto auto auto auto; grid-template-areas: "month day wd clock"; justify-content: center; align-items: center; column-gap: 8px; padding: 6px 14px; }
+body.portrait:not(.tall) .month { grid-area: month; align-self: end; margin: 0 0 8px; font-size: 28px; white-space: nowrap; }
+body.portrait:not(.tall) .day { grid-area: day; margin: 0; line-height: 1; white-space: nowrap; }
+body.portrait:not(.tall) .day #day { font-size: 68px; }
+body.portrait:not(.tall) .day .unit { font-size: 26px; }
+body.portrait:not(.tall) .wd-row { grid-area: wd; }
+body.portrait:not(.tall) .weekday { margin: 0; font-size: 19px; padding: 2px 12px; white-space: nowrap; }
+body.portrait:not(.tall) .clock { grid-area: clock; margin: 0 0 0 36px; font-size: 64px; line-height: 1; white-space: nowrap; }
+body.portrait:not(.tall) .clock.analog { width: 80px; height: 80px; }
+body.portrait:not(.tall) .greeting { display: none; }
+/* 縦の タブレット: 予定は 3件ぶんまで、のこりは がんばりカレンダー */
+body.portrait:not(.tall):not(.no-cal) .board { grid-template-rows: min-content minmax(0, 1fr) minmax(170px, 252px); }
+body.portrait:not(.tall):not(.no-cal).ev-none .board { grid-template-rows: min-content minmax(0, 1fr) min-content; }

@@ -122,6 +122,14 @@
     return o >= 0 && o <= CAL_DAYS - 1;
   });
 
+  // いつもの 日（さわって いない とき）に 予定が ない: 縦の タブレットは 予定の 欄を ちぢめて がんばりカレンダーへ（style.css の ev-none）。
+  //   スワイプで ほかの 日を 見て いる 間は かえない（カードが 上下に うごかない ように）
+  function markNone(none) {
+    if (navOffset !== null || document.body.classList.contains("ev-none") === none) return;
+    document.body.classList.toggle("ev-none", none);
+    window.dispatchEvent(new Event("board:fit"));
+  }
+
   function renderEvents() {
     B.curSec = "schedule";
     var now = new Date();
@@ -145,7 +153,7 @@
       window.dispatchEvent(new Event("board:fit")); // こどもの ボタンの かたちを えらびなおす
     }
     if (noCal) { el.innerHTML = ""; return; }
-    if (!calendar) { el.innerHTML = '<li class="empty">' + W(calError ? "calError" : "loading") + '</li>'; return; }
+    if (!calendar) { if (calError) markNone(true); el.innerHTML = '<li class="empty">' + W(calError ? "calError" : "loading") + '</li>'; return; }
 
     var dayStart = day.getTime(), dayEnd = dayStart + 24 * 60 * 60 * 1000;
     // 並び順だけに使う時刻。カレンダー上の時刻が正確でない予定があるので、予定名に「10:30」などがあればそちらを優先する
@@ -160,6 +168,7 @@
       return (b.allDay - a.allDay) || (a.minutes - b.minutes);
     });
 
+    markNone(!list.length);
     if (!list.length) { el.innerHTML = '<li class="empty">' + W("noEvents") + '</li>'; return; }
     // 時刻を出す設定なら、終日でない予定は 印の かわりに「10:30〜11:30」。日を またぐ ぶんは かたほうだけ
     var showTime = !!B.settings.eventTime;
