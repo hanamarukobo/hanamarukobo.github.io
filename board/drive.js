@@ -345,16 +345,21 @@
       var p = c.tokenNow();
       if (!p) { c.prepare(); return null; }
       tried = t;
+      // 窓が 一瞬 白く 出るので、何を して いるかを 画面の まんなかに 出す（2026-11-22 社長「バグかと思う」）
+      tell("start");
       return p.then(function () {
+        tell("done");
         if (dirtySince()) return run();
         if (status === "expired") set("");
         emit();
         return status;
       }, function () {
+        tell("");
         emit();
         return status;
       });
     }
+    function tell(kind) { if (o.notice) { try { o.notice(kind); } catch (e) { /* 知らせの 失敗で 止めない */ } } }
     return {
       changed: changed, run: run, clearHeld: clearHeld, clearDirty: clearDirty, needsReconnect: needsReconnect, nudge: nudge,
       status: function () { return status; }, dirty: function () { return !!dirtySince(); }, heldAt: function () { return heldAt; },
@@ -364,6 +369,27 @@
 
   // ---- ブラウザでの 既定 ----
   var loading = null;
+  // 押した ついでの 取りなおし（nudge）の あいだ、画面の まんなかに 一言（start: つないで います… / done: つなぎ直しました を 2秒 / "": 消す）。
+  //   Google の 窓が 一瞬 白く 出るのが 何か 分かる ように（2026-11-22 社長）。style.css に 頼らず ここで 形を 決める
+  var noticeEl = null, noticeTimer = null;
+  function notice(kind) {
+    if (typeof document === "undefined") return;
+    if (!noticeEl) {
+      noticeEl = document.createElement("div");
+      noticeEl.setAttribute("role", "status");
+      noticeEl.style.cssText = "position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:9999;padding:14px 22px;" +
+        "border-radius:14px;background:rgba(40,40,48,.92);color:#fff;font-size:18px;font-weight:700;box-shadow:0 6px 24px rgba(0,0,0,.3);" +
+        "pointer-events:none;max-width:80vw;text-align:center";
+      document.body.appendChild(noticeEl);
+    }
+    clearTimeout(noticeTimer);
+    var AW = window.Words && window.Words.adult;
+    if (!kind || !AW) { noticeEl.hidden = true; return; }
+    noticeEl.textContent = AW(kind === "done" ? "driveNudged" : "driveNudging");
+    noticeEl.hidden = false;
+    noticeTimer = setTimeout(function () { noticeEl.hidden = true; }, kind === "done" ? 2000 : 30000);
+  }
+
   function loadGsi() {
     var g = window.google;
     if (g && g.accounts && g.accounts.oauth2) return Promise.resolve(g);
@@ -417,6 +443,7 @@
       return current || (current = make({ clientId: clientId(), fetch: function (u, i) { return window.fetch(u, i); }, loadGsi: loadGsi, storage: storage, remember: true }));
     },
     use: function (c) { current = c; },
+    notice: notice,   // 確かめの 道具から 形を 見る
     // 失敗の 文（Words.adult の driveErr…。設定と 入口で 同じ 文）
     errText: function (e) {
       var AW = window.Words.adult;
@@ -433,6 +460,7 @@
         storage: storage,
         // 押した 扱いが 続いて いるか（長押しの タイマーや ページの 読みこみから 呼ばれた ときは 窓を 出さない。知らない ブラウザは 試す）
         active: function () { var u = window.navigator && window.navigator.userActivation; return !u || !!u.isActive; },
+        notice: notice,
       }));
     },
   };

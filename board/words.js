@@ -413,6 +413,9 @@
     driveLinked: "Google ドライブとつないでいます。記録が変わると自動で控えます",
     // つないだ アカウント（drive.js の account。Google の 窓に 伝えて、選ぶ 画面を 出さない）
     driveWho: "（{who}）",
+    // おうちの人が 押した ついでに つなぎ直す あいだ（drive.js の notice。Google の 窓が 一瞬 出る）
+    driveNudging: "Google ドライブにつないでいます…",
+    driveNudged: "Google ドライブにつなぎ直しました",
     driveStopped: "控えが止まっています",
     driveReconnect: "つなぎ直す",
     driveUnlink: "つなぐのをやめる",
