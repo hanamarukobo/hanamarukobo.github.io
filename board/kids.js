@@ -601,6 +601,9 @@
   function approve(on, date) {
     var kid = openKid, day = date || ymd(new Date());
     window.ParentLock.ask(function () {
+      // Web 版で ドライブに つないで いて 通行証が 切れて いたら、「みました」の ついでに 取りなおす（鍵の あと・押した 処理の 中で 同期で。
+      //   drive.js の nudge。子どもの 操作では 呼ばない）
+      if (on && window.Drive && window.Drive.on()) window.Drive.auto().nudge();
       var e = entry(day, kid);
       window.BoardApi.post("/api/parent/day", { date: day, kid: kid, checks: e.checks, counts: e.counts || {}, approved: on })
         .then(function () { if (on) confetti(); return load(); })

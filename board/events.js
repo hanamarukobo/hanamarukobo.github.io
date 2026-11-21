@@ -23,7 +23,8 @@
     if (c && c.type === "none") return null;
     // この端末の カレンダー（アプリ。2026-11-21）。url は 読みこみ先が かわったかを くらべる ための しるし（board.js）
     if (c && c.type === "device") return c.ids && c.ids.length ? { type: "device", ids: c.ids, url: "device:" + c.ids.join(",") } : null;
-    if (c && c.url && (c.type === "ical" || c.type === "gas")) return c;
+    // iCal か Apps Script かは URL で きめる（前の 版で 取りちがえて 保存した ものも 読める。api.js の gasUrl）
+    if (c && c.url && (c.type === "ical" || c.type === "gas")) return { type: window.BoardApi.gasUrl(c.url) ? "gas" : "ical", url: c.url };
     if (C.calendar && C.calendar.url) return { type: "gas", url: C.calendar.url };
     return null;
   }

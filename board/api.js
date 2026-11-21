@@ -41,7 +41,7 @@
 
   // 色の 並びは palette.js と同じ
   var COLORS = ["purple", "pink", "blue", "green", "orange", "yellow", "mint"];
-  var MAX_KIDS = 8, MAX_NAME = 12, MAX_COUNT = 99;
+  var MAX_KIDS = 4, MAX_NAME = 12, MAX_COUNT = 99;
   // ことばの だんかい（words.js と同じ）
   var LEVELS = ["kinder", "lower", "upper"];
   var HONORS = ["", "ちゃん", "くん"];   // 名前の あとに 小さく つける
@@ -53,7 +53,7 @@
   ];
   var MAX_TASK_NAME = 30;
   // 無料と Pro で 数の 上限は 分けない（2026-11-19。前は 子どもは 2人まで・3人目から Pro。人数で 分けるのは 理不尽なので やめた）。
-  // 子どもの 表示は だれでも MAX_KIDS（8人。画面の 並びの 上限）まで。やることの 数は かぎらない。
+  // 子どもの 表示は だれでも MAX_KIDS（4人。ホームに スクロールなしで 全員 並べられる 数。2026-11-22 に 8人から）まで。やることの 数は かぎらない。
   // PRO は ビルドの 印（config.js の pro。build-app.ps1 の -Pro）。Pro かは isPro(state) で 見る（ビルドの 印か、招待コードで 開いた 家）
   var PRO = !!(window.CONFIG && window.CONFIG.pro);
   // 招待コードの 照合の 値（2026-11-20）: コードから 英数字 いがいを 取り、大文字に した 文字列の SHA-256。コードそのものは どこにも 書かない。
@@ -1001,7 +1001,12 @@
     // 「使わない」でも URL は のこす（また 使うときに 入れなおさなくて よいように）
     if (req.type === "none") return { type: "none", url: /^(https|webcal):\/\/\S+$/i.test(url) && url.length <= 2000 ? url : "" };
     if (!/^(https|webcal):\/\/\S+$/i.test(url) || url.length > 2000) throw httpError(400, "カレンダーの URL は https:// で始まるものを入れてください");
-    return { type: req.type, url: url };
+    // iCal か Apps Script かは URL で きめる（画面では「URL を貼る」1つ。前は 2つ あって、取りちがえると 読めなかった。2026-11-21）
+    return { type: gasUrl(url) ? "gas" : "ical", url: url };
+  }
+  // Apps Script の ウェブアプリの URL（https://script.google.com/macros/s/…/exec。Workspace は /a/<ドメイン>/macros/…）
+  function gasUrl(url) {
+    return /^https:\/\/script\.google(usercontent)?\.com\/(a\/[^\/]+\/)?macros\//i.test(String(url || "").trim());
   }
 
   // 親モードの鍵。"none"（なし）/ "easy"（計算問題）/ "pin"（4桁の番号）。
@@ -1263,6 +1268,7 @@
     },
     // 予定の URL の よくある まちがい。Google カレンダーの 共有リンク（…/calendar/u/0?cid=…）や 画面の URL は
     //   iCal では ないので 読めない（「予定が わからないよ」に なる）。"share" なら Words の calShareLink を 出す
+    gasUrl: gasUrl,
     calUrlProblem: function (url) {
       url = String(url || "").trim();
       return /^https?:\/\/calendar\.google\.com\//i.test(url) && !/\/calendar\/ical\//i.test(url) ? "share" : "";

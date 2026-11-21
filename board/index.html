@@ -249,8 +249,7 @@
           <select id="s-cal-type">
             <option value="none">使わない</option>
             <option value="device" hidden>この端末の Google カレンダー（おすすめ）</option>
-            <option value="ical">iCal の URL</option>
-            <option value="gas">Apps Script</option>
+            <option value="ical">URL を貼る（iCal・Apps Script）</option>
           </select>
           <input type="url" id="s-cal-url" placeholder="https://…" class="url">
           <button class="ghost small" id="s-cal-clear">URL を消去</button>
@@ -259,9 +258,8 @@
         <p class="su-warn s-cal-warn" id="s-cal-warn" hidden></p>
         <div class="s-help" id="s-cal-help" hidden>
           <p><b>この端末の Google カレンダー（おすすめ）</b>：アプリだけ。この端末に入っている Google アカウントのカレンダーから選びます（いくつでも）。URL のコピーはいりません。</p>
-          <p><b>iCal の URL</b>：Google カレンダーなどの「iCal 形式の URL」を貼って使います。Google カレンダーなら、パソコンで 設定 → 予定を出したいカレンダー →「カレンダーの統合」の「iCal 形式の非公開 URL」をコピーします。</p>
-          <p><b>Apps Script</b>：Google Apps Script で自分で用意した中継の URL です。詳しい方向け。わからなければ iCal を選んでください。</p>
-          <p>どちらの URL も、知っている人は誰でも予定を見られます。ほかの人に教えないでください。</p>
+          <p><b>URL を貼る</b>：Google カレンダーなどの「iCal 形式の URL」を貼って使います。Google カレンダーなら、パソコンで 設定 → 予定を出したいカレンダー →「カレンダーの統合」の「iCal 形式の非公開 URL」をコピーします。Google Apps Script で自分で用意した中継の URL も、そのまま貼れます（どちらかは URL から見分けます）。</p>
+          <p>URL を知っている人は誰でも予定を見られます。ほかの人に教えないでください。</p>
         </div>
         <p class="note" id="s-cal-note">URL はこの端末の中だけに保存します。「使わない」にすると、ボードの予定の欄がなくなります。</p>
         <h3>予定の時刻</h3>
@@ -548,7 +546,7 @@
             <details><summary>やることを増やしたい・変えたい</summary>
               <p>設定の「やること」→「やることの設定」で、名前・ポイント・曜日・子どもごとなどを変えられます。</p></details>
             <details><summary>子どもや、やることはいくつまで入れられる？</summary>
-              <p>やることは、いくつでも入れられます。子どもは8人まで表示できます。どちらも無料です。</p></details>
+              <p>やることは、いくつでも入れられます。子どもは4人まで表示できます。どちらも無料です。</p></details>
             <details><summary>設定を変えたのに、戻ってしまった</summary>
               <p>設定は、タブごとに下の「保存」を押すと保存されます。保存していないタブには「●」が付きます。「やること」の中は、欄ごとに「保存」があります。</p></details>
             <details><summary>週のどこかでやればよいこと（塾の宿題など）を入れたい</summary>
@@ -594,9 +592,9 @@
               <p>予定の欄の ◀ ▶ を押すか、左右にスワイプすると、6日先まで見られます。</p></details>
             <details><summary>Google カレンダーの予定を出したい</summary>
               <p>アプリなら、設定の「ボードの表示」の「予定の読み込み先」で「この端末の Google カレンダー」を選び、カレンダーを読む許可をして、出したいカレンダーに印を付けます（いくつでも）。この端末に Google アカウントが入っていれば、URL のコピーはいりません。予定はこの端末の中で読み、外には送りません。</p>
-              <p>ブラウザや、端末に Google アカウントがないときは、パソコンで Google カレンダーを開き、設定 → 予定を出したいカレンダー →「カレンダーの統合」の「iCal 形式の非公開 URL」をコピーして、「iCal の URL」に貼ってください。</p></details>
+              <p>ブラウザや、端末に Google アカウントがないときは、パソコンで Google カレンダーを開き、設定 → 予定を出したいカレンダー →「カレンダーの統合」の「iCal 形式の非公開 URL」をコピーして、「URL を貼る」に貼ってください。</p></details>
             <details><summary>予定が出ない・反映が遅い</summary>
-              <p>「この端末の Google カレンダー」に Google カレンダーが出てこないときは、Google カレンダーのアプリの 設定 → 全般 で「Google カレンダーのデータを他のアプリと共有」をオンにしてください（オフだと、ほかのアプリから予定が見えません）。端末の設定のアカウントで Google カレンダーの同期がオンかも確かめてください。カレンダーを読む許可を外したときは、端末の設定 → アプリ → はなまるボード → 権限 で許可し直します。iCal の URL は、URL と Wi-Fi を確かめてください。Google カレンダーで変えた予定は、反映まで時間がかかることがあります。</p></details>
+              <p>「この端末の Google カレンダー」に Google カレンダーが出てこないときは、Google カレンダーのアプリの 設定 → 全般 で「Google カレンダーのデータを他のアプリと共有」をオンにしてください（オフだと、ほかのアプリから予定が見えません）。端末の設定のアカウントで Google カレンダーの同期がオンかも確かめてください。カレンダーを読む許可を外したときは、端末の設定 → アプリ → はなまるボード → 権限 で許可し直します。URL を貼ったときは、URL と Wi-Fi を確かめてください。Google カレンダーで変えた予定は、反映まで時間がかかることがあります。</p></details>
             <details><summary>予定の時刻を出したい</summary>
               <p>設定の「ボードの表示」で「予定の時刻を表示する」をオンにすると、「10:30〜11:30」のように出ます。終日の予定は時刻を出しません。</p></details>
             <details><summary>予定の欄がいらない</summary>
@@ -640,7 +638,9 @@
             <!-- Web 版で Google ドライブの 控えが ある ときだけ 出す（settings.js。Drive.on） -->
             <details id="faq-web-drive" hidden><summary>iPhone・iPad で使いたい・データが消えないか心配</summary>
               <p>iPhone・iPad では、このブラウザの Web 版を「ホーム画面に追加」して使ってください。記録はブラウザの中に保存するため、しばらく開かないと消えることがあります。Google ドライブとつないでおくと、記録が変わるたびに自動で控え、消えても「ドライブから戻す」で戻せます（はじめに「つないではじめる」を選ぶか、設定の「おうちの人」→「Google ドライブに控える」）。控えはお使いの Google ドライブに保存し、はなまる工房には送りません。</p>
-              <p>つながりは1時間ほどで切れることがあります。切れているあいだに記録が変わると、設定の上に「控えが止まっています」と出るので「つなぎ直す」を押してください。2台で同じドライブにつなぐと、ほかの端末があとから控えたときは自動の控えを止めてお知らせします（同じ内容にそろえる仕組みではありません）。やめるときは、設定の「おうちの人」→「つなぐのをやめる」（ドライブの控えは残ります）。</p></details>
+              <p>つながりは1時間ほどで切れますが、おうちの人が設定を開いたときや「みました」を押したときに、つなぎ直します（Google の画面が出ることがあります）。つなぎ直せないまま記録が変わると、設定の上に「控えが止まっています」と出るので「つなぎ直す」を押してください。</p>
+              <!-- 1つの Google アカウントに 控えは 1つ（文は Words.adult の driveOneAccount。settings.js の renderDrive が 入れる） -->
+              <p><span id="faq-drive-one"></span>やめるときは、設定の「おうちの人」→「つなぐのをやめる」（ドライブの控えは残ります）。</p></details>
             <details><summary>機種変更・アプリの入れ直しをしたい</summary>
               <p>設定の「おうちの人」→「データの書き出し・読み込み」で、前もって書き出しておくと、新しい端末で「ファイルから戻す」で元に戻せます。</p></details>
             <details><summary>はじめの設定をやり直したい</summary>
@@ -882,7 +882,7 @@
       <p class="su-q">Google カレンダーの予定を、ボードに出せます。</p>
       <div class="su-cards small" id="su-cal">
         <button data-value="device" hidden>この端末の Google カレンダー<small>カレンダーを選ぶだけ</small></button>
-        <button data-value="ical">URL を貼る<small>iCal 形式の URL</small></button>
+        <button data-value="ical">URL を貼る<small>iCal・Apps Script の URL</small></button>
         <button data-value="later">あとで設定する<small>設定の「ボードの表示」からいつでも</small></button>
       </div>
       <div class="cal-pick" id="su-cal-device" hidden></div>

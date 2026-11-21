@@ -330,8 +330,8 @@
         '<select data-i="' + i + '" aria-label="ねんれいの めやす">' + window.Words.levelOptions({ level: levels[i], ruby: rubys[i] }) + '</select></li>';
     }).join("");
     Array.prototype.forEach.call($("su-names").querySelectorAll("input"), function (el, i) { el.value = names[i]; });
-    // 表示できる 子どもの 数（8人。無料も Pro も おなじ）まで 入れたら「＋ ふやす」を 押せなく する
-    var max = window.BoardApi.maxKids || 8, full = names.length >= max;
+    // 表示できる 子どもの 数（4人。無料も Pro も おなじ）まで 入れたら「＋ ふやす」を 押せなく する
+    var max = window.BoardApi.maxKids || 4, full = names.length >= max;
     $("su-add").disabled = full;
     $("su-free").hidden = !full;
     if (full) $("su-free").textContent = window.Words.t("maxKids", "upper", { n: max });
@@ -346,7 +346,7 @@
     }
   });
   $("su-add").addEventListener("click", function () {
-    if (names.length < (window.BoardApi.maxKids || 8)) { names.push(""); levels.push("lower"); rubys.push(false); renderNames(); }
+    if (names.length < (window.BoardApi.maxKids || 4)) { names.push(""); levels.push("lower"); rubys.push(false); renderNames(); }
   });
 
   function renderTasks() {

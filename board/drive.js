@@ -1,7 +1,9 @@
 // Google ドライブに 控える・ドライブから 戻す（Web 版だけ。2026-11-20 社長の 決定）。
 //   Android の アプリ・QR で 置いた端末に つないだ ブラウザ・localhost の 開発では 出さない（Drive.on）。
 //   クライアント ID は config.js の googleClientId（Web 版の ビルド build-web.ps1 が 入れる）。空なら 機能ごと 出さない。ソースに ID を 書かない
-//   - Google Identity Services の トークンモデル（https://accounts.google.com/gsi/client。設定の「おうちの人」を ひらいた とき・押した ときだけ 読む）
+//   - Google Identity Services の トークンモデル（https://accounts.google.com/gsi/client。設定の「おうちの人」を ひらいた とき・押した とき、
+//     つないで いる 間は 起動した とき・設定を 開いた ときにも 読む）。トークンは メモリだけ（約1時間）。切れたら おうちの人が 押した
+//     ついでに 取りなおす（makeAuto の nudge。設定を 開いた・「みました」）
 //   - 範囲は drive.file だけ（この アプリが 作った ファイルだけ 触れる）。控えは 1つの ファイルに し、次からは 同じ ファイルを 上書き（ドライブに 版の 履歴が のこる）
 //   - データは その人の ドライブと この ブラウザの あいだだけ。はなまる工房の サーバーには 送らない
 //   画面は settings.js（「おうちの人」の 控える・戻す）。中身は datafile.js（書き出しと 同じ）。fetch と gsi は 差し替えられる（tools/dev/test-drive.mjs）
@@ -41,7 +43,49 @@
     var tok = null;          // { value, exp }
     var client = null, gsi = null, pending = null;
 
-    function prepare() { return o.loadGsi().then(function () { return true; }, function () { return false; }); }
+    // gsi を 読んで、トークン クライアントも 先に 作って おく（押した ときに 同期で 窓を 開ける ように。tokenNow）
+    function prepare() {
+      return o.loadGsi().then(function (google) {
+        try { ensureClient(google); return true; } catch (e) { return false; }
+      }, function () { return false; });
+    }
+    function ensureClient(google) {
+      if (client && gsi === google) return client;
+      gsi = google;
+      client = google.accounts.oauth2.initTokenClient({
+        client_id: o.clientId,
+        scope: SCOPE,
+        callback: function (r) {
+          var p = pending;
+          pending = null;
+          if (!p) return;
+          if (!r || r.error || !r.access_token) return p.reject(fail(r && r.error === "access_denied" ? "denied" : "auth"));
+          // 画面で ドライブの チェックを 外された とき
+          var ok = google.accounts.oauth2.hasGrantedAllScopes;
+          if (typeof ok === "function" && !ok(r, SCOPE)) return p.reject(fail("denied"));
+          tok = { value: r.access_token, exp: now() + (Number(r.expires_in) || 3600) * 1000 };
+          p.resolve(tok.value);
+        },
+        error_callback: function (e) {
+          var p = pending;
+          pending = null;
+          if (!p) return;
+          var t = e && e.type;
+          p.reject(fail(t === "popup_closed" ? "cancel" : t === "popup_failed_to_open" ? "popup" : "auth"));
+        },
+      });
+      return client;
+    }
+    // Google の 窓を 開く。requestAccessToken は この 呼び出しの 中で 同期で 呼ぶ（Promise の 中身は すぐ 動く）
+    function request() {
+      return new Promise(function (resolve, reject) {
+        if (pending) pending.reject(fail("cancel"));
+        var me = pending = { resolve: resolve, reject: reject };
+        // Google の 画面が 閉じられたのに 知らせが 来ない ときに 待ちつづけない（2分）
+        setTimeout(function () { if (pending === me) { pending = null; reject(fail("cancel")); } }, 120000);
+        client.requestAccessToken({ prompt: "" });
+      });
+    }
 
     function ready() { return !!tok && tok.exp - 60000 > now(); }
     // アクセストークン（1時間）。のこりが 1分を 切ったら 取りなおす。はじめては Google の 画面で 許可を もらう。
@@ -53,39 +97,18 @@
       tok = null;
       if (silent) return Promise.reject(fail("expired"));
       return o.loadGsi().catch(function () { throw fail("load"); }).then(function (google) {
-        return new Promise(function (resolve, reject) {
-          if (pending) pending.reject(fail("cancel"));
-          var me = pending = { resolve: resolve, reject: reject };
-          // Google の 画面が 閉じられたのに 知らせが 来ない ときに 待ちつづけない（2分）
-          setTimeout(function () { if (pending === me) { pending = null; reject(fail("cancel")); } }, 120000);
-          if (!client || gsi !== google) {
-            gsi = google;
-            client = google.accounts.oauth2.initTokenClient({
-              client_id: o.clientId,
-              scope: SCOPE,
-              callback: function (r) {
-                var p = pending;
-                pending = null;
-                if (!p) return;
-                if (!r || r.error || !r.access_token) return p.reject(fail(r && r.error === "access_denied" ? "denied" : "auth"));
-                // 画面で ドライブの チェックを 外された とき
-                var ok = google.accounts.oauth2.hasGrantedAllScopes;
-                if (typeof ok === "function" && !ok(r, SCOPE)) return p.reject(fail("denied"));
-                tok = { value: r.access_token, exp: now() + (Number(r.expires_in) || 3600) * 1000 };
-                p.resolve(tok.value);
-              },
-              error_callback: function (e) {
-                var p = pending;
-                pending = null;
-                if (!p) return;
-                var t = e && e.type;
-                p.reject(fail(t === "popup_closed" ? "cancel" : t === "popup_failed_to_open" ? "popup" : "auth"));
-              },
-            });
-          }
-          client.requestAccessToken({ prompt: "" });
-        });
+        ensureClient(google);
+        return request();
       });
+    }
+    // 押した 処理の 中で そのまま（同期で）窓を 開いて 取りなおす（Safari は 押した 処理から 同期で 開いた 窓しか 許さない。
+    //   token() は loadGsi().then の あとに 開くので 止められる 心配が ある）。gsi と クライアントが 先に できて いる（prepare の あと）
+    //   ときだけ。できて いなければ null（何も しない）
+    function tokenNow() {
+      if (ready()) return Promise.resolve(tok.value);
+      if (!client) return null;
+      tok = null;
+      return request();
     }
 
     // Drive の API。401（トークン切れ）は 1回だけ 取りなおして やりなおす（silent の ときは 窓を 開かず expired）
@@ -204,7 +227,7 @@
     // トークンを 忘れる（確かめの 道具で「切れた」形を 作る）
     function forget() { tok = null; }
 
-    return { prepare: prepare, token: token, ready: ready, latest: latest, backup: backup, read: read, last: last, stale: stale,
+    return { prepare: prepare, token: token, tokenNow: tokenNow, ready: ready, latest: latest, backup: backup, read: read, last: last, stale: stale,
       linked: linked, setLinked: setLinked, adopt: adopt, startFresh: startFresh, unlink: unlink, forget: forget };
   }
 
@@ -213,7 +236,8 @@
   //   changed()（保存の たび）→ 最後の 変更から 20秒 静かに なったら 1回。続く ときは 最初の 変更から 2分で 1回（秒数は 推測。実物で 調整）。
   //   窓は 開かない（token silent）。トークンが なければ「expired」で 待つ（設定の「つなぎ直す」）。
   //   status: "" | "expired" | "held-ask" | "held-other" | "full" | "offline" | "busy"（held と full は 押して もらう まで 止める）
-  var QUIET = 20000, MAX_WAIT = 120000, BUSY_WAIT = [60000, 300000, 900000];
+  //   押した ついでの 取りなおし（nudge）は 同じ 窓を 何度も 出さない ように 3分 あける（推測。実物で 調整）
+  var QUIET = 20000, MAX_WAIT = 120000, BUSY_WAIT = [60000, 300000, 900000], NUDGE_GAP = 180000;
   var DIRTY_KEY = "drive:dirty", HELD_KEY = "drive:held";
   function makeAuto(o) {
     var now = o.now || function () { return Date.now(); };
@@ -285,8 +309,34 @@
     }
     // 「つなぎ直す」を 出すか: つないで いる・切れた・控えて いない 変更が ある（そろった ときだけ）
     function needsReconnect() { var c = o.client(); return c.linked() && !c.ready() && !!dirtySince() && !stopped(); }
+    // おうちの人が 押した ついでに 通行証を 取りなおす（2026-11-22 社長。案 B）。鍵の あとの 操作（設定を 開いた・「みました」）の
+    //   押した 処理の 中で 同期で 呼ぶ。子どもの 操作では 呼ばない（子どもの 前で Google の 窓を 出さない）。
+    //   試すのは つないで いる・トークンが ない・止まって いない（held・full）・押した 扱いが 続いて いる（o.active）・
+    //   前に 試してから NUDGE_GAP たった ときだけ。gsi が まだ なら 窓は 開かず、つぎの ために 読んで おく。
+    //   取れたら たまって いる 変更を すぐ 控える。失敗（窓が 止められた・閉じられた・エラー）は 黙って いまの 帯の まま。
+    //   返り値: 試したら Promise<status>、試さなければ null
+    var tried = 0;
+    function nudge() {
+      var c = o.client();
+      if (!c.linked() || c.ready() || stopped() || typeof c.tokenNow !== "function") return null;
+      if (o.active && !o.active()) return null;
+      var t = now();
+      if (tried && t - tried < NUDGE_GAP) return null;
+      var p = c.tokenNow();
+      if (!p) { c.prepare(); return null; }
+      tried = t;
+      return p.then(function () {
+        if (dirtySince()) return run();
+        if (status === "expired") set("");
+        emit();
+        return status;
+      }, function () {
+        emit();
+        return status;
+      });
+    }
     return {
-      changed: changed, run: run, clearHeld: clearHeld, clearDirty: clearDirty, needsReconnect: needsReconnect,
+      changed: changed, run: run, clearHeld: clearHeld, clearDirty: clearDirty, needsReconnect: needsReconnect, nudge: nudge,
       status: function () { return status; }, dirty: function () { return !!dirtySince(); }, heldAt: function () { return heldAt; },
       onChange: function (f) { subs.push(f); },
     };
@@ -361,6 +411,8 @@
         text: function () { return window.DataFile.text().then(function (f) { return f.text; }); },
         hasRecords: function () { return window.BoardApi.hasRecords(); },
         storage: storage,
+        // 押した 扱いが 続いて いるか（長押しの タイマーや ページの 読みこみから 呼ばれた ときは 窓を 出さない。知らない ブラウザは 試す）
+        active: function () { var u = window.navigator && window.navigator.userActivation; return !u || !!u.isActive; },
       }));
     },
   };

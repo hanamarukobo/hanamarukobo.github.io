@@ -77,7 +77,8 @@
     renderBrightness();
     // 「使わない」でも URL は のこして おく（また 使うときに 入れなおさなくて よいように）
     var cal = (s.calendar && (s.calendar.type === "none" || s.calendar.type === "device") ? s.calendar : B.calSource()) || { type: "none", url: "" };
-    $("s-cal-type").value = cal.type;
+    // iCal と Apps Script は「URL を貼る」1つ（どちらかは URL から 見分ける。api.js の gasUrl）
+    $("s-cal-type").value = cal.type === "gas" ? "ical" : cal.type;
     $("s-cal-url").value = cal.url || "";
     $("s-event-time").checked = !!s.eventTime;
     calDeviceOption(cal.type === "device");
@@ -137,11 +138,9 @@
     if (!document.hidden && !$("settings").hidden) { renderBrightness(); renderFront(); renderNotice(); }
   });
 
-  // 「この端末のカレンダー」を 出せる とき、それを おすすめに する（出せない ときは iCal が おすすめ）
+  // 「この端末のカレンダー」は 端末に カレンダーが ある ときだけ 出す（出せない ときは「URL を貼る」だけ）
   function calDeviceOption(on) {
-    var opt = $("s-cal-type").querySelector('option[value=device]'), ical = $("s-cal-type").querySelector('option[value=ical]');
-    opt.hidden = !on;
-    ical.textContent = on ? "iCal の URL" : "iCal の URL（おすすめ）";
+    $("s-cal-type").querySelector('option[value=device]').hidden = !on;
   }
   // ids: 設定を 開いた ときに えらんで いた カレンダー（それ 以外は 画面の 印の まま）
   function calTypeChanged(ids, ask) {
@@ -165,7 +164,7 @@
     $("s-cal-type").value = "none";
     calTypeChanged();
   });
-  // iCal と Apps Script の ちがいの せつめい
+  // 予定の 読み込み先の せつめい
   $("s-cal-help-btn").addEventListener("click", function () { $("s-cal-help").hidden = !$("s-cal-help").hidden; });
   // 「スリープ」の ときは 明るさの 許可は いらない
   Array.prototype.forEach.call(document.getElementsByName("s-power"), function (r) {
@@ -405,9 +404,9 @@
   $("s-goals").addEventListener("input", function (ev) {
     if (ev.target.dataset.goal) goalsEdit[ev.target.dataset.goal] = ev.target.value;
   });
-  // 表示できる 子どもの 数（8人。無料も Pro も おなじ。2026-11-19 に 無料の 2人の 上限を なくした）まで いたら「＋ 子どもを追加」を 押せなく する
+  // 表示できる 子どもの 数（4人。無料も Pro も おなじ。2026-11-19 に 無料の 2人の 上限を なくした）まで いたら「＋ 子どもを追加」を 押せなく する
   function maxKidsNote() {
-    var max = window.BoardApi.maxKids || 8;
+    var max = window.BoardApi.maxKids || 4;
     var full = kidsEdit.filter(function (k) { return k.active !== false; }).length >= max;
     $("s-add-kid").disabled = full;
     $("s-max-kids").hidden = !full;
@@ -513,6 +512,8 @@
   setInterval(renderBattery, 10 * 60 * 1000);
 
   function openSettings() {
+    // Web 版で ドライブに つないで いて 通行証が 切れて いたら、開いた ついでに 取りなおす（鍵の あとの 押した 処理の 中で 同期で。drive.js の nudge）
+    if (driveOn()) window.Drive.auto().nudge();
     renderBattery();
     fillSettings(B.settings);
     kidsEdit = JSON.parse(JSON.stringify(B.kids));
@@ -786,7 +787,8 @@
     $("s-drive-title").textContent = AW("driveTitle");
     $("s-drive-save").textContent = AW("driveSave");
     $("s-drive-restore").textContent = AW("driveRestore");
-    $("s-drive-note").textContent = AW("driveNote");
+    $("s-drive-note").textContent = AW("driveNote") + AW("driveOneAccount");
+    $("faq-drive-one").textContent = AW("driveOneAccount");
     $("s-drive-last").textContent = last ? AW("driveLast").replace("{d}", driveWhen(last)) : AW("driveNever");
     // 7日の 一言は つながずに 手で 控える 人だけ（つないで いる 人には 止まった ときの 帯）
     $("s-drive-stale").textContent = AW("driveStale");
