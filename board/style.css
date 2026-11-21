@@ -693,6 +693,29 @@ body.lowpower *, body.lowpower *::before, body.lowpower *::after {
   z-index: 10;
 }
 
+/* 暗くする 10秒前の 知らせ（下の まんなか。さわれる ものを ふさがない） */
+.dim-soon {
+  position: fixed;
+  left: 16px;
+  right: 16px;
+  bottom: 14px;
+  width: fit-content;
+  margin: 0 auto;
+  word-break: keep-all;
+  word-break: auto-phrase;
+  overflow-wrap: anywhere;
+  padding: 8px 18px;
+  border-radius: 999px;
+  background: rgba(40, 40, 48, 0.82);
+  color: #fff;
+  font-size: 15px;
+  line-height: 1.4;
+  text-align: center;
+  z-index: 30;
+  pointer-events: none;
+}
+.dim-soon[hidden] { display: none; }
+
 /* 設定画面 */
 .settings {
   position: fixed;
@@ -1365,6 +1388,19 @@ body.portrait .qk-body { flex-direction: column; }
 .settings .s-help { background: var(--cream); border-radius: 14px; padding: 4px 14px; font-size: 15px; line-height: 1.5; margin: 6px 0; }
 .settings .s-help[hidden] { display: none; }
 .settings .s-help p { margin: 6px 0; }
+/* 予定の「この端末のカレンダー」の 一覧（calpick.js。設定と かんたん設定） */
+.cal-pick[hidden] { display: none; }
+.cal-pick { margin: 6px 0 0; }
+.cal-pick .cal-list { list-style: none; margin: 0; padding: 0; }
+.cal-pick .cal-list li { padding: 2px 0; }
+.cal-pick .cal-list label { display: flex; align-items: center; gap: 10px; min-height: 40px; cursor: pointer; flex-wrap: wrap; }
+.cal-pick .cal-list input { width: 22px; height: 22px; flex: none; margin: 0; }
+.cal-pick .cal-dot { width: 14px; height: 14px; border-radius: 50%; flex: none; }
+.cal-pick .cal-name { font-size: 18px; overflow-wrap: anywhere; }
+.cal-pick .cal-acc { font-size: 14px; color: var(--muted); overflow-wrap: anywhere; }
+.cal-pick .cal-msg { margin: 4px 0 8px; }
+.cal-pick .cal-share { margin: 2px 0 6px; padding: 6px 10px; border-radius: 10px; background: var(--cream); color: var(--text, inherit); }
+.cal-pick .cal-allow { margin-bottom: 4px; }
 .settings .buttons { margin-top: 8px; }
 body.portrait .settings .s-nav { width: auto; flex-direction: row; flex-wrap: wrap; }
 body.portrait .settings .s-nav button { font-size: 16px; padding: 4px 12px; }

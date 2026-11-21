@@ -153,7 +153,7 @@
   var EASY_TASKS = ["帰ったら手をあらう", "くつをそろえる", "あしたのじゅんび"];
   var POWER_KEY = "screenOff";        // sleep.js と おなじ（この端末だけ。JSON で 入れる）
   var ORIENT_KEY = "orientation";     // app.js と おなじ
-  var step = 0, first = true, saving = false, cur = null;
+  var step = 0, first = true, saving = false, cur = null, calIds = [], calUrl0 = "", calDevOk = false;
   var place = null, usage = null, power = "dim", names = [], levels = [], rubys = [], kidIds = [], calPick = null;
   var tasks = [], taskNames = [], tasksEditable = true, taskYen = "1", yenMixed = false;
   // おさいふ（"on"/"off"・使う子の 印（名前の 順）・1ポイント＝○円）と 鍵（"none"/"easy"/"pin"）。2026-11-18
@@ -216,7 +216,13 @@
       // 予定: 設定して あれば「設定する」、なければ「あとで設定する」を えらんだ 状態で ひらく。
       // Apps Script（詳しい 設定）の ときは URL を 見せず、入れた ときだけ iCal に かえる
       var cal = st.calendar || {};
-      calPick = (cal.type === "ical" || cal.type === "gas") && cal.url ? "ical" : "later";
+      calPick = cal.type === "device" ? "device" : (cal.type === "ical" || cal.type === "gas") && cal.url ? "ical" : "later";
+      calIds = cal.type === "device" ? (cal.ids || []).slice() : [];
+      calUrl0 = cal.url || "";
+      // 「この端末のカレンダー」は 端末に カレンダーが ある ときだけ 出す（calpick.js）
+      calDevOk = cal.type === "device";
+      calDevCard();
+      window.CalPick.available().then(function (ok) { if (ok) { calDevOk = true; calDevCard(); } });
       $("su-cal-url").value = cal.type === "ical" ? cal.url || "" : "";
       $("su-cal-url").placeholder = cal.type === "gas" && cal.url
         ? "いまは Apps Script で設定しています（変えるときだけ入れてください）" : "https://calendar.google.com/…/basic.ics";
@@ -278,12 +284,15 @@
       $("su-sleep").disabled = !Device.canSleep();
       pick("su-power", power);
       $("su-front-row").hidden = !(Device.canFront() && here());
+      // 画面オフまでの 時間（設定の「この端末」の「画面オフまで」。はじめは 1分）
+      var idle = parseFloat(((cur && cur.settings && cur.settings.display) || {}).idleMinutes) || 1;
+      $("su-idle").textContent = idle < 1 ? Math.round(idle * 60) + "秒" : idle + "分";
     }
     if (name === "kids") renderNames();
     if (name === "tasks") renderTasks();
     if (name === "wallet") renderWallet();
     if (name === "lock") renderLock();
-    if (name === "calendar") { pick("su-cal", calPick); $("su-cal-box").hidden = calPick !== "ical"; }
+    if (name === "calendar") { pick("su-cal", calPick); calBoxes(false); }
   }
 
   $("su-connect").addEventListener("click", function () {
@@ -414,9 +423,16 @@
     if (!b) return;
     calPick = b.dataset.value;
     pick("su-cal", calPick);
-    $("su-cal-box").hidden = calPick !== "ical";
+    calBoxes(true);
     if (calPick === "ical") $("su-cal-url").focus();
   });
+  function calDevCard() { $("su-cal").querySelector("button[data-value=device]").hidden = !calDevOk; }
+  // えらんだ カードの 中身（この端末の カレンダーの 一覧・URL の 欄）。ask: 許可が なければ すぐ 聞く（カードを 押した とき）
+  function calBoxes(ask) {
+    $("su-cal-box").hidden = calPick !== "ical";
+    if (calPick === "device") window.CalPick.show($("su-cal-device"), calIds, ask);
+    else $("su-cal-device").hidden = true;
+  }
   // 共有リンクなど 読めない URL を 貼ったら、その場で 正しい URL の 出し方を 出す（api.js の calUrlProblem）
   function calWarn() {
     var bad = !!Api.calUrlProblem($("su-cal-url").value);
@@ -482,6 +498,7 @@
     }
     var url = $("su-cal-url").value.trim();
     if (calPick === "ical" && url) next.calendar = { type: "ical", url: url };
+    if (calPick === "device") next.calendar = { type: "device", ids: window.CalPick.picked($("su-cal-device")), url: calUrl0 };
     var oldUsage = first ? null : Api.usage(cur.settings);
     // 子ども → 設定 → やること を まとめて 保存（どれか だめなら なにも かえない。古い 置いた端末には 1つずつ）
     Api.postAll([{ path: "/api/board/kids", body: { kids: sendKids } }, { path: "/api/board/settings", body: next },
@@ -526,6 +543,10 @@
       if (walletRate.trim() !== "" && !/^\d{1,5}$/.test(walletRate.trim())) { $("su-error").textContent = "1ポイントの金額は数字で入れてください"; return; }
     }
     if (name === "lock" && !readLock()) { $("su-error").textContent = "鍵の4桁の番号を入れてください"; $("su-pin").focus(); return; }
+    if (name === "calendar" && calPick === "device") {
+      calIds = window.CalPick.picked($("su-cal-device"));
+      if (!calIds.length) { $("su-error").textContent = window.Words.adult("calPickNone"); return; }
+    }
     if (name === "calendar" && calPick === "ical") {
       var url = $("su-cal-url").value.trim();
       if (url && !/^(https|webcal):\/\/\S+$/i.test(url)) { $("su-error").textContent = "URL は https:// で始まるものを入れてください"; return; }

@@ -56,6 +56,17 @@
     window.EchoBoard.setKeepScreenOn(on);
   }
 
+  // 暗くする 10秒前の 知らせ（「暗くするだけ」の ときだけ。さわると そのまま）。
+  //   何も 言わずに 急に 暗く なると 驚く（2026-11-21 社長）。文字は みんなで 見る ところと 同じ（時計に あわせる）
+  var SOON_MS = 10 * 1000, soonOn = false;
+  function setSoon(on) {
+    var el = $("dim-soon");
+    if (!el || soonOn === on) return;
+    soonOn = on;
+    if (on) el.innerHTML = window.Words.t("dimSoon", B.levelFor ? B.levelFor("clock") : "lower", {});
+    el.hidden = !on;
+  }
+
   function updateSleep(now) {
     // Web 版も 同じ（ブラウザは 画面を つけて おけず 明るさも 変えられないので、黒い 画面を かぶせる だけに なって しまう。
     //   説明の 途中で 急に 真っ暗に なった。2026-11-21 社長）
@@ -63,6 +74,7 @@
       // スマホだけ・置いた端末に つないだ スマホは ふつうの アプリと おなじ（画面オフは 端末に まかせる。黒い画面も 出さない）。
       //   明るさも 端末に まかせる（-1）。前は 起動の たびに 180 に 固定して、暗い 部屋で まぶしく なっていた（2026-11-11 の 問い合わせ、Pixel 9 Pro XL）
       setKeepOn(false);
+      setSoon(false);
       if (wakeAt) { wakeAt = null; window.EchoBoard.scheduleWake(0); }
       if (B.sleeping !== false) {
         B.sleeping = false;
@@ -71,10 +83,14 @@
       }
       return;
     }
-    var force = !$("settings").hidden || !$("setup").hidden || inAlwaysOn(now);
+    // はじめて（まだ 設定して いない）ときの 説明も 暗くしない。読んでいる 途中で 1分たつと 暗くなって 説明が 閉じていた（2026-11-21）。
+    //   2回目からの「説明を見る」は 今のまま（だれも 閉じないと 一日中 明るいままに なるため）
+    var firstTour = !$("tutorial").hidden && window.BoardApi.needsSetup();
+    var force = !$("settings").hidden || !$("setup").hidden || firstTour || inAlwaysOn(now);
     if (powerMode() === "sleep") {
       // 黒い画面は 出さず、つけておく時間の ほかは 端末に まかせて スリープさせる
       setKeepOn(force);
+      setSoon(false);
       var next = nextAlwaysOn(now), ms = B.display.idleMinutes * 60 * 1000;
       if (next !== wakeAt) { wakeAt = next; window.EchoBoard.scheduleWake(next); }
       // 許可（システム設定の変更）が ないと 設定できない。ためすのは 1分に 1回
@@ -93,8 +109,10 @@
     var front = Device.canFront() && window.EchoBoard.getFront() ? nextAlwaysOn(now) : 0;
     if (front !== (wakeAt || 0)) { wakeAt = front || null; window.EchoBoard.scheduleWake(front); }
     setKeepOn(true);
-    // つかいかたが ひらいたままでも 時間に なったら 消す（だれも とじないと 一日中 明るいままに なるため）
-    var awake = force || (Date.now() - B.lastTouch) < B.display.idleMinutes * 60 * 1000;
+    // つかいかたが ひらいたままでも 時間に なったら 消す（だれも とじないと 一日中 明るいままに なるため。はじめての ときは 上の firstTour）
+    var left = B.display.idleMinutes * 60 * 1000 - (Date.now() - B.lastTouch);
+    var awake = force || left > 0;
+    setSoon(!force && awake && left <= SOON_MS);
     if (B.sleeping === !awake) return;
     B.sleeping = !awake;
     if (B.sleeping && window.Tutorial) window.Tutorial.dismiss();
