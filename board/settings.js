@@ -76,11 +76,14 @@
     Array.prototype.forEach.call(document.getElementsByName("s-orient"), function (r) { r.checked = r.value === orient; });
     renderBrightness();
     // 「使わない」でも URL は のこして おく（また 使うときに 入れなおさなくて よいように）
-    var cal = (s.calendar && s.calendar.type === "none" ? s.calendar : B.calSource()) || { type: "none", url: "" };
+    var cal = (s.calendar && (s.calendar.type === "none" || s.calendar.type === "device") ? s.calendar : B.calSource()) || { type: "none", url: "" };
     $("s-cal-type").value = cal.type;
     $("s-cal-url").value = cal.url || "";
     $("s-event-time").checked = !!s.eventTime;
-    calTypeChanged();
+    calDeviceOption(cal.type === "device");
+    calTypeChanged(cal.type === "device" ? cal.ids || [] : []);
+    // 「この端末のカレンダー」は 端末に カレンダーが ある ときだけ 出す（つないだ スマホは 置いた端末に 聞く）
+    window.CalPick.available().then(function (ok) { if (ok) calDeviceOption(true); });
     setText("s-error", "");
   }
 
@@ -134,16 +137,28 @@
     if (!document.hidden && !$("settings").hidden) { renderBrightness(); renderFront(); renderNotice(); }
   });
 
-  function calTypeChanged() {
+  // 「この端末のカレンダー」を 出せる とき、それを おすすめに する（出せない ときは iCal が おすすめ）
+  function calDeviceOption(on) {
+    var opt = $("s-cal-type").querySelector('option[value=device]'), ical = $("s-cal-type").querySelector('option[value=ical]');
+    opt.hidden = !on;
+    ical.textContent = on ? "iCal の URL" : "iCal の URL（おすすめ）";
+  }
+  // ids: 設定を 開いた ときに えらんで いた カレンダー（それ 以外は 画面の 印の まま）
+  function calTypeChanged(ids, ask) {
+    var dev = $("s-cal-type").value === "device";
     $("s-cal-url").disabled = $("s-cal-type").value === "none";
-    $("s-cal-clear").hidden = !$("s-cal-url").value;
+    $("s-cal-url").hidden = dev;
+    $("s-cal-note").hidden = dev;
+    if (dev) window.CalPick.show($("s-cal-device"), Array.isArray(ids) ? ids : null, ask);
+    else $("s-cal-device").hidden = true;
+    $("s-cal-clear").hidden = dev || !$("s-cal-url").value;
     // 共有リンクなど 読めない URL を 貼ったら、その場で 正しい URL の 出し方を 出す
     var bad = $("s-cal-type").value === "ical" && window.BoardApi.calUrlProblem($("s-cal-url").value);
     $("s-cal-warn").hidden = !bad;
     $("s-cal-warn").textContent = bad ? window.Words.t("calShareLink", "upper") : "";
   }
-  $("s-cal-type").addEventListener("change", calTypeChanged);
-  $("s-cal-url").addEventListener("input", calTypeChanged);
+  $("s-cal-type").addEventListener("change", function () { calTypeChanged(null, true); });
+  $("s-cal-url").addEventListener("input", function () { calTypeChanged(); });
   $("s-cal-clear").addEventListener("click", function () {
     if (!confirm("予定の URL を消去しますか？（保存すると元に戻せません）")) return;
     $("s-cal-url").value = "";
@@ -545,9 +560,11 @@
   var SAVE_PAGES = ["kids", "parent", "board", "system"], baseline = {};
   function pageState(page) {
     // ファイルを えらぶ 欄（データの 読み込み）は 保存とは 関係ない
-    var v = Array.prototype.map.call($("s-page-" + page).querySelectorAll("input:not([type=file]), select, textarea"), function (i) {
+    //   予定の カレンダーの 一覧（calpick.js）は あとから 描くので、印 そのものでは なく えらんだ id で くらべる
+    var v = Array.prototype.map.call($("s-page-" + page).querySelectorAll("input:not([type=file]):not([data-id]), select, textarea"), function (i) {
       return i.type === "checkbox" || i.type === "radio" ? (i.checked ? "1" : "0") : i.value;
     }).join("|");
+    if (page === "board") v += "|" + window.CalPick.picked($("s-cal-device")).join(",");
     return page === "kids" ? v + JSON.stringify(kidsEdit) : v;
   }
   function dirtyPages() { return SAVE_PAGES.filter(function (p) { return pageState(p) !== baseline[p]; }); }
@@ -633,11 +650,16 @@
       showTab("parent");
       return setText("s-error", "鍵の4桁の番号を入れてください");
     }
+    var calReq = { type: $("s-cal-type").value, url: $("s-cal-url").value.trim() };
+    if (calReq.type === "device") {
+      calReq.ids = window.CalPick.picked($("s-cal-device"));
+      if (!calReq.ids.length) { showTab("board"); return setText("s-error", window.Words.adult("calPickNone")); }
+    }
     var next = {
       parentLock: lock,
       parentName: $("s-parent-name").value.trim(),
       location: window.AreaSelect.value($("s-office"), $("s-area")),
-      calendar: { type: $("s-cal-type").value, url: $("s-cal-url").value.trim() },
+      calendar: calReq,
       weekStart: $("s-week-mon").checked ? 1 : 0,
       lowPower: $("s-lowpower").checked,
       usage: pickedUsage(),

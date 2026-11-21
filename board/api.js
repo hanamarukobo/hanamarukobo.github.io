@@ -147,6 +147,7 @@
     if (migrateBundles(data)) moved = true;
     if (migrateGoals(data)) moved = true;
     if (sameWords(data.settings)) moved = true;
+    if (markStarted(data)) moved = true;
     if (moved && raw) storageSet(KEY, JSON.stringify(data));
     // 上げた あと はじめて 開いた ときも 控えの ファイルを つくる（さわらない 日が あっても 控えが あるように）
     if (raw && !fileSaved) saveFile(storageGet(KEY));
@@ -164,6 +165,26 @@
     if (secs.every(function (k) { return (w[k] || "auto") === best; })) return false;
     secs.forEach(function (k) { w[k] = best; });
     return true;
+  }
+
+  // 前から 使っている 人の 印（2026-11-21 社長）: はじめて 開いた 日と 版を 1度だけ 書く（settings.started = { at, v }）。
+  //   at は データの 中で いちばん 古い 記録の 日と きょうの 古いほう（前の 版から 使っている 人も 本当に 始めた 日に なる）。
+  //   課金を 始める 版で「その日より 前なら 不自由なく 使い続けられる」ように する ための 印で、印を 書くだけ（制限は 何も かけない）。
+  //   書き出し・ドライブの 控えに 乗るので、ブラウザ → アプリ・機種変更でも ついてくる。書いた あとは 変えない（読み込みは 古いほうを のこす）
+  function markStarted(data) {
+    var s = data.settings;
+    if (s.started && isDate(s.started.at)) return false;
+    s.started = { at: oldestDate(data), v: window.APP_VERSION || "" };
+    return true;
+  }
+  function oldestDate(data) {
+    var at = today();
+    function see(d) { if (isDate(d) && d < at) at = d; }
+    Object.keys(data.days || {}).forEach(see);
+    (Array.isArray(data.graduations) ? data.graduations : []).forEach(function (g) { see(g && g.date); });
+    var w = data.wallets && typeof data.wallets === "object" ? data.wallets : {};
+    Object.keys(w).forEach(function (k) { ((w[k] && w[k].log) || []).forEach(function (x) { see(x && x.date); }); });
+    return at;
   }
 
   // 卒業の ころの データ: まとめた やること（grad）が あるのに 「もう できる」が ない 子には、「もう できる」を つくる
@@ -876,8 +897,15 @@
     }
     var old = storageGet(KEY);
     if (old && !dailySnapshot(today() + "-import", old)) storageSet(BACKUP_PREFIX + today() + "-import", old);
+    var keep = data.settings && data.settings.started;
     Object.keys(data).forEach(function (k) { delete data[k]; });
     Object.keys(d).forEach(function (k) { if (k !== "exportedAt" && k !== "today") data[k] = d[k]; });
+    // 前から 使っている 人の 印は 古いほうを のこす（印の ない 前の ファイルを 読み込んでも、この 端末で 始めた 日が 消えない）
+    if (keep && isDate(keep.at)) {
+      if (!data.settings || typeof data.settings !== "object") data.settings = {};
+      var got = data.settings.started;
+      if (!got || !isDate(got.at) || keep.at < got.at) data.settings.started = keep;
+    }
   };
   // 招待コードで Pro を 開く（2026-11-20）。正しければ ボードの データに 印（settings.pro = { at: 開いた 日 }。つないだ スマホも Pro、書き出しにも 乗る）。
   //   何度 まちがえても 待たせない（照合の 値が ソースに あるので、待たせても 守りに ならない）
@@ -957,11 +985,19 @@
     return p;
   }
 
-  // カレンダーの よみこみ先。type: "none"（つかわない）/ "ical"（iCal の URL）/ "gas"（Apps Script の URL）
+  // カレンダーの よみこみ先。type: "none"（つかわない）/ "device"（この端末の カレンダー。アプリ）/ "ical"（iCal の URL）/ "gas"（Apps Script の URL）
   // null は「えらんでいない」（config.js の値を使う）
   function calendar(req) {
-    if (!req || ["none", "ical", "gas"].indexOf(req.type) < 0) return null;
+    if (!req || ["none", "device", "ical", "gas"].indexOf(req.type) < 0) return null;
     var url = String(req.url || "").trim();
+    // この端末の カレンダー: 端末の カレンダーの id（数字）を えらぶ。URL は のこす（iCal に もどした ときに 入れなおさなくて よいように）
+    if (req.type === "device") {
+      var ids = (Array.isArray(req.ids) ? req.ids : []).map(String).filter(function (id, i, a) {
+        return /^[0-9]{1,12}$/.test(id) && a.indexOf(id) === i;
+      }).slice(0, 30);
+      if (!ids.length) throw httpError(400, "予定を出すカレンダーを選んでください");
+      return { type: "device", ids: ids, url: /^(https|webcal):\/\/\S+$/i.test(url) && url.length <= 2000 ? url : "" };
+    }
     // 「使わない」でも URL は のこす（また 使うときに 入れなおさなくて よいように）
     if (req.type === "none") return { type: "none", url: /^(https|webcal):\/\/\S+$/i.test(url) && url.length <= 2000 ? url : "" };
     if (!/^(https|webcal):\/\/\S+$/i.test(url) || url.length > 2000) throw httpError(400, "カレンダーの URL は https:// で始まるものを入れてください");
@@ -982,6 +1018,42 @@
   }
 
   // ---- 2台連携 ----
+  // ---- この端末の カレンダー（アプリの EchoBoard.listCalendars・calendarEvents。2026-11-21） ----
+  function devCal() {
+    var eb = hostWin().EchoBoard;
+    return eb && typeof eb.listCalendars === "function" ? eb : null;
+  }
+  // { provider（カレンダーが ある 端末か）, permitted（読む 許可）, list: [{id, name, account, color, primary}] }
+  function localCalList() {
+    var eb = devCal(), st = {};
+    if (!eb) return { provider: false, permitted: false, list: [] };
+    try { st = JSON.parse(eb.calendarState()) || {}; } catch (e) { /* ふるい アプリ */ }
+    var list = [];
+    if (st.permitted) { try { list = JSON.parse(eb.listCalendars()) || []; } catch (e) { /* 空 */ } }
+    return { provider: !!st.provider, permitted: !!st.permitted, list: list };
+  }
+  // きょうの 0時から days 日分の 予定 → [{title, start, end, allDay}]（start・end は ISO。ical.js と おなじ 形）
+  function localCalEvents(ids, days) {
+    var eb = devCal();
+    if (!eb) throw httpError(503, "この端末ではカレンダーを読めません");
+    var now = new Date(), from = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    var raw = JSON.parse(eb.calendarEvents((ids || []).join(","), from, from + days * 24 * 60 * 60 * 1000)) || [];
+    return raw.map(function (e) {
+      return { title: String(e.title || ""), start: new Date(e.start).toISOString(), end: new Date(e.end).toISOString(), allDay: !!e.allDay };
+    });
+  }
+  // つないだ スマホ（アプリ）・QR の ブラウザから 置いた端末に 読んで もらう
+  function boardGet(path) {
+    if (REMOTE) return remoteCall("GET", path);
+    return fetch(path, { cache: "no-store", headers: authHeaders() }).then(function (r) {
+      if (r.status === 401) throw httpError(401, PAIR_AGAIN);
+      if (r.status === 429) throw waitError();
+      if (!r.ok) throw httpError(r.status, "HTTP " + r.status);
+      return r.json();
+    });
+  }
+  var CAL_DAYS = 7; // events.js と おなじ
+
   function remoteConf() {
     try { return JSON.parse(storageGet(REMOTE_KEY) || "null"); } catch (e) { return null; }
   }
@@ -1120,6 +1192,13 @@
           d.board = { update: !!(window.Update && window.Update.self()), version: window.APP_VERSION || "" };
           return reply(200, d);
         }
+        // 予定: 置いた端末の カレンダーの 一覧と、えらんだ カレンダーの 予定（つないだ スマホの 設定・ボードの 予定に）
+        if (method === "GET" && path === "/api/calendar/list") return reply(200, localCalList());
+        if (method === "GET" && path === "/api/calendar/events") {
+          var cal = load().settings.calendar;
+          if (!cal || cal.type !== "device") return reply(200, { events: [] });
+          return reply(200, { events: localCalEvents(cal.ids, CAL_DAYS) });
+        }
         if (method !== "POST" || !routes[path]) return reply(404, { error: "not found" });
         var data = load();
         routes[path](data, JSON.parse(bodyText || "{}"));
@@ -1162,6 +1241,26 @@
     taskCount: taskCount,
     editFrom: editFrom,
     kidEditable: kidEditable,
+    // この端末の カレンダー。一覧 → Promise({ provider, permitted, list })。つないで いれば 置いた端末の もの
+    //   （つないだ スマホでは 許可を 聞けない。許可は 置いた端末で）
+    calendarList: function () {
+      if (LOCAL && !REMOTE) return Promise.resolve(localCalList());
+      return boardGet("/api/calendar/list");
+    },
+    // カレンダーを 読む 許可を 聞く（この端末の アプリだけ。答えは "board:calendar" イベント）。聞けなければ false
+    requestCalendar: function () {
+      var eb = devCal();
+      if (!eb || !LOCAL || REMOTE || typeof eb.requestCalendar !== "function") return false;
+      eb.requestCalendar();
+      return true;
+    },
+    // 予定 → Promise([{title, start, end, allDay}])。ids は この端末で 読む ときの カレンダー
+    calendarEvents: function (ids, days) {
+      if (LOCAL && !REMOTE) {
+        try { return Promise.resolve(localCalEvents(ids, days || CAL_DAYS)); } catch (e) { return Promise.reject(e); }
+      }
+      return boardGet("/api/calendar/events").then(function (r) { return (r && r.events) || []; });
+    },
     // 予定の URL の よくある まちがい。Google カレンダーの 共有リンク（…/calendar/u/0?cid=…）や 画面の URL は
     //   iCal では ないので 読めない（「予定が わからないよ」に なる）。"share" なら Words の calShareLink を 出す
     calUrlProblem: function (url) {

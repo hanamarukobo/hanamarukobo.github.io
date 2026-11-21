@@ -188,6 +188,8 @@
 
 <!-- 待機中の黒い画面。タップで消える -->
 <div class="sleep" id="sleep" hidden></div>
+<!-- 暗くする 10秒前の 知らせ（sleep.js。さわると そのまま。2026-11-21 社長: 何も 言わずに 暗くならない） -->
+<div class="dim-soon" id="dim-soon" hidden></div>
 <!-- 電池が 熱い・弱って いる ときだけ 出す 小さな しるし（おうちの人むけ） -->
 <div class="batt-chip" id="batt-chip" hidden>電池に注意</div>
 <!-- 鍵の 番号を わすれて 入れなおし中（24時間 まつ あいだ。おうちの人が 気づけるように） -->
@@ -246,19 +248,22 @@
         <div class="row">
           <select id="s-cal-type">
             <option value="none">使わない</option>
-            <option value="ical">iCal の URL（おすすめ）</option>
+            <option value="device" hidden>この端末の Google カレンダー（おすすめ）</option>
+            <option value="ical">iCal の URL</option>
             <option value="gas">Apps Script</option>
           </select>
           <input type="url" id="s-cal-url" placeholder="https://…" class="url">
           <button class="ghost small" id="s-cal-clear">URL を消去</button>
         </div>
+        <div class="cal-pick" id="s-cal-device" hidden></div>
         <p class="su-warn s-cal-warn" id="s-cal-warn" hidden></p>
         <div class="s-help" id="s-cal-help" hidden>
-          <p><b>iCal の URL（おすすめ）</b>：Google カレンダーなどの「iCal 形式の URL」を貼るだけで使えます。Google カレンダーなら、パソコンで 設定 → 予定を出したいカレンダー →「カレンダーの統合」の「iCal 形式の非公開 URL」をコピーします。</p>
+          <p><b>この端末の Google カレンダー（おすすめ）</b>：アプリだけ。この端末に入っている Google アカウントのカレンダーから選びます（いくつでも）。URL のコピーはいりません。</p>
+          <p><b>iCal の URL</b>：Google カレンダーなどの「iCal 形式の URL」を貼って使います。Google カレンダーなら、パソコンで 設定 → 予定を出したいカレンダー →「カレンダーの統合」の「iCal 形式の非公開 URL」をコピーします。</p>
           <p><b>Apps Script</b>：Google Apps Script で自分で用意した中継の URL です。詳しい方向け。わからなければ iCal を選んでください。</p>
           <p>どちらの URL も、知っている人は誰でも予定を見られます。ほかの人に教えないでください。</p>
         </div>
-        <p class="note">URL はこの端末の中だけに保存します。「使わない」にすると、ボードの予定の欄がなくなります。</p>
+        <p class="note" id="s-cal-note">URL はこの端末の中だけに保存します。「使わない」にすると、ボードの予定の欄がなくなります。</p>
         <h3>予定の時刻</h3>
         <div class="row"><label><input type="checkbox" id="s-event-time"> 予定の時刻（何時から何時まで）を表示する</label></div>
         </div>
@@ -428,7 +433,7 @@
           <span class="label">土日祝</span>
           <input type="time" id="s-holiday-from"> 〜 <input type="time" id="s-holiday-to">
         </div>
-        <p class="note">この時間はずっと表示します。ほかの時間は、しばらく触らないと画面オフになります。</p>
+        <p class="note">この時間はずっと表示します。ほかの時間は、しばらく触らないと画面オフになります。置いて使うなら、使わない時間は暗くするのがおすすめです。</p>
         <h3>画面オフの方法</h3>
         <div class="s-choices" id="s-power-row">
           <label class="s-choice"><input type="radio" name="s-power" value="dim">
@@ -511,7 +516,7 @@
         <div class="faq">
           <details class="faq-cat"><summary>画面・表示</summary>
             <details><summary>画面が暗くなる・消えてしまう</summary>
-              <p>設定の「この端末」の「画面をつけておく時間」のほかは、しばらく触らないと画面オフになります。オフになるまでの時間は「画面オフまで」で変えられます。ブラウザ版では、画面オフは端末の設定（自動ロックなど）にまかせます。</p></details>
+              <p>設定の「この端末」の「画面をつけておく時間」のほかは、しばらく触らないと画面オフになります（「暗くするだけ」のときは、10秒前に画面の下でお知らせします。触るとそのまま）。オフになるまでの時間は「画面オフまで」で変えられます。ブラウザ版では、画面オフは端末の設定（自動ロックなど）にまかせます。</p></details>
             <details><summary>朝、自動で画面がつかない</summary>
               <p>アプリなら「画面をつけておく時間」になると自動で表示します。端末の省電力でアプリが止められているときは、端末の設定でこのアプリを最適化の対象から外してください。ほかのアプリを開いたままになるときは、設定の「この端末」で「ボードを自動で開く」をオンにしてください。</p></details>
             <details><summary>電源を入れたら、ボードが開くようにしたい</summary>
@@ -588,9 +593,10 @@
             <details><summary>あしたやその先の予定を見たい</summary>
               <p>予定の欄の ◀ ▶ を押すか、左右にスワイプすると、6日先まで見られます。</p></details>
             <details><summary>Google カレンダーの予定を出したい</summary>
-              <p>パソコンで Google カレンダーを開き、設定 → 予定を出したいカレンダー →「カレンダーの統合」の「iCal 形式の非公開 URL」をコピーして、設定の「ボードの表示」の「予定の読み込み先」に貼ってください。</p></details>
+              <p>アプリなら、設定の「ボードの表示」の「予定の読み込み先」で「この端末の Google カレンダー」を選び、カレンダーを読む許可をして、出したいカレンダーに印を付けます（いくつでも）。この端末に Google アカウントが入っていれば、URL のコピーはいりません。予定はこの端末の中で読み、外には送りません。</p>
+              <p>ブラウザや、端末に Google アカウントがないときは、パソコンで Google カレンダーを開き、設定 → 予定を出したいカレンダー →「カレンダーの統合」の「iCal 形式の非公開 URL」をコピーして、「iCal の URL」に貼ってください。</p></details>
             <details><summary>予定が出ない・反映が遅い</summary>
-              <p>URL と Wi-Fi を確かめてください。Google カレンダーで変えた予定は、反映まで時間がかかることがあります。</p></details>
+              <p>「この端末の Google カレンダー」に Google カレンダーが出てこないときは、Google カレンダーのアプリの 設定 → 全般 で「Google カレンダーのデータを他のアプリと共有」をオンにしてください（オフだと、ほかのアプリから予定が見えません）。端末の設定のアカウントで Google カレンダーの同期がオンかも確かめてください。カレンダーを読む許可を外したときは、端末の設定 → アプリ → はなまるボード → 権限 で許可し直します。iCal の URL は、URL と Wi-Fi を確かめてください。Google カレンダーで変えた予定は、反映まで時間がかかることがあります。</p></details>
             <details><summary>予定の時刻を出したい</summary>
               <p>設定の「ボードの表示」で「予定の時刻を表示する」をオンにすると、「10:30〜11:30」のように出ます。終日の予定は時刻を出しません。</p></details>
             <details><summary>予定の欄がいらない</summary>
@@ -809,6 +815,7 @@
     </section>
     <section class="su-step" data-step="screen" hidden>
       <h2>画面オフ</h2>
+      <p class="su-note">置いて使うなら、使わない時間は画面を暗くするのがおすすめです（夜もまぶしくなく、電気も抑えられます）。</p>
       <div class="su-cards small" id="su-power">
         <button data-value="dim">暗くするだけ<small>タップですぐ表示できる</small></button>
         <button data-value="sleep" id="su-sleep">スリープする<small>電力を抑える（アプリのみ）</small></button>
@@ -818,7 +825,7 @@
         <div><span class="label">平日</span><input type="time" id="su-weekday-from"> 〜 <input type="time" id="su-weekday-to"></div>
         <div><span class="label">土日祝</span><input type="time" id="su-holiday-from"> 〜 <input type="time" id="su-holiday-to"></div>
       </div>
-      <p class="su-note">ほかの時間は、しばらく触らないと画面オフになります。</p>
+      <p class="su-note">ほかの時間は、<span id="su-idle">1分</span>触らないと画面オフになり、触るとすぐ戻ります（時間は設定の「この端末」で変えられます）。</p>
       <p class="su-note" id="su-front-row" hidden><label><input type="checkbox" id="su-front"> 電源を入れたときと、つけておく時間になったら、ボードを自動で開く（最後に許可の画面が開きます）</label></p>
     </section>
     <section class="su-step" data-step="area" hidden>
@@ -874,9 +881,11 @@
       <h2>カレンダー連携</h2>
       <p class="su-q">Google カレンダーの予定を、ボードに出せます。</p>
       <div class="su-cards small" id="su-cal">
-        <button data-value="ical">設定する<small>iCal 形式の URL を貼る</small></button>
+        <button data-value="device" hidden>この端末の Google カレンダー<small>カレンダーを選ぶだけ</small></button>
+        <button data-value="ical">URL を貼る<small>iCal 形式の URL</small></button>
         <button data-value="later">あとで設定する<small>設定の「ボードの表示」からいつでも</small></button>
       </div>
+      <div class="cal-pick" id="su-cal-device" hidden></div>
       <div id="su-cal-box" hidden>
         <input type="url" id="su-cal-url" placeholder="https://calendar.google.com/…/basic.ics">
         <p class="su-warn" id="su-cal-warn" hidden></p>
@@ -931,6 +940,7 @@
 <script src="area-select.js"></script>
 <script src="rain.js"></script>
 <script src="ical.js"></script>
+<script src="calpick.js"></script>
 <script src="holidays.js"></script>
 <script src="api.js"></script>
 <script src="datafile.js"></script>

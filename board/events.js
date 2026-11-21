@@ -21,6 +21,8 @@
     if (window.BoardApi.web) return null;
     var c = B.settings.calendar;
     if (c && c.type === "none") return null;
+    // この端末の カレンダー（アプリ。2026-11-21）。url は 読みこみ先が かわったかを くらべる ための しるし（board.js）
+    if (c && c.type === "device") return c.ids && c.ids.length ? { type: "device", ids: c.ids, url: "device:" + c.ids.join(",") } : null;
     if (c && c.url && (c.type === "ical" || c.type === "gas")) return c;
     if (C.calendar && C.calendar.url) return { type: "gas", url: C.calendar.url };
     return null;
@@ -53,7 +55,10 @@
     calLoading = true;
     $("cal-reload").classList.add("spin");
     var job;
-    if (src.type === "ical") {
+    if (src.type === "device") {
+      // 置いた端末・スマホの アプリは 自分で、つないだ スマホ・QR の ブラウザは 置いた端末に 読んで もらう（api.js）
+      job = window.BoardApi.calendarEvents(src.ids, CAL_DAYS).then(function (events) { return { events: events }; });
+    } else if (src.type === "ical") {
       job = fetchText(src.url.replace(/^webcal:/i, "https:")).then(function (text) {
         var now = new Date(), from = new Date(now.getFullYear(), now.getMonth(), now.getDate());
         return { events: window.ICal.events(text, from, new Date(from.getTime() + CAL_DAYS * 24 * 60 * 60 * 1000)) };
@@ -71,7 +76,8 @@
       calError = false;
       storageSet(CAL_KEY, json);
       renderEvents();
-      calTimer = setTimeout(fetchCalendar, 15 * 60 * 1000);
+      // この端末の カレンダーは 端末の 中を 読むだけで 軽いので 5分ごと（Google との 同期は 端末が する）
+      calTimer = setTimeout(fetchCalendar, (src.type === "device" ? 5 : 15) * 60 * 1000);
     }).catch(function (e) {
       if (seq !== calSeq) return;
       done();
