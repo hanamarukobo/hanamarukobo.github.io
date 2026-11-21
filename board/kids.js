@@ -211,6 +211,20 @@
     return ok;
   }
 
+  // カードの 中の 白い 楕円（毎日 はなまる！ など）が カードの 幅を こえる ときは 字を 小さく する（2026-11-21。スマホの 形で 2列・横 1列の とき）。
+  //   10px まで 小さく しても 入らなければ CSS の「…」に まかせる
+  function fitStates(box) {
+    Array.prototype.forEach.call(box.querySelectorAll(".kid-btn .state"), function (el) {
+      el.style.fontSize = "";
+      if (!el.offsetWidth) return;
+      var size = parseFloat(getComputedStyle(el).fontSize) || 16;
+      while (el.scrollWidth > el.clientWidth + 1 && size > 10) {
+        size -= 1;
+        el.style.fontSize = size + "px";
+      }
+    });
+  }
+
   function layoutKids(box, n) {
     var modes = n <= 2 ? ["big", "row", "icon"] : n <= 4 ? ["row", "icon"] : ["icon"];
     box.style.setProperty("--n", n);
@@ -257,6 +271,7 @@
       lastHtml = html;
       $("kids").innerHTML = html;
       layoutKids($("kids"), kids.length);
+      fitStates($("kids"));
       fitDone($("kids"));
     }
     if (openKid) renderKidView();
