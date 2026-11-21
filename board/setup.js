@@ -165,6 +165,8 @@
     return STEPS.filter(function (s) {
       if (!here() && (s === "usage" || s === "screen")) return false;
       if (Api.web && s === "calendar") return false;
+      // Web 版は 画面オフを 使わない（sleep.js）
+      if (Api.web && s === "screen") return false;
       // まだ 選んで いない ときは、スマホなら「スマホだけ」と みて 数える（選んだ とたんに「1 / 8」が「2 / 7」に かわった。2026-11-19）
       return s !== "screen" || (usage || (Device.phone() ? "phone" : null)) !== "phone";
     });

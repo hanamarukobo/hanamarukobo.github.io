@@ -276,6 +276,17 @@
     var json = JSON.stringify(data);
     if (!storageSet(KEY, json)) throw httpError(507, "保存できませんでした（容量がいっぱいです）");
     saveFile(json);
+    notifySaved();
+  }
+  // 保存したと 知らせる（Web 版の Google ドライブの 自動の 控え。drive.js の makeAuto）。
+  //   設定に うめこんだ admin.html（iframe）は drive.js を 読まないので、親の 窓にも 知らせる
+  function notifySaved() {
+    try {
+      if (typeof window.dispatchEvent !== "function" || typeof Event !== "function") return;
+      window.dispatchEvent(new Event("board:saved"));
+      var p = window.parent;
+      if (p && p !== window && typeof p.dispatchEvent === "function") p.dispatchEvent(new Event("board:saved"));
+    } catch (e) { /* 知らせられなくても 保存は できて いる */ }
   }
 
   function httpError(status, message) {

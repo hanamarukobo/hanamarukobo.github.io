@@ -188,6 +188,11 @@
   // はじめては 説明 → かんたん設定（どちらも とばせない。かんたん設定の ✕ も はじめては 出ない）。「つぎから ひょうじしない」に して いれば かんたん設定から。
   // 置いた端末に つないだ おうちの人の 端末（アプリ・QR の ブラウザ）は 設定から はじめるので 出さない（設定の「説明を見る」で 見られる）
   // 2026-11-20: 自分から 出すのは はじめて（まだ 設定して いない）ときだけ。前は 開くたびに 出て、朝の ボードに かぶさった（歩き通しで 見つけた）
-  if (window.BoardApi.needsSetup() && !hidden() && !window.BoardApi.paired && !window.BoardApi.remote) open(true);
-  else afterTutorial();
+  // 2026-11-21: Web 版で Google ドライブが 使える ときは、その 前に 入口（drive-start.js。つなぐ／つながずに 使う／前の データを 戻す）
+  function first() {
+    if (window.BoardApi.needsSetup() && !hidden() && !window.BoardApi.paired && !window.BoardApi.remote) open(true);
+    else afterTutorial();
+  }
+  if (window.DriveStart && window.DriveStart.wanted()) window.DriveStart.open(first);
+  else first();
 })();

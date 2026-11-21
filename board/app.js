@@ -44,9 +44,11 @@
     document.documentElement.style.setProperty("--bw", bw + "px");
     document.documentElement.style.setProperty("--bh", bh + "px");
     document.body.classList.toggle("portrait", portrait);
+    // 同じ 形の 画面が 2つ ある（かんたん設定と ブラウザ版の 入口の .su-board）ので、ぜんぶに かける
     [".board", ".settings .panel", ".kv-board", ".grv-board", ".lk-board", ".su-board", ".tu-board", ".cn-board"].forEach(function (sel) {
-      document.querySelector(sel).style.zoom = scale;
+      Array.prototype.forEach.call(document.querySelectorAll(sel), function (el) { el.style.zoom = scale; });
     });
+    document.documentElement.classList.remove("unfit");
     // 向きが かわると がんばりカレンダーの ボタンの はいりかたも かわる
     window.dispatchEvent(new Event("board:fit"));
   }

@@ -81,6 +81,8 @@ body { box-sizing: border-box; padding: var(--sa-t, 0px) var(--sa-r, 0px) var(--
 
 /* 横置きは 幅960 で組み、高さは画面の縦横比に合わせる（Echo Show 5 は 480、16:10 のタブレットは 600）。
    縦置きは 幅600 で組む。--bw / --bh と拡大率は app.js の fit() が決める */
+/* 起動して 大きさを 合わせる（fit）までは 見せない。遅い 端末で 960 のまま はみ出して 見えた（2026-11-21 テスター）。index.html の head が つけ、fit か 5秒で はずす */
+html.unfit .board { visibility: hidden; }
 .board {
   display: grid;
   grid-template-columns: 230px 1fr 240px;
@@ -652,7 +654,9 @@ body.night .kv-gauge .kg-track { background: rgba(255, 255, 255, 0.15); }
 .slot.wx-day .label { font-size: 22px; color: var(--text); }
 .slot.wx-day .rain { font-size: 18px; }
 .advice .tile.wx-note { grid-column: 1 / -1; }
-.events { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-direction: column; gap: 8px; overflow: hidden; }
+/* 予定が 多くて 入りきらない ときは、たてに スクロール できる（2026-11-21 .9 で 4つ目が 切れて 見られなかった） */
+.events { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-direction: column; gap: 8px; flex: 1 1 auto; min-height: 0; overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; }
+.events li { flex: none; }
 /* スワイプで 日を かえたとき、すべって 入ってくる */
 .events.slide-next { animation: ev-in-next 0.22s ease-out; }
 /* 子どもの 画面の カレンダーも 左右の スワイプで 月が かわる（指に ついて うごく） */
@@ -1589,6 +1593,20 @@ body.portrait .settings .buttons .s-saved { position: absolute; left: 50%; botto
 .settings .s-drive-row { flex-wrap: wrap; }
 .settings .s-drive-row button:disabled { opacity: 0.5; cursor: default; }
 .settings .s-drive-stale { color: var(--text); }
+/* つないで いる 間の 状態（止まって いる ときは 濃く）・止まった ときの ボタン・つなぐのを やめる（2026-11-21） */
+.settings .s-drive-state { color: var(--text); }
+.settings .s-drive-state.warn { color: #c45a10; font-weight: 700; }
+.settings .s-drive-row[hidden], .settings .s-drive-row button[hidden], .settings #s-drive-unlink[hidden] { display: none; }
+.settings #s-drive-fix { margin-bottom: 8px; }
+.settings #s-drive-unlink { margin-top: 4px; }
+.settings .s-drive-band button:disabled { opacity: 0.5; cursor: default; }
+/* ブラウザ版の 入口（drive-start.js。かんたん設定の 見た目を 借りる） */
+.drive-start .su-board { min-height: 0; }
+.drive-start .su-cards button b { font-size: 21px; word-break: keep-all; overflow-wrap: anywhere; }
+.drive-start .su-cards button:disabled { opacity: 0.5; }
+.drive-start .ds-more { margin: 14px 0 0; }
+.drive-start #ds-found-text { font-size: 22px; color: var(--text); line-height: 1.5; }
+.drive-start .su-error { min-height: 1.2em; }
 .settings .s-parent-name { width: 12em; max-width: 100%; }
 .settings .s-procode-row { flex-wrap: wrap; }
 .settings .s-procode { width: 12em; max-width: 100%; }
@@ -1888,7 +1906,8 @@ body:not(.portrait) .today:has(.clock.analog) .wd-side { display: none; }
 .kids.mode-icon .kid-btn .tally { padding: 1px 6px; margin-top: 2px; }
 .kids.mode-icon .kid-btn .tally .num { font-size: 15px; line-height: 18px; }
 .kid-btn .tally .dots { min-width: auto; }
-.kid-btn .tally .dots i.on { background: none; filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.25)); }
+/* 影（filter: drop-shadow）は かけない。.9（古い WebView）で 影の 絵が ずれて「つぶれた はなまる＋下に 小さい はなまる」に 見えた（2026-11-21。影なしでも 見た目は ほぼ 同じ） */
+.kid-btn .tally .dots i.on { background: none; }
 .kid-btn .tally.tight { gap: 2px; padding: 4px 8px; }
 .kid-btn .tally.tight .tl { font-size: 16px; }
 .kid-btn .tally.tight .num { font-size: 22px; }
@@ -2167,6 +2186,8 @@ body.night .wl-in { background: transparent; color: #6fd39b; box-shadow: inset 0
 .gd-text { font-size: clamp(15px, 2.2vmin, 21px); line-height: 1.55; }
 .gd-tip.adult .gd-title { color: #3d6fb5; }
 .gd-tip.adult .gd-text { font-weight: 500; }
+/* 子ども向けの ふきだしは わかちがきの 切れ目で 折りかえす（「はな／まるに」に ならない ように。2026-11-21 テスター） */
+.gd-tip:not(.adult) .gd-title, .gd-tip:not(.adult) .gd-text { word-break: keep-all; word-break: auto-phrase; overflow-wrap: anywhere; }
 .gd-foot { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
 .gd-skip { border: none; background: none; font: inherit; font-size: clamp(14px, 1.9vmin, 18px); color: #9a8a84; padding: 6px 4px; cursor: pointer; }
 .gd-hint { flex: 1; text-align: right; font-size: clamp(14px, 1.9vmin, 18px); color: #ff8a3d; }
