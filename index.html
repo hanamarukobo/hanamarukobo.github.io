@@ -67,6 +67,13 @@ li::marker{color:var(--accent)}
 .d-arrow{fill:none;stroke:var(--accent);stroke-width:4;stroke-dasharray:10 8}
 footer{margin-top:48px;color:var(--muted);font-size:.9em;padding:22px;border-radius:28px;background:var(--foot)}
 footer .btn{color:#fff}
+/* お知らせ（2026-11-22。新しいものを上に2つまで。古いものは消す） */
+.news{display:flex;gap:14px;align-items:baseline;margin:14px 0 0;padding:10px 18px;border-radius:20px;background:var(--card);border:2px solid var(--line);font-size:.92em;line-height:1.6}
+.news b{flex:none;color:var(--accent-d)}
+.news ul{margin:0;padding:0;list-style:none}
+.news li{word-break:auto-phrase;text-wrap:pretty}
+.news time{color:var(--muted);margin-right:.7em;font-variant-numeric:tabular-nums}
+@media (max-width:560px){.news{flex-direction:column;gap:2px;padding:10px 16px}}
 @media(max-width:700px){
  .hero{grid-template-columns:1fr;padding:22px 18px;border-radius:28px}
  .hero-art{order:-1;max-width:300px;margin:0 auto}
@@ -169,6 +176,10 @@ footer{background:linear-gradient(135deg,#fdf0cf,#fce6d2)}
     </div>
     <div class="hero-art"><img src="img/hero.webp" alt="" width="917" height="849"></div>
   </header>
+  <aside class="news" aria-label="最新のお知らせ"><b>最新のお知らせ</b><ul>
+    <li><time datetime="2026-11-22">11/22</time>スマホのブラウザで、かんたん設定が狭く表示されていたのを直しました</li>
+    <li><time datetime="2026-11-22">11/22</time>紹介動画とこのページを新しくしました</li>
+  </ul></aside>
 
   <!-- 使っているところの動画（音なし・くり返し）。縦長の画面（スマホ）は縦の動画、横長は横の動画（元は EchoMonitor の docs/video/）。
        動きを減らす設定の人には自動で流さず、再生ボタンを出す -->
