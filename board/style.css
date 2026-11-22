@@ -771,7 +771,8 @@ body.lowpower *, body.lowpower *::before, body.lowpower *::after {
 .settings button.small { font-size: 18px; padding: 4px 14px; }
 
 /* こどもの一覧 */
-.settings .s-kids { list-style: none; margin: 4px 0 8px; padding: 0; max-height: 220px; overflow-y: auto; }
+/* 子どもは 4人まで なので 高さを かぎらず 全員 出す（中で スクロールすると 4人目が 見えなかった） */
+.settings .s-kids { list-style: none; margin: 4px 0 8px; padding: 0; }
 .settings .s-kids li { display: flex; align-items: center; gap: 10px; padding: 6px 0; border-bottom: 2px dashed #f0dcd4; }
 /* 名前は いちばん 優先して 5文字は 見えるように（ちゃん・くん、年齢の目安の ほうを ちぢめる） */
 .settings .s-kids input[type=text] { flex: 1 1 7.5em; min-width: 7em; }
@@ -1971,8 +1972,6 @@ body.portrait:not(.no-cal) .kids-card { min-height: 120px; }
 
 /* 無料の 上限で 押せない「＋ 子どもを追加」「＋ ふやす」 */
 #s-add-kid:disabled, #su-add:disabled { opacity: 0.4; cursor: default; }
-
-body.portrait .settings .s-kids { max-height: 300px; }
 
 /* かんたん設定を やりなおす ときの「置きかえます」の 注意 */
 .su-warn { background: #fff1e6; color: #b5541c; border-radius: 12px; padding: 6px 12px; font-size: 14px; line-height: 1.45; margin: 0 0 8px; }

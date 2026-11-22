@@ -154,7 +154,7 @@
   var POWER_KEY = "screenOff";        // sleep.js と おなじ（この端末だけ。JSON で 入れる）
   var ORIENT_KEY = "orientation";     // app.js と おなじ
   var step = 0, first = true, saving = false, cur = null, calIds = [], calUrl0 = "", calDevOk = false;
-  var place = null, usage = null, power = "dim", names = [], levels = [], rubys = [], kidIds = [], calPick = null;
+  var place = null, usage = null, power = "dim", names = [], levels = [], rubys = [], kidIds = [], kidColors = [], calPick = null;
   var tasks = [], taskNames = [], tasksEditable = true, taskYen = "1", yenMixed = false;
   // おさいふ（"on"/"off"・使う子の 印（名前の 順）・1ポイント＝○円）と 鍵（"none"/"easy"/"pin"）。2026-11-18
   var walletPick = "off", walletChecks = [], walletRate = "", walletRate0 = "", lockPick = "none", lockNow = { type: "none" };
@@ -198,6 +198,7 @@
       levels = kids.length ? kids.map(function (k) { return k.level || "lower"; }) : ["lower", "lower"];
       rubys = kids.length ? kids.map(function (k) { return !!k.ruby; }) : [false, false];
       kidIds = kids.map(function (k) { return k.id; });
+      kidColors = kids.map(function (k) { return k.color; });
       walletChecks = kids.map(function (k) { return !!k.wallet; });
       walletPick = walletChecks.some(Boolean) ? "on" : "off";
       var rated = kids.filter(function (k) { return k.wallet && k.walletRate > 0; })[0];
@@ -322,8 +323,16 @@
   });
 
   function renderNames() {
+    // 色の 丸は 保存と おなじ 決め方: 前から いる 子は その子の 色、あたらしい 子は まだ つかって いない 色を 順に
+    var pal = Object.keys(window.KID_PALETTE), used = {};
+    kidColors.forEach(function (c) { if (c) used[c] = true; });
+    var swatches = names.map(function (n, i) {
+      var c = kidColors[i];
+      if (!window.KID_PALETTE[c]) { c = pal.filter(function (x) { return !used[x]; })[0] || pal[0]; used[c] = true; }
+      return window.KID_PALETTE[c].main;
+    });
     $("su-names").innerHTML = names.map(function (n, i) {
-      var c = window.KID_PALETTE[Object.keys(window.KID_PALETTE)[i % 7]].main;
+      var c = swatches[i];
       return '<li><span class="swatch" style="background:' + c + '"></span>' +
         '<input type="text" maxlength="12" data-i="' + i + '" placeholder="なまえ" aria-label="' + (i + 1) + 'にんめの なまえ">' +
         // 年齢の めやす。ボードの ことば（ひらがな・漢字）を この子に あわせる
