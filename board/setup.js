@@ -99,6 +99,8 @@
     if (typed !== answer) {
       typed = "";
       renderTyped();
+      // ゆれる だけでは 気づきにくかった（2026-11-22 実機）。欄に 短い ことばを 出し、つぎに 押すと 消える
+      $("lk-typed").textContent = window.Words.adult(mode === "pin" ? "lockWrongPin" : "lockWrongAnswer");
       $("lk-typed").classList.add("wrong");
       return;
     }

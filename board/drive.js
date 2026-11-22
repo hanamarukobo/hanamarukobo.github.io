@@ -88,7 +88,8 @@
     };
   }
   // ファイルに 付ける 目印（しるし ＋ 端末の 名前 ＋ まとめ）。名前が 長ければ 切る
-  function props(sum, dev) {
+  //   pre: ほかの 控えに 置きかえる 前に 控えた（一覧で「置きかえる前の控え」の 札。2026-11-22 案 D）
+  function props(sum, dev, pre) {
     var p = {};
     p[MARK_KEY] = MARK_VALUE;
     p.dev = cut("dev", dev || "");
@@ -98,12 +99,13 @@
       p.days = String(sum.days);
       p.from = sum.from;
     }
+    if (pre) p.pre = "1";
     return p;
   }
   // 目印から まとめを 読む（目印の ない 前の 版の ファイルは null）
   function fromProps(p) {
     if (!p || p.days === undefined || p.kn === undefined) return null;
-    return { dev: p.dev || "", kids: p.kids || "", kn: Number(p.kn) || 0, days: Number(p.days) || 0, from: p.from || "" };
+    return { dev: p.dev || "", kids: p.kids || "", kn: Number(p.kn) || 0, days: Number(p.days) || 0, from: p.from || "", pre: p.pre === "1" };
   }
 
   // o: { clientId, fetch(url, init), loadGsi() → Promise<google>, storage: { get(k), set(k, v) }, now() → ミリ秒, device: 端末の 名前 }
@@ -261,12 +263,14 @@
     //     opts.auto（自動）は 止めて { held: "other", file } を かえす（窓も 開かない）。
     //     手で 控える ときは、書きかえた 内容を 残して 別の ファイルを 作り、そちらを おぼえる。
     //   opts.apart: 別の ファイルを 作り、おぼえない（「このデータを使う」で この 端末の 控えを 選んだ ときに、いまの 内容を 残す）
+    //   opts.pre: 置きかえる 前の 控え（目印に pre）。ふつうの 控えで 書きかえる ときは pre を 消す（PATCH の 目印は 足し合わせなので
+    //     null で 消す。置きかえを やめた あとに 札が 残らない ように）
     function backup(text, opts) {
       opts = opts || {};
       var auto = !!opts.auto, id = opts.apart ? "" : mine();
       var sum = null;
       try { sum = summary(JSON.parse(text)); } catch (e) { /* 目印なしで 控える */ }
-      var meta = props(sum, dev);
+      var meta = props(sum, dev, !!opts.pre);
       var look = !id ? Promise.resolve(null) :
         call("GET", FILES + "/" + encodeURIComponent(id) + "?fields=" + encodeURIComponent("id,modifiedTime,trashed"), undefined, undefined, false, auto)
           .then(function (r) { return r.json(); }, function (e) { if (e && e.status === 404) return null; throw e; });
@@ -279,6 +283,7 @@
             f = null;
           }
         }
+        if (f && !opts.pre) meta.pre = null;
         var put = f ? send("PATCH", UPLOAD + "/" + encodeURIComponent(f.id), { appProperties: meta }, text, auto)
           : send("POST", UPLOAD, { name: NAME, mimeType: "application/json", appProperties: meta }, text, auto);
         return put.then(function (r) { return r.json(); }).then(function (j) {
@@ -314,7 +319,7 @@
         data = d;
         if (!h.hasRecords || (own && !h.dirty)) return null;
         return Promise.resolve().then(h.text).then(function (text) {
-          return backup(text, own ? { apart: true } : {});
+          return backup(text, own ? { apart: true, pre: true } : { pre: true });
         }).catch(function (e) {
           var x = e && e.code ? e : fail("http");
           x.kept = false;

@@ -234,6 +234,61 @@
     }
   }
 
+  // カードに くらべて 中身が 小さい ときは、名前・ことば・きょう・もくひょうを まとめて 大きく する（2026-11-22。
+  //   子ども1人・予定なし や、横で 3〜4人の ときに カードの 上下が 大きく あいて 中身が 小さく 見えた）。
+  //   入る 大きさ（高さの 8割・幅の 9割）まで、2倍まで。スマホの 形（tall・wide）は 並びを 詰めて あるので かけない。
+  //   大きさは style.css の .kid-btn の --grow（zoom）。カードの 大きさが かわったら（天気・予定を 読んだ あと など）はかりなおす
+  var GROW_MAX = 2;
+  function growKids(box) {
+    box.style.removeProperty("--grow");
+    var body = document.body.classList;
+    if (body.contains("tall") || body.contains("wide") || !box.classList.contains("mode-big") && !box.classList.contains("mode-row")) return;
+    var btns = box.querySelectorAll(".kid-btn"), g = GROW_MAX;
+    if (!btns.length) return;
+    Array.prototype.forEach.call(btns, function (b) {
+      var r = b.getBoundingClientRect(), top = Infinity, bottom = -Infinity, wide = 0;
+      Array.prototype.forEach.call(b.querySelectorAll(":scope > .name, :scope > .state, :scope > .tally, :scope > .kid-goal"), function (el) {
+        var e = el.getBoundingClientRect();
+        if (!e.height) return;
+        top = Math.min(top, e.top);
+        bottom = Math.max(bottom, e.bottom);
+        // もくひょうの ゲージは カードの 幅に あわせて のびるので、幅は ほかの もので はかる
+        //   名前は「…」で 切れて いれば 入りきらない 幅（scrollWidth）で はかる
+        if (el.classList.contains("kid-goal")) return;
+        wide = Math.max(wide, el.clientWidth ? e.width * el.scrollWidth / el.clientWidth : e.width);
+      });
+      if (!r.height || bottom <= top || !wide) { g = 1; return; }
+      g = Math.min(g, r.height * 0.8 / (bottom - top), r.width * 0.9 / wide);
+    });
+    // 大きく した あとで はみ出す もの（「今日：💮×4」の 帯・もくひょうの「もうすこし！」・名前）が あれば、すこしずつ 小さく する
+    function over(el) { return el.scrollWidth > el.clientWidth + 1; }
+    function bad() {
+      return Array.prototype.some.call(btns, function (b) {
+        if (b.scrollHeight > b.clientHeight + 1) return true;   // 横は 右上の しるしが はみ出して いるので はからない
+        var t = b.querySelector(":scope > .tally"), n = b.querySelector(":scope > .name"), k = b.querySelector(":scope > .kid-goal");
+        if (t && over(t) || n && over(n)) return true;
+        if (!k) return false;
+        var w = k.querySelector(".kg-word"), tr = k.querySelector(".kg-track");
+        return w && over(w) || tr && tr.clientWidth < k.clientWidth * 0.45;
+      });
+    }
+    while (g >= 1.1) {
+      box.style.setProperty("--grow", String(Math.round(g * 100) / 100));
+      if (!bad()) return;
+      g *= 0.92;
+    }
+    box.style.removeProperty("--grow");
+  }
+  if (window.ResizeObserver) {
+    var growSize = "";
+    new ResizeObserver(function (en) {
+      var c = en[0].contentRect, k = Math.round(c.width) + "x" + Math.round(c.height);
+      if (k === growSize) return;
+      growSize = k;
+      growKids($("kids"));
+    }).observe($("kids"));
+  }
+
   function render() {
     if (!state) return;
     var now = new Date(), today = ymd(now), kids = visibleKids();
@@ -273,6 +328,7 @@
       layoutKids($("kids"), kids.length);
       fitStates($("kids"));
       fitDone($("kids"));
+      growKids($("kids"));
     }
     if (openKid) renderKidView();
   }

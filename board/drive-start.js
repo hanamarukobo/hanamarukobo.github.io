@@ -71,8 +71,9 @@
     done = null;
     fill();
     lock(false);
-    step("ds-first");
+    // 先に 出して から step（隠れた ままでは scrollTop を 0 に しても 効かず、前に スクロールした 位置で 開く。2026-11-22 iPlay の Chrome）
     $("drive-start").hidden = false;
+    step("ds-first");
     // 押してから 読むと iPhone の Safari が Google の 窓を 止める ことが あるので 先に 読む
     window.Drive.client().prepare();
   }
@@ -132,6 +133,7 @@
     var c = el("div", "ds-bk" + (f.mine ? " me" : ""));
     var h = el("div", "ds-dev", f.old ? AW("drivePickOld") : f.dev || AW("drivePickOld"));
     if (f.mine) h.appendChild(el("span", "ds-tag", AW("drivePickHere")));
+    else if (f.pre) h.appendChild(el("span", "ds-tag pre", AW("drivePickPre")));
     c.appendChild(h);
     c.appendChild(kidsLine(f));
     var m = el("div", "ds-meta");
@@ -175,7 +177,7 @@
       daysLine(am, cur);
       a.appendChild(am);
       b.textContent = "";
-      b.appendChild(el("div", "ds-h", f.mine ? AW("driveConfirmToHere") : f.old || !f.dev ? AW("driveConfirmToOld") : AW("driveConfirmTo").replace("{dev}", f.dev)));
+      b.appendChild(el("div", "ds-h", f.mine ? AW("driveConfirmToHere") : f.old || !f.dev ? AW("driveConfirmToOld") : f.pre ? AW("driveConfirmToPre").replace("{dev}", f.dev) : AW("driveConfirmTo").replace("{dev}", f.dev)));
       b.appendChild(kidsLine(f));
       var bm = el("div", "ds-meta");
       daysLine(bm, f);
@@ -222,8 +224,8 @@
     done = then || null;
     fill();
     lock(false);
+    $("drive-start").hidden = false;   // 先に 出す（open と 同じ わけ）
     showPick(list);
-    $("drive-start").hidden = false;
   }
 
   $("ds-link").addEventListener("click", function () {

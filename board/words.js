@@ -347,6 +347,9 @@
     proCodeFail: "開けませんでした",
     proCodeDone: "はなまるプラスが使えるようになりました",
     proCodeOn: "はなまるプラスをお使いいただけます",
+    // 鍵で ちがう 番号・答えを 入れた とき（setup.js の submit。番号の 欄に 出し、つぎに 押すと 消える。2026-11-22）
+    lockWrongPin: "番号が違います",
+    lockWrongAnswer: "答えが違います",
     // おさいふ（wallet.js。鍵の あとの 入力は 大人向け）
     wlInTitle: "お金の記録",
     wlModeIn: "おさいふに入れる",
@@ -410,6 +413,7 @@
     drivePickLead: "この Google アカウントのドライブに、控えが{n}つあります。",
     drivePickHere: "この端末",
     drivePickOld: "前の版の控え",
+    drivePickPre: "置きかえる前の控え",
     drivePickKids: "（{n}人）",
     drivePickRecord: "記録",
     drivePickDays: "{n}日ぶん",
@@ -423,6 +427,7 @@
     driveConfirmTo: "使うデータ（{dev} の控え）",
     driveConfirmToHere: "使うデータ（この端末の控え）",
     driveConfirmToOld: "使うデータ（前の版の控え）",
+    driveConfirmToPre: "使うデータ（{dev} の置きかえる前の控え）",
     driveConfirmSafe: "いまの この端末のデータは、置きかえる前にドライブに控えておきます。あとから「ほかの控えから戻す」で戻せます。",
     driveConfirmGo: "置きかえる",
     driveKeeping: "この端末のデータを控えています…",

@@ -900,8 +900,8 @@ body.portrait .kv-grad { font-size: 16px; padding: 6px 12px; }
 .lk-board .kv-close { position: absolute; top: 12px; left: 12px; }
 .lk-title { font-size: 22px; font-weight: 700; }
 .lk-question { font-size: 30px; font-weight: 700; color: var(--orange); min-height: 4px; }
-.lk-typed { font-size: 30px; letter-spacing: 8px; margin: 4px 0 10px; min-height: 40px; }
-.lk-typed.wrong { color: var(--pink); animation: shake 0.3s; }
+.lk-typed { font-size: 30px; letter-spacing: 8px; margin: 4px 0 10px; height: 44px; line-height: 44px; }   /* 空・●・まちがいの ことば で 高さを かえない（テンキーが ずれない） */
+.lk-typed.wrong { color: var(--pink); animation: shake 0.3s; font-size: 22px; font-weight: 700; letter-spacing: 0; }
 @keyframes shake { 25% { transform: translateX(-8px); } 75% { transform: translateX(8px); } }
 .lk-keys { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
 .lk-keys button {
@@ -1650,6 +1650,7 @@ body.portrait .settings .buttons .s-saved { position: absolute; left: 50%; botto
 .drive-start .ds-bk.me { border-color: var(--orange); background: rgba(255, 154, 82, 0.08); }
 .drive-start .ds-dev { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 10px; font-weight: 700; font-size: 20px; }
 .drive-start .ds-tag { font-size: 14px; background: var(--orange); color: #fff; border-radius: 999px; padding: 1px 10px; white-space: nowrap; }
+.drive-start .ds-tag.pre { background: #6b6880; }   /* 置きかえる前の控え: この端末（オレンジ）より 目立たせない */
 .drive-start .ds-kids { font-size: 18px; margin: 4px 0 2px; overflow-wrap: anywhere; }
 .drive-start .ds-kids b { font-weight: 700; }
 .drive-start .ds-meta { font-size: 16px; color: var(--muted); line-height: 1.6; }
@@ -1734,7 +1735,10 @@ body:not(.portrait) .settings .s-head { gap: 10px; }
 .su-board .su-sub { margin: 12px 0 6px; }
 #setup .su-names { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); overflow-x: hidden; }
 #setup .su-names input { flex: 1; min-width: 0; width: auto; }
-#setup .su-names select { max-width: 185px; }
+/* 年齢の めやすは 切らない（「小学3年〜＋ふりがな」が 185px で 切れた。2026-11-22 iPlay の 縦）。のこりの 幅は 名前の 欄 */
+#setup .su-names select { max-width: none; }
+/*   横も 1列に（2列だと 年齢の めやすを 切らない 分 名前の 欄が せまく なる。下は あいて いた） */
+body:not(.portrait) #setup .su-names { grid-template-columns: minmax(0, 1fr); max-height: 290px; }
 body.portrait #setup .su-names { grid-template-columns: minmax(0, 1fr); }
 /* スマホ: 名前の 欄が せまく「なまえ」が 切れた ので、年齢の めやすは 名前の 下の 行に（2026-11-19） */
 @media (max-width: 480px) {
@@ -2393,3 +2397,29 @@ body.portrait:not(.tall) .greeting { display: none; }
 /* 縦の タブレット: 予定は 3件ぶんまで、のこりは がんばりカレンダー */
 body.portrait:not(.tall):not(.no-cal) .board { grid-template-rows: min-content minmax(0, 1fr) minmax(170px, 252px); }
 body.portrait:not(.tall):not(.no-cal).ev-none .board { grid-template-rows: min-content minmax(0, 1fr) min-content; }
+/* ev-none の まま ほかの 日へ 送っても 予定の 欄の 高さを かえない（行の 数で がんばりカレンダーの 高さが かわった。2026-11-22 iPlay の 縦）。
+   1行ぶんと 2行目の 頭が すこし 見える 高さに して、のこりは 欄の 中で スクロール */
+body.portrait:not(.tall):not(.no-cal).ev-none .events { flex: none; height: 56px; }
+/*   「25日」の ふりがなで 見出しが 高く なる 分も はじめから とっておく */
+body.portrait:not(.tall):not(.no-cal).ev-none .day-nav { min-height: 50px; }
+
+/* がんばりカレンダーの カードが 中身に くらべて 大きい とき（子ども1人・予定なし、横で 3〜4人 など）は 中身を まとめて 大きく（kids.js の growKids が --grow を きめる。2026-11-22） */
+.kids .kid-btn > .name, .kids .kid-btn > .state, .kids .kid-btn > .tally { zoom: var(--grow, 1); }
+/*   もくひょうの ゲージは 半分だけ 大きく して、その分 横に のばす（⭐と 旗だけ 大きく なって ゲージが 短く 見えた） */
+.kids .kid-btn > .kid-goal { zoom: calc(1 + (var(--grow, 1) - 1) / 2); max-width: calc(300px * var(--grow, 1) / (1 + (var(--grow, 1) - 1) / 2)); }
+
+/* スマホの 横（wide）の 設定: タブを 左の 列に たてに ならべ、中身の 欄を 上から 下まで 使う（2026-11-22。上の タブと 下の ボタンで 中身の 欄が 低く、スクロールが 多かった） */
+body.wide .settings .panel { display: grid; grid-template-columns: 150px minmax(0, 1fr); grid-template-rows: auto auto auto minmax(0, 1fr) auto auto; column-gap: 12px; padding: 10px 16px 8px; }
+body.wide .settings .s-head { grid-column: 1; grid-row: 1 / -1; flex-direction: column; align-items: stretch; gap: 6px; border-bottom: 0; min-height: 0; }
+body.wide .settings .s-title { margin: 0 0 2px 4px; }
+body.wide .settings .s-nav { flex: none; flex-direction: column; gap: 4px; overflow: visible; margin: 0; }
+body.wide .settings .s-nav button { border-radius: 12px; border-bottom-width: 2px; font-size: 15px; padding: 5px 10px; text-align: left; }
+body.wide .settings .s-nav button.on { border-color: var(--orange); background: var(--cream); }
+body.wide .settings .s-battery-warn { grid-column: 2; grid-row: 1; }
+body.wide .settings #s-update { grid-column: 2; grid-row: 2; }
+body.wide .settings #s-drive-band { grid-column: 2; grid-row: 3; }
+body.wide .settings .s-pages { grid-column: 2; grid-row: 4; border-top: 2px solid var(--orange); border-radius: 16px; }
+body.wide .settings #s-error { grid-column: 2; grid-row: 5; margin: 0; }
+body.wide .settings .buttons { grid-column: 2; grid-row: 6; margin-top: 2px; }
+body.wide .settings .buttons button { font-size: 16px; padding: 3px 14px; }
+body.wide .settings #s-error:empty { min-height: 0; }
