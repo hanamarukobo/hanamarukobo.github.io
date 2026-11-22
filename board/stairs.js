@@ -113,7 +113,7 @@
     if (N) showCard(opt.pick >= 0 && opt.pick < N ? opt.pick : N - 1);
     else {
       climber.style.display = "none";
-      card.innerHTML = '<div class="sm-card-name" style="font-size:' + (phone ? 22 : 28) + 'px"><img src="' + HANAMARU + '" alt=""><span>' + esc(T.empty) + '</span></div>';
+      card.innerHTML = '<div class="sm-card-name sm-empty" style="font-size:' + (phone ? 22 : 28) + 'px"><img src="' + HANAMARU + '" alt=""><span>' + esc(T.empty) + '</span></div>';
     }
     var still = !opt.animate || document.body.classList.contains("lowpower") ||
       (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);

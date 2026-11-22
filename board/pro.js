@@ -82,7 +82,7 @@
     if (flowers) {
       // 期間の 日が ぜんぶ はなまるなら「7日」ではなく「毎日」
       lines.push(flowers === datesIn(r).length ? "<li>はなまるの日: <b>毎日できました</b></li>"
-        : "<li>はなまるの日: <b>" + flowers + "日</b>" + (best >= 2 ? "（いちばん長く続いたのは " + best + "日）" : "") + "</li>");
+        : "<li>はなまるの日: <b>" + flowers + "日</b>" + (best >= 2 ? "（いちばん長く続いたのは <span class=\"nw\">" + best + "日）</span>" : "") + "</li>");
       lines.push("<li>できたやること: <b>" + done + "個</b>" + (top.length ? "（よくできたのは" + top.map(function (n) { return "「" + esc(n) + "」"; }).join("") + "）" : "") + "</li>");
     }
     if (selfStart) lines.push("<li>自分から始めた: <b>" + selfStart + "回</b></li>");

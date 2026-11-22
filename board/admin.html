@@ -18,7 +18,10 @@
     margin: 0; background: var(--bg); color: var(--text);
     font-family: "Hiragino Maru Gothic ProN", "Zen Maru Gothic", "Yu Gothic", sans-serif;
     font-size: 16px;
+    /* 文節で 折りかえし、さいごの 行に 1〜2字だけ 残さない（どの 字の 間でも 切れて「ボ｜ード」「子｜ども」に なっていた。11-22） */
+    word-break: auto-phrase; text-wrap: pretty;
   }
+  h2, h3 { text-wrap: balance; }
   header { padding: 16px; font-size: 20px; font-weight: bold; }
   main { max-width: 640px; margin: 0 auto; padding: 0 16px 40px; }
   section { background: var(--card); border-radius: 18px; padding: 16px; margin-bottom: 16px; }

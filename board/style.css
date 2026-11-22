@@ -841,7 +841,7 @@ body.lowpower *, body.lowpower *::before, body.lowpower *::after {
 .grv-hello b { display: block; font-size: 40px; color: #ff6a3d; }
 .grv-title { font-size: 26px; font-weight: 700; color: var(--kid); padding: 0 40px; word-break: keep-all; word-break: auto-phrase; overflow-wrap: anywhere; }
 .grv-title .honor { font-size: 0.55em; }
-.grv-count { font-size: 18px; color: var(--muted); margin: 2px 0 10px; }
+.grv-count { font-size: 18px; color: var(--muted); margin: 2px 0 10px; word-break: keep-all; overflow-wrap: anywhere; }
 .grv-steps { list-style: none; margin: 0; padding: 0 0 4px; overflow-y: auto; min-height: 0; text-align: left; scrollbar-width: thin; }
 .grv-steps li {
   margin: 0 0 6px calc(var(--i) * 6%);
@@ -2066,6 +2066,8 @@ body:not(.portrait) .tu-hide { grid-column: 4; grid-row: 1; justify-self: end; w
 .sm-card-head { font-size: 16px; font-weight: 700; color: #e8708f; }
 .sm-card-name { display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 26px; font-weight: 700; line-height: 1.3; word-break: keep-all; word-break: auto-phrase; overflow-wrap: anywhere; }
 .sm-card-name img { width: 36px; height: 36px; flex: none; }
+/* 空の カード（できる ことを ふやそう！）は 分かち書きの すきまだけで 折りかえす（auto-phrase だと「ふや｜そう」で 切れた） */
+.sm-card-name.sm-empty { word-break: keep-all; text-wrap: balance; }
 .sm-card-comment { margin-top: 4px; font-size: 15px; color: #8a7272; overflow-wrap: anywhere; }
 .sm.phone .sm-card-name { font-size: 20px; }
 .sm-hint { position: absolute; left: 10px; top: 55%; width: 44px; height: 44px; border-radius: 50%; background: rgba(255, 255, 255, 0.9); border: 3px solid #f0d4cc; color: #b09090; font-size: 20px; text-align: center; line-height: 38px; pointer-events: none; }
@@ -2233,6 +2235,10 @@ body.night .wl-in { background: transparent; color: #6fd39b; box-shadow: inset 0
 .settings .s-guide-row .note { margin: 0; }
 /* 説明の 文の 最後の 1〜2字だけが 次の 行に 落ちないように（対応して いる WebView だけ。11-20） */
 .tu-text, .tu-text p { text-wrap: pretty; }
+/* 大人向けの 文（設定・かんたん設定・説明）は 文節で 折りかえし、さいごの 行に 1〜2字だけ 残さない（指定が なく「ボ｜ード」「子｜ども」「入れられま｜す。」と 切れていた。11-22） */
+.settings, .setup, .tutorial { word-break: auto-phrase; text-wrap: pretty; }
+.settings h2, .settings h3, .setup h2, .setup h3 { text-wrap: balance; }
+.nw { white-space: nowrap; }   /* 数と 単位を はなさない（「4｜日」） */
 /* 子ども向けの ページは 分かち書きの すきまで だけ 折り返す（「おうえん / するよ」のように ことばの 途中で 切れた。11-20） */
 .tu-board:not(.for-parent) .tu-text { word-break: keep-all; overflow-wrap: anywhere; }
 
