@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>はなまるボード</title>
 <meta name="color-scheme" content="light">
-<meta name="description" content="はなまるボード。スマホや余ったタブレットを、子どもが毎朝見るボードに。子どもが自分でできるように。Android はアプリのテスト版（おすすめ）、iPhone・iPad・PC はブラウザ版で使えます。">
+<meta name="description" content="はなまるボード。今日がわかる。自分でできる。「着替えた？」「傘持った？」毎朝の声かけを、少し減らせたら。子どもが自分で今日の予定ややることを確かめられるアプリです。スマホ1台からでも、余ったタブレットをリビングに置いても使えます。">
 <link rel="icon" href="img/icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700&display=swap" rel="stylesheet">
@@ -99,20 +99,73 @@ footer{background:linear-gradient(135deg,#fdf0cf,#fce6d2)}
 .safe-lead{margin:0 0 8px}
 .safe ul{margin:0}
 .safe-more{margin:10px 0 0;font-size:.95em}
+/* 2026-11-22 組み直し: つかみ → 動画 → 使ってみる → できること（体験4つ）→ 安心 → ちがい → 作り手 → ご意見 */
+.hook{font-family:var(--hf);font-weight:700;font-size:1.15em;color:var(--ink);margin:16px 0 0;line-height:1.7}
+.hero .lead{margin-top:8px}
+.hero-cta{margin:16px 0 0;display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center}
+.hero-cta .btn{margin-top:0}
+.text-link{font-weight:700;color:var(--btn)}
+.recruit{margin:10px 0 0;font-size:.88em;color:var(--muted)}
+.start-note{margin:12px 0 0;font-size:.9em;color:var(--muted)}
+.feats{display:grid;gap:30px;margin:8px 0}
+.feat{display:grid;grid-template-columns:1fr 1fr;gap:26px;align-items:center}
+.feat:nth-child(even) figure{order:2}
+.feat figure{margin:0}
+.feat img{width:100%;height:auto;display:block;border-radius:18px;border:4px solid #fff;box-shadow:0 6px 0 var(--shadow),0 10px 24px rgba(80,60,30,.10)}
+.feat h3{font-size:1.25em;margin:0 0 6px;line-height:1.45}
+.feat p{margin:0}
+.feat.big{background:linear-gradient(135deg,#e8f5e0,#fbf7ec 70%);border:3px solid #bfdfae;border-radius:28px;padding:22px}
+.feat.big h3{font-size:1.45em;color:#3d6a2c}
+.feat.big img{box-shadow:0 6px 0 #bfdfae,0 10px 24px rgba(60,90,40,.10)}
+.badges{list-style:none;padding:0;margin:0 0 12px;display:flex;flex-wrap:wrap;gap:8px}
+.badges li{margin:0;background:#fff2cc;color:#855f0a;font-weight:700;border-radius:999px;padding:3px 14px}
+.safe p{margin:6px 0}
+.safe details,.ways-notes details{margin-top:10px}
+.safe summary,.ways-notes summary{cursor:pointer;color:var(--muted);font-weight:700}
+.safe details ul{margin-top:8px}
+.ways-pics{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:6px 0 12px}
+.ways-pics figure{margin:0;text-align:center;font-size:.9em;color:var(--muted)}
+.ways-pics img{width:100%;max-width:260px;height:150px;object-fit:contain;display:block;margin:0 auto 4px}
+.cmp{width:100%;border-collapse:collapse;font-size:.93em;background:var(--card);border-radius:18px;overflow:hidden}
+.cmp th,.cmp td{padding:9px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top;line-height:1.6}
+.cmp thead th{background:#fdf0cf;color:var(--ink);font-family:var(--hf)}
+.cmp tbody th{color:var(--muted);font-weight:700;width:26%}
+.cmp tr:last-child th,.cmp tr:last-child td{border-bottom:0}
+.ways-notes{margin:12px 0 0;font-size:.93em}
+.ways-notes p{margin:6px 0}
+.ways-notes ol{margin:6px 0 0;padding-left:1.3em}
+.about{display:flex;gap:16px;align-items:flex-start;background:var(--card);border:3px solid var(--line);border-radius:28px;padding:18px 22px}
+.about img{width:56px;height:56px;border-radius:14px;flex:none}
+.about p{margin:0 0 8px}
+.about p:last-child{margin-bottom:0}
+.contact p{margin:6px 0}
+.sns a{margin-right:16px;font-weight:700}
+@media(max-width:700px){
+ .feat{grid-template-columns:1fr;gap:12px}
+ .feat:nth-child(even) figure{order:0}
+ .feat.big{padding:16px}
+ .cmp{font-size:.86em}
+ .cmp th,.cmp td{padding:8px 7px}
+ .about{padding:16px;gap:12px}
+ .about img{width:44px;height:44px}
+}
 </style>
 <!-- アクセスの数（GoatCounter。cookie なし。つなぐための番号 pair= がアドレスにあるときは送らない） -->
 <script>window.goatcounter = { path: function () { return /[?&]pair=/.test(location.search) ? null : location.pathname || "/"; } };</script>
 <script data-goatcounter="https://hanamaru-board.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 </head>
 <body>
+<!-- Android の入口は class="to-android" の3か所（上・使ってみる・ちがいの表の下）。製品版の公開時に、join.html を Google Play のリンクに、「テスト版に参加する」を「Google Play で入れる」に差し替える -->
 <main>
   <header class="hero">
     <div class="hero-text">
       <img class="logo" src="img/icon.png" alt="">
       <h1>はなまるボード</h1>
       <p class="copy">今日がわかる。自分でできる。</p>
-      <p class="easy">Android アプリのテスト版、参加者を募集しています</p>
-      <p class="lead">子どもが毎朝見るボードのアプリです。スマホ1台からでも始められます。余ったタブレットがあれば、リビングに置くと家族みんなで見られます。時計・天気・予定と、子どもごとのやることを1つの画面に出します。子どもができたやることを自分で押して はなまるにし、おうちの人が「みました」を押すと、カレンダーにもはなまるがつきます。iPhone・iPad・PC の方は、ブラウザ版で試せます。</p>
+      <p class="hook">「着替えた？」「傘持った？」<br>毎朝の声かけを、少し減らせたら。</p>
+      <p class="lead">はなまるボードは、子どもが自分で今日の予定や、やることを確認できるアプリです。余ったタブレットをリビングに置いて、家族で使えます。スマホ1台からでも始められます。</p>
+      <p class="hero-cta"><a class="btn to-android" href="join.html">Android テスト版に参加する</a><a class="text-link" href="#start">iPhone・iPad の方は</a></p>
+      <p class="recruit">Android アプリは、Google Play で公開する前のテスト版の参加者を募集しています（無料）。</p>
     </div>
     <div class="hero-art"><img src="img/hero.webp" alt="" width="917" height="849"></div>
   </header>
@@ -137,92 +190,128 @@ footer{background:linear-gradient(135deg,#fdf0cf,#fce6d2)}
   })();
   </script>
 
-  <!-- はじめる: 端末で分ける。製品版の公開時に、Android の欄を Google Play のボタンに差し替える -->
+  <h2 class="sec" id="start">使ってみる</h2>
   <div class="start">
     <section class="ask">
-      <p class="who">Android のタブレット・スマホ</p>
+      <p class="who">Android のスマホ・タブレット</p>
       <h2>Android アプリ（テスト版）<span class="tag">おすすめ</span></h2>
-      <p>いちばんおすすめの使い方です。Google Play で公開する前のテスト版なので、参加の手続きが少しあります（費用はかかりません）。</p>
-      <p>おうちの人のスマホからつないで「みました」を押す・毎日のお知らせ・Google カレンダーを選ぶだけで予定を出す・決まった時間に画面をつける、はアプリだけの機能です。新しい機能もアプリから入ります。</p>
-      <a class="btn" href="join.html">テスト版に参加する方法</a>
+      <p>はなまるボードを、しっかり使ってみたい方へ。</p>
+      <p>同じ Wi-Fi のスマホから「みました」を押す・毎日のお知らせ・端末の Google カレンダーの予定を出す、などアプリだけの機能があります。Google Play で公開する前のテスト版なので参加の手続きがありますが、無料です。</p>
+      <a class="btn to-android" href="join.html">Android テスト版に参加する</a>
     </section>
     <section class="ask">
       <p class="who">iPhone・iPad・PC</p>
       <h2>ブラウザ版</h2>
-      <p>インストールせずに、まず見てみたい方へ。記録はその端末のブラウザと、お使いの Google ドライブ（つないだときだけ）に保存します。費用はかかりません。1台で使う形で、アプリだけの機能はありません。ドライブとのつながりは仕組み上1時間ほどで切れるため、設定を開いたときなどに Google の画面が一瞬出ます。</p>
-      <a class="btn sub" href="board/">ブラウザではじめる</a>
-      <details>
-        <summary>記録を守るため、iPhone・iPad は「ホーム画面に追加」してください</summary>
-        <p>Safari のまましばらく開かないと、記録が消えることがあります。ホーム画面に追加して、そこから開いてください。</p>
-        <ol>
-          <li>上のボタンで開く</li>
-          <li>共有ボタン（四角から上向きの矢印）を押す</li>
-          <li>「ホーム画面に追加」→「追加」</li>
-        </ol>
-      </details>
+      <p>iPhone・iPad の方や、まず見てみたい方へ。</p>
+      <p>インストールせずに試せます。ホーム画面に追加すると、アプリのように開けます。無料です。</p>
+      <a class="btn sub" href="board/">ブラウザで試してみる</a>
+    </section>
+  </div>
+  <p class="start-note">アプリとブラウザ版のちがいは、<a href="#ways">下の表</a>にまとめています。</p>
+
+  <h2 class="sec">はなまるボードでできること</h2>
+  <div class="feats">
+    <section class="feat">
+      <figure><img src="img/feat-today.webp" alt="ホームの画面。時計と、今日の天気（雨なので かさを もってね）、今日の予定" loading="lazy"></figure>
+      <div>
+        <h3>今日のことが、自分でわかる</h3>
+        <p>時計・天気・予定をひとつの画面に。「今日は傘がいるかな？」「次は何をするんだっけ？」と、子どもが自分で気づくきっかけになります。</p>
+      </div>
+    </section>
+    <section class="feat">
+      <figure><img src="img/feat-check.webp" alt="子どもの画面。できたやることにチェックがつき、カレンダーの今日のマスに はなまる" loading="lazy"></figure>
+      <div>
+        <h3>できたら、自分でチェック</h3>
+        <p>自分のやることを、できたら自分でチェック。寝る前におうちの人が「みました」を押すと、その日のカレンダーに はなまるがつきます。できたことを、親子で一緒にふり返れます。</p>
+      </div>
+    </section>
+    <section class="feat big">
+      <figure><img src="img/feat-moudekiru.webp" alt="子どもの画面。やることのいちばん上に「もう できる」、名前の横に緑の階段と数字" loading="lazy"></figure>
+      <div>
+        <h3>「もう できる」が増えていく</h3>
+        <p>言われなくてもできるようになったことは、おうちの人が「もう できる」にまとめます。名前の横の緑の階段の数が、少しずつ増えていきます。</p>
+        <p>はなまるを集めるだけでなく、自分でできることが増えていくのを大切にしています。</p>
+      </div>
+    </section>
+    <section class="feat">
+      <figure><img src="img/feat-wallet.webp" alt="おさいふの画面。ほしいもの・のこり・お金の記録" loading="lazy"></figure>
+      <div>
+        <h3>お金のことも、少しずつ</h3>
+        <p>「おさいふ」では、使ったお金やちょきんを、子どもが自分で記録します。ほしいものに向けて、お金の使い方を考えるきっかけに。使いたいお子さんだけオンにできます。</p>
+      </div>
     </section>
   </div>
 
   <h2 class="sec">データの安心</h2>
   <section class="safe">
-    <p class="safe-lead"><b>家族の記録は、おうちの端末の中だけにあります。</b>運営者（はなまる工房）のサーバーやクラウドには、記録を1件も置いていません。</p>
-    <ul>
-      <li><b>アカウント登録はいりません。</b>名前やメールアドレスを運営者に送ることはありません。</li>
-      <li><b>アプリ・ブラウザ版とも、記録はその端末の中に保存します。</b>運営者が見たり集めたりすることはできません。</li>
-      <li><b>2台で使うときも、家の Wi-Fi の中だけでつながります。</b>つなぐときは番号で確かめます。</li>
-      <li><b>ブラウザ版の Google ドライブへの控えは、あなた自身のドライブに置きます。</b>はなまるボードが作ったファイルだけを扱い、ほかのファイルは見ません。運営者には届きません。</li>
-      <li>広告はありません。</li>
-    </ul>
+    <ul class="badges"><li>広告なし</li><li>アカウント登録なし</li><li>家族の記録は端末の中に保存</li></ul>
+    <p>家族の毎日の記録だからこそ、安心して使えることを大切にしました。はなまる工房のサーバーに、ご家庭の記録を集めることはありません。</p>
+    <details>
+      <summary>くわしく</summary>
+      <ul>
+        <li><b>アカウント登録はいりません。</b>名前やメールアドレスを運営者に送ることはありません。</li>
+        <li><b>アプリ・ブラウザ版とも、記録はその端末の中に保存します。</b>運営者が見たり集めたりすることはできません。</li>
+        <li><b>2台で使うときも、家の Wi-Fi の中だけでつながります。</b>つなぐときは番号で確かめます。</li>
+        <li><b>ブラウザ版の Google ドライブへの控えは、あなた自身のドライブに置きます。</b>はなまるボードが作ったファイルだけを扱い、ほかのファイルは見ません。運営者には届きません。</li>
+        <li><b>表示に必要な通信はします。</b>天気の予報（気象庁）や、設定したカレンダーの予定を読み込みます。家族の記録は送りません。</li>
+      </ul>
+    </details>
     <p class="safe-more"><a href="privacy.html">くわしくはプライバシーポリシー</a></p>
   </section>
 
-  <h2 class="sec">画面</h2>
-  <div class="shots">
-    <img src="img/store-1.webp" alt="ホームの画面。時計・天気・子どもごとのはなまるの数・予定" loading="lazy" width="1280" height="720">
-    <img src="img/store-2.webp" alt="子どもの画面。できたやることを自分で押し、おうちの人が見たら はなまる" loading="lazy" width="1280" height="720">
-    <img src="img/store-3.webp" alt="おさいふの画面。ほしいものに向けて記録する" loading="lazy" width="1280" height="720">
-    <img src="img/store-4.webp" alt="スマホの画面。スマホでも試せる" loading="lazy" width="1280" height="720">
+  <h2 class="sec" id="ways">Android アプリとブラウザ版のちがい</h2>
+  <div class="ways-pics">
+    <figure><img src="img/site-android.webp" alt="置いたタブレットを子どもが押し、おうちの人はソファのスマホからつないでいる" loading="lazy">Android アプリ: 置いて、スマホからも</figure>
+    <figure><img src="img/site-browser.webp" alt="子ども2人が、1台のタブレットを押している" loading="lazy">ブラウザ版: 1台で</figure>
+  </div>
+  <table class="cmp">
+    <thead><tr><th></th><th>Android アプリ</th><th>ブラウザ版</th></tr></thead>
+    <tbody>
+      <tr><th>使える端末</th><td>Android のスマホ・タブレット</td><td>iPhone・iPad・PC など</td></tr>
+      <tr><th>はじめ方</th><td>テスト版に参加して Google Play から入れる</td><td>インストール不要</td></tr>
+      <tr><th>使い方</th><td>スマホ1台でも。タブレットを置いて家族のボードにも</td><td>基本は1台で</td></tr>
+      <tr><th>スマホから</th><td>同じ Wi-Fi のスマホから「みました」や設定</td><td>なし（その端末で押します）</td></tr>
+      <tr><th>お知らせ</th><td>毎日のお知らせ（通知）</td><td>なし</td></tr>
+      <tr><th>予定</th><td>端末の Google カレンダーを選ぶだけで出せる</td><td>なし</td></tr>
+      <tr><th>画面</th><td>決まった時間に画面をつける・ボードを自動で開く</td><td>自分で開く</td></tr>
+      <tr><th>端末を替えるとき</th><td>設定の「おうちの人」→「データの書き出し・読み込み」</td><td>Google ドライブの控えから戻す（書き出し・読み込みも可）</td></tr>
+    </tbody>
+  </table>
+  <div class="ways-notes">
+    <p>アプリを置いて使うときは、同じ Wi-Fi の iPhone からも、置いた端末に出る QR コードを読み取ってブラウザで使えます。</p>
+    <p>ブラウザ版の記録は、その端末のブラウザと、お使いの Google ドライブ（つないだときだけ）に保存します。ドライブとのつながりは仕組み上1時間ほどで切れるため、設定を開いたときなどに Google の画面が一瞬出ます。</p>
+    <details>
+      <summary>記録を守るため、iPhone・iPad は「ホーム画面に追加」してください</summary>
+      <p>Safari のまましばらく開かないと、記録が消えることがあります。ホーム画面に追加して、そこから開いてください。</p>
+      <ol>
+        <li>「ブラウザで試してみる」で開く</li>
+        <li>共有ボタン（四角から上向きの矢印）を押す</li>
+        <li>「ホーム画面に追加」→「追加」</li>
+      </ol>
+    </details>
+    <p>iOS のアプリは検討中です。</p>
+    <p><a class="btn to-android" href="join.html">Android テスト版に参加する</a></p>
   </div>
 
-  <h2 class="sec">できること</h2>
-  <ul>
-    <li><b>朝の準備</b>: 天気から「はんそで」「かさ いるよ」などを出し、着る服や持ち物を子どもが自分で考えるきっかけにします。</li>
-    <li><b>がんばりカレンダー</b>: お子さんごとに決めたやることを、できたら子どもが自分で押して はなまるにします。できた日はカレンダーにたまっていきます。</li>
-    <li><b>おさいふ</b>: 使いたいお子さんだけオンにできます。ほしいものに向けて、使ったお金やちょきんを自分で記録します。</li>
-    <li><b>おうちの人のスマホから</b>: 同じ Wi-Fi のスマホから、記録を見て「みました」を押せます。</li>
-    <li><b>データは端末の中だけ</b>: 記録や設定は外に送りません。広告もありません。</li>
-  </ul>
+  <h2 class="sec">はなまる工房について</h2>
+  <section class="about">
+    <img src="img/icon.png" alt="">
+    <div>
+      <p>小学生と幼稚園の娘が2人いる父親です。</p>
+      <p>はじまりは、妻がホワイトボードとマグネットで工夫していた毎日の準備でした。でも、毎日続けるのはなかなか難しくて。「だったらアプリにしてみよう」と作り始めたのが、はなまるボードです。</p>
+      <p>家族で1か月以上使いながら、少しずつ改良してきました。知人にも使ってもらい、感想を聞きながら直しています。同じような毎日の困りごとを持つご家庭で、少しでも役に立てたらうれしいです。</p>
+    </div>
+  </section>
 
-  <h2 class="sec">はじめ方で、使い方が変わります</h2>
-  <div class="ways">
-    <section class="way">
-      <h3><span class="who">Android のタブレット・スマホ</span>Android アプリではじめた場合</h3>
-      <figure class="way-pic"><img src="img/site-android.webp" alt="置いたタブレットを子どもが押し、おうちの人はソファのスマホからつないでいる" loading="lazy"></figure>
-      <ul>
-        <li><b>スマホ1台だけでも、リビングなどに置いても使えます。</b>記録はその端末の中にあります。</li>
-        <li>おうちの人のスマホから、同じ Wi-Fi でつないで「みました」や設定ができます（Android はアプリ、iPhone は置いた端末の QR を読んでブラウザで）。</li>
-        <li>決まった時間に画面をつける・ボードを自動で開く・毎日のお知らせができます。</li>
-        <li>端末を替えるときは、設定の「おうちの人」→「データの書き出し・読み込み」で移せます。</li>
-      </ul>
-      <a class="btn" href="join.html">テスト版に参加する方法</a>
-    </section>
-    <section class="way">
-      <h3><span class="who">iPhone・iPad・PC</span>ブラウザではじめた場合</h3>
-      <figure class="way-pic"><img src="img/site-browser.webp" alt="子ども2人が、1台のタブレットを押している" loading="lazy"></figure>
-      <ul>
-        <li><b>1台で使います。</b>記録はその端末のブラウザの中にあります。</li>
-        <li>ほかの端末からは見られません。「みました」もその端末で押します。</li>
-        <li>画面は自分で開きます。お知らせ（通知）はありません。</li>
-        <li>端末を替えるときは、設定の「おうちの人」から Google ドライブに控えておくと、ほかの端末で戻せます（「データの書き出し・読み込み」でも移せます）。</li>
-      </ul>
-      <a class="btn sub" href="board/">ブラウザではじめる</a>
-    </section>
-  </div>
-  <p class="note">iOS のアプリは検討中です。</p>
+  <h2 class="sec">ご意見・お問い合わせ</h2>
+  <section class="contact">
+    <p>使ってみて気づいたことや、「こんな機能があったらいいな」という声もお待ちしています。使いにくかったところも、気軽に送ってください。</p>
+    <p><a class="btn" href="https://forms.gle/N1bPRj8BhCanZp8CA">ご意見・お問い合わせ（フォーム）</a></p>
+    <p class="note">アプリを入れたあとは、アプリの設定（画面の左上の歯車）→「ヘルプ」→「ご要望・お問い合わせ」から送っていただけると、アプリのバージョンと機種が自動で入り、原因を調べやすくなるので助かります。</p>
+  </section>
 
   <footer>
-    <p><a class="btn" href="https://forms.gle/N1bPRj8BhCanZp8CA">要望・お問い合わせ（フォーム）</a></p>
-    <p>アプリを入れたあとは、アプリの設定（画面の左上の歯車）→「ヘルプ」→「ご要望・お問い合わせ」から送っていただけると、アプリのバージョンと機種が自動で入り、原因を調べやすくなるので助かります。</p>
+    <p class="sns"><a href="https://x.com/hanamarukobo">X</a><a href="https://www.instagram.com/hanamaru.kobo/">Instagram</a></p>
     <p>運営: はなまる工房（メール: <a href="mailto:hanamaru.board.app@gmail.com">hanamaru.board.app@gmail.com</a>）</p>
     <p><a href="privacy.html">プライバシーポリシー</a></p>
   </footer>
