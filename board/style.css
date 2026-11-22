@@ -1642,8 +1642,37 @@ body.portrait .settings .buttons .s-saved { position: absolute; left: 50%; botto
 .drive-start .su-cards button b { font-size: 21px; word-break: keep-all; overflow-wrap: anywhere; }
 .drive-start .su-cards button:disabled { opacity: 0.5; }
 .drive-start .ds-more { margin: 14px 0 0; }
-.drive-start #ds-found-text { font-size: 22px; color: var(--text); line-height: 1.5; }
 .drive-start .su-error { min-height: 1.2em; }
+/* 控えの 一覧と 置きかえる 前の 確かめ（2026-11-22 案 A。見本 dist/review/drive-pick/mock.html） */
+.drive-start .ds-lead { margin: -6px 0 12px; font-size: 18px; }
+.drive-start .ds-list { display: flex; flex-direction: column; gap: 12px; }
+.drive-start .ds-bk { border: 3px solid #f0dcd4; border-radius: 18px; padding: 10px 16px 12px; }
+.drive-start .ds-bk.me { border-color: var(--orange); background: rgba(255, 154, 82, 0.08); }
+.drive-start .ds-dev { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 10px; font-weight: 700; font-size: 20px; }
+.drive-start .ds-tag { font-size: 14px; background: var(--orange); color: #fff; border-radius: 999px; padding: 1px 10px; white-space: nowrap; }
+.drive-start .ds-kids { font-size: 18px; margin: 4px 0 2px; overflow-wrap: anywhere; }
+.drive-start .ds-kids b { font-weight: 700; }
+.drive-start .ds-meta { font-size: 16px; color: var(--muted); line-height: 1.6; }
+.drive-start .ds-meta b { color: var(--text); }
+.drive-start .ds-bk button { margin-top: 8px; }
+.drive-start .ds-new { width: 100%; margin-top: 12px; font: inherit; text-align: left; border: 3px dashed #f0dcd4; border-radius: 18px; padding: 10px 16px; background: transparent; color: var(--text); display: flex; flex-direction: column; gap: 2px; }
+.drive-start .ds-new b { font-size: 19px; }
+.drive-start .ds-new small { font-size: 15px; color: var(--muted); }
+.drive-start .ds-new[hidden] { display: none; }
+.drive-start .ds-box { border-radius: 16px; padding: 10px 16px; background: var(--cream); }
+.drive-start .ds-box.to { background: var(--mint); }
+.drive-start .ds-h { font-size: 15px; color: var(--muted); }
+.drive-start .ds-arrow { text-align: center; font-size: 24px; color: var(--orange); line-height: 1.3; }
+.drive-start .ds-safe { font-size: 16px; background: #fff1e6; color: #b5541c; border-radius: 12px; padding: 8px 12px; margin: 12px 0 14px; line-height: 1.5; }
+body.night .drive-start .ds-safe { background: #4a3a2e; color: #ffc9a3; }
+body.night .drive-start .ds-bk, body.night .drive-start .ds-new { border-color: #4a4560; }
+/* 設定の「おうちの人」の ドライブの 欄: この 端末が どの 控えに つながって いるか（左に 見出し・右に 値） */
+.settings .s-drive-info { margin: 4px 0 8px; font-size: 16px; }
+.settings .s-drive-info > div { display: flex; justify-content: space-between; gap: 12px; padding: 5px 0; border-bottom: 1px dashed #eadfd8; }
+.settings .s-drive-info > div[hidden] { display: none; }
+.settings .s-drive-info dt { color: var(--muted); white-space: nowrap; }
+.settings .s-drive-info dd { margin: 0; text-align: right; overflow-wrap: anywhere; min-width: 0; }
+body.night .settings .s-drive-info > div { border-bottom-color: #4a4560; }
 .settings .s-parent-name { width: 12em; max-width: 100%; }
 .settings .s-procode-row { flex-wrap: wrap; }
 .settings .s-procode { width: 12em; max-width: 100%; }

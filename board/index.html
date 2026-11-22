@@ -334,17 +334,22 @@
         <!-- Google ドライブの 控え（Web 版だけ。drive.js・settings.js。アプリ・つないだ スマホ・クライアント ID が ない ときは 出さない）。文は Words.adult の drive… -->
         <div class="s-group" id="s-drive-group" hidden>
           <h3 id="s-drive-title"></h3>
-          <!-- つないで いる 間の 状態と、止まって いる ときの ボタン（つなぎ直す・この内容で上書き。2026-11-21） -->
+          <!-- つないで いる 間の 状態と、止まって いる ときの ボタン（つなぎ直す。2026-11-21） -->
           <p class="note s-drive-state" id="s-drive-state" hidden></p>
           <div class="row s-drive-row" id="s-drive-fix" hidden>
             <button type="button" class="small" id="s-drive-reconnect"></button>
-            <button type="button" class="ghost small" id="s-drive-overwrite"></button>
           </div>
+          <!-- この 端末が どの 控えに つながって いるか（2026-11-22 案 A。控えは 端末ごとに 1つの ファイル） -->
+          <dl class="s-drive-info" id="s-drive-info">
+            <div id="s-drive-who-row"><dt id="s-drive-who-k"></dt><dd id="s-drive-who"></dd></div>
+            <div><dt id="s-drive-dev-k"></dt><dd id="s-drive-dev"></dd></div>
+            <div><dt id="s-drive-at-k"></dt><dd id="s-drive-last"></dd></div>
+            <div id="s-drive-sum-row"><dt id="s-drive-sum-k"></dt><dd id="s-drive-sum"></dd></div>
+          </dl>
           <div class="row s-drive-row">
             <button type="button" class="ghost small" id="s-drive-save"></button>
             <button type="button" class="ghost small" id="s-drive-restore"></button>
           </div>
-          <p class="note" id="s-drive-last"></p>
           <p class="note s-drive-stale" id="s-drive-stale" hidden></p>
           <p class="note" id="s-drive-result" aria-live="polite"></p>
           <p class="note" id="s-drive-note"></p>
@@ -637,10 +642,10 @@
               <p>記録や設定は、この端末の中に保存し、外には送りません。くわしくは、このページのいちばん下の「プライバシーポリシー」をご覧ください。</p></details>
             <!-- Web 版で Google ドライブの 控えが ある ときだけ 出す（settings.js。Drive.on） -->
             <details id="faq-web-drive" hidden><summary>iPhone・iPad で使いたい・データが消えないか心配</summary>
-              <p>iPhone・iPad では、このブラウザの Web 版を「ホーム画面に追加」して使ってください。記録はブラウザの中に保存するため、しばらく開かないと消えることがあります。Google ドライブとつないでおくと、記録が変わるたびに自動で控え、消えても「ドライブから戻す」で戻せます（はじめに「つないではじめる」を選ぶか、設定の「おうちの人」→「Google ドライブに控える」）。控えはお使いの Google ドライブに保存し、はなまる工房には送りません。</p>
+              <p>iPhone・iPad では、このブラウザの Web 版を「ホーム画面に追加」して使ってください。記録はブラウザの中に保存するため、しばらく開かないと消えることがあります。Google ドライブとつないでおくと、記録が変わるたびに自動で控え、消えても、はじめの画面の「前のデータを戻す」か、設定の「おうちの人」→「ほかの控えから戻す」で戻せます（つなぐには、はじめに「つないではじめる」を選ぶか、設定の「おうちの人」→「いま控える」）。控えはお使いの Google ドライブに保存し、はなまる工房には送りません。</p>
               <p>つながりは1時間ほどで切れますが、おうちの人が設定を開いたときや「みました」を押したときに、つなぎ直します（Google の画面が出ることがあります）。つなぎ直せないまま記録が変わると、設定の上に「控えが止まっています」と出るので「つなぎ直す」を押してください。</p>
-              <!-- 1つの Google アカウントに 控えは 1つ（文は Words.adult の driveOneAccount。settings.js の renderDrive が 入れる） -->
-              <p><span id="faq-drive-one"></span>やめるときは、設定の「おうちの人」→「つなぐのをやめる」（ドライブの控えは残ります）。</p></details>
+              <!-- 控えは 端末ごとに 1つの ファイル（2026-11-22。文は Words.adult の driveEachDevice・driveMove。settings.js の renderDrive が 入れる） -->
+              <p><span id="faq-drive-each"></span>やめるときは、設定の「おうちの人」→「つなぐのをやめる」（ドライブの控えは残ります）。</p></details>
             <details><summary>機種変更・アプリの入れ直しをしたい</summary>
               <p>設定の「おうちの人」→「データの書き出し・読み込み」で、前もって書き出しておくと、新しい端末で「ファイルから戻す」で元に戻せます。</p></details>
             <details><summary>はじめの設定をやり直したい</summary>
@@ -912,11 +917,24 @@
       <p class="su-note" id="ds-note"></p>
       <p class="ds-more"><button type="button" class="ghost small" id="ds-restore"></button></p>
     </section>
-    <section class="su-step" id="ds-found" hidden>
-      <h2 id="ds-found-text"></h2>
-      <div class="su-cards small">
-        <button type="button" id="ds-use"></button>
-        <button type="button" id="ds-new"><span></span><small></small></button>
+    <!-- 控えの 一覧から 選ぶ（2026-11-22 案 A。入口と 設定の「ほかの控えから戻す」）。カードは drive-start.js が 作る -->
+    <section class="su-step" id="ds-pick" hidden>
+      <h2 id="ds-pick-title"></h2>
+      <p class="ds-lead" id="ds-pick-lead"></p>
+      <div class="ds-list" id="ds-list"></div>
+      <button type="button" class="ds-new" id="ds-new"><b></b><small></small></button>
+      <p class="ds-more"><button type="button" class="ghost small" id="ds-pick-back"></button></p>
+    </section>
+    <!-- この 端末に 記録が ある ときは、置きかえる 前に 並べて 見せる -->
+    <section class="su-step" id="ds-confirm" hidden>
+      <h2 id="ds-confirm-title"></h2>
+      <div class="ds-box" id="ds-cur"></div>
+      <div class="ds-arrow" aria-hidden="true">↓</div>
+      <div class="ds-box to" id="ds-to"></div>
+      <p class="ds-safe" id="ds-safe"></p>
+      <div class="su-buttons ds-buttons">
+        <button type="button" class="ghost" id="ds-cancel"></button>
+        <button type="button" id="ds-replace"></button>
       </div>
     </section>
     <section class="su-step" id="ds-from" hidden>

@@ -4,7 +4,10 @@
 //   - Google Identity Services の トークンモデル（https://accounts.google.com/gsi/client。設定の「おうちの人」を ひらいた とき・押した とき、
 //     つないで いる 間は 起動した とき・設定を 開いた ときにも 読む）。トークンは メモリだけ（約1時間）。切れたら おうちの人が 押した
 //     ついでに 取りなおす（makeAuto の nudge。設定を 開いた・「みました」）
-//   - 範囲は drive.file だけ（この アプリが 作った ファイルだけ 触れる）。控えは 1つの ファイルに し、次からは 同じ ファイルを 上書き（ドライブに 版の 履歴が のこる）
+//   - 範囲は drive.file だけ（この アプリが 作った ファイルだけ 触れる）。控えは 端末（ブラウザ）ごとに 1つの ファイル（2026-11-22 案 A。0.1.35）。
+//     ブラウザが 自分の ファイルの id を おぼえ（drive:file）、自分の ファイルだけを 書きかえる（ドライブに 版の 履歴が のこる）。
+//     ほかの 端末の ファイルは 上書きしない。ファイルには 中身の 目印（appProperties: 端末の 名前・子どもの 名前と 人数・記録の 日数・
+//     いちばん 古い 日）を 付け、一覧は 目印だけで 出す（目印の ない 前の 版の ファイルは 中身を 読んで 数える）
 //   - データは その人の ドライブと この ブラウザの あいだだけ。はなまる工房の サーバーには 送らない
 //   画面は settings.js（「おうちの人」の 控える・戻す）。中身は datafile.js（書き出しと 同じ）。fetch と gsi は 差し替えられる（tools/dev/test-drive.mjs）
 (function () {
@@ -17,13 +20,17 @@
   var NAME = "はなまるボードの控え.json";
   // アプリが 作った 控えの しるし（名前を かえられても 見つける）
   var MARK_KEY = "hanamaru", MARK_VALUE = "backup";
-  // この ブラウザで 最後に 控えた 日時（ISO）。ブラウザが 記録を 消すと これも 消える
+  // この ブラウザで 最後に 控えた 日時（ISO。自分の ファイルの ドライブの 更新日時）。ブラウザが 記録を 消すと これも 消える
   var LAST_KEY = "drive:last";
   var STALE_DAYS = 7;
   // つないで いる 印（"1"）。トークンは メモリだけ（2026-11-21 社長。ストレージに 置かない）なので、読みなおすと「切れた」に なる
   var LINK_KEY = "drive:link";
-  // 「新しく 始める」を 選んだ 印（"1"）。つぎの 控えは 前の 控えを 残して 別の ファイルに 作る
-  var FRESH_KEY = "drive:fresh";
+  // この ブラウザの 控えの ファイルの id（2026-11-22。なければ 次の 控えで 作って おぼえる）。前の 版の「drive:fresh」は もう 読まない
+  var FILE_KEY = "drive:file";
+  // この ブラウザの 控えの 中身（最後に 控えた ときの 人数・日数。設定に 出す）{ kn, days }
+  var SUM_KEY = "drive:sum";
+  // appProperties の 1組（キー＋値）の 上限（UTF-8 の バイト）。Google の 決まり
+  var PROP_BYTES = 124;
   // つないだ Google アカウント（メールアドレス）。Google の 窓に 伝えて、アカウントを 選ぶ 画面を 出さない（2026-11-22。
   //   iPad に 2人ぶんの アカウントが あると 毎回 選ばされた）。この ブラウザの 中だけ。控えの ファイルには 入れない
   var WHO_KEY = "drive:who";
@@ -40,9 +47,69 @@
     return e;
   }
 
-  // o: { clientId, fetch(url, init), loadGsi() → Promise<google>, storage: { get(k), set(k, v) }, now() → ミリ秒 }
+  // ---- 中身の 目印（appProperties。2026-11-22）----
+  // 端末の 名前を UA から（「iPad・Safari」「Android・Chrome」「Windows・Edge」）。o: { touch: 指の 数（iPad は Mac の UA で 来る）, standalone: ホーム画面の アプリ }
+  function deviceName(ua, o) {
+    ua = String(ua || "");
+    o = o || {};
+    var os = /iPad/.test(ua) || (/Macintosh/.test(ua) && o.touch > 1) ? "iPad"
+      : /iPhone|iPod/.test(ua) ? "iPhone"
+      : /Android/.test(ua) ? "Android"
+      : /CrOS/.test(ua) ? "Chromebook"
+      : /Windows/.test(ua) ? "Windows"
+      : /Macintosh|Mac OS X/.test(ua) ? "Mac"
+      : /Linux/.test(ua) ? "Linux" : "";
+    var br = o.standalone ? "ホーム画面のアプリ"
+      : /Edg(A|iOS)?\//.test(ua) ? "Edge"
+      : /SamsungBrowser\//.test(ua) ? "Samsung Internet"
+      : /OPR\/|OPiOS\//.test(ua) ? "Opera"
+      : /Firefox\/|FxiOS\//.test(ua) ? "Firefox"
+      : /Chrome\/|CriOS\//.test(ua) ? "Chrome"
+      : /Safari\//.test(ua) ? "Safari" : "";
+    return [os, br].filter(Boolean).join("・") || "ブラウザ";
+  }
+  // UTF-8 の バイト数
+  function bytes(s) { return encodeURIComponent(s).replace(/%[0-9A-F]{2}/gi, "x").length; }
+  // 1組が 上限に おさまる ように 値を 切る（切ったら …）
+  function cut(key, value) {
+    value = String(value == null ? "" : value);
+    if (bytes(key) + bytes(value) <= PROP_BYTES) return value;
+    var ch = Array.from(value);
+    while (ch.length && bytes(key) + bytes(ch.join("") + "…") > PROP_BYTES) ch.pop();
+    return ch.join("") + "…";
+  }
+  // データ（書き出しと 同じ 形）の 中身の まとめ { kids: 名前を「・」で, kn: 人数, days: 記録の 日数, from: いちばん 古い 日 }
+  function summary(d) {
+    var kids = d && Array.isArray(d.kids) ? d.kids : [];
+    var keys = Object.keys((d && d.days && typeof d.days === "object" && d.days) || {}).filter(function (k) { return /^\d{4}-\d\d-\d\d$/.test(k); }).sort();
+    return {
+      kids: kids.map(function (k) { return String((k && k.name) || "").trim(); }).filter(Boolean).join("・"),
+      kn: kids.length, days: keys.length, from: keys[0] || "",
+    };
+  }
+  // ファイルに 付ける 目印（しるし ＋ 端末の 名前 ＋ まとめ）。名前が 長ければ 切る
+  function props(sum, dev) {
+    var p = {};
+    p[MARK_KEY] = MARK_VALUE;
+    p.dev = cut("dev", dev || "");
+    if (sum) {
+      p.kids = cut("kids", sum.kids);
+      p.kn = String(sum.kn);
+      p.days = String(sum.days);
+      p.from = sum.from;
+    }
+    return p;
+  }
+  // 目印から まとめを 読む（目印の ない 前の 版の ファイルは null）
+  function fromProps(p) {
+    if (!p || p.days === undefined || p.kn === undefined) return null;
+    return { dev: p.dev || "", kids: p.kids || "", kn: Number(p.kn) || 0, days: Number(p.days) || 0, from: p.from || "" };
+  }
+
+  // o: { clientId, fetch(url, init), loadGsi() → Promise<google>, storage: { get(k), set(k, v) }, now() → ミリ秒, device: 端末の 名前 }
   function make(o) {
     var now = o.now || function () { return Date.now(); };
+    var dev = o.device || "";
     var store = o.storage || { get: function () { return null; }, set: function () {} };
     var tok = null;          // { value, exp }
     var client = null, gsi = null, pending = null;
@@ -153,55 +220,123 @@
       });
     }
 
-    // アプリが 作った 控えの うち いちばん 新しい もの { id, at（ドライブの 更新日時 ISO） }。なければ null
-    function latest(silent) {
-      var q = "appProperties has { key='" + MARK_KEY + "' and value='" + MARK_VALUE + "' } and trashed = false";
-      var url = FILES + "?q=" + encodeURIComponent(q) + "&spaces=drive&orderBy=" + encodeURIComponent("modifiedTime desc") +
-        "&pageSize=10&fields=" + encodeURIComponent("files(id,modifiedTime)");
-      return call("GET", url, undefined, undefined, false, silent).then(function (r) { return r.json(); }).then(function (j) {
-        var f = ((j && j.files) || [])[0];
-        return f ? { id: f.id, at: f.modifiedTime } : null;
-      });
+    // この ブラウザの 控えの ファイルの id（まだ なら ""）
+    function mine() { return store.get(FILE_KEY) || ""; }
+    // この ブラウザの 控えの 中身（最後に 控えた ときの { kn, days }。まだ なら null）
+    function mineSum() {
+      try { var s = JSON.parse(store.get(SUM_KEY) || "null"); return s && typeof s === "object" ? s : null; } catch (e) { return null; }
     }
 
-    // 控える。text は 書き出しと 同じ 中身（datafile.js の text）。良い 控えを 古い・空の 内容で 消さないために:
-    //   ① この ブラウザで まだ 控えて いない（記録が 消えた あとかも しれない）のに ドライブに 控えが ある（"ask"）
-    //   ② ドライブの 控えが この ブラウザで 最後に 控えた より 新しい（ほかの 端末が 後から 控えた。"other"）
-    //   ときは opts.replace(控え, なぜ) に 聞いて から 上書きする（false なら 何も しないで null）。
-    //   opts.auto（自動）は 聞かずに 止めて { held: "ask"|"other", file } を かえす。窓も 開かない。
-    //   opts.force は 聞かずに 上書き（設定の「この内容で上書き」）。「新しく 始める」の あとは 前の 控えを 残して 別の ファイルを 作る
+    // アプリが 作った 控えの 一覧（ごみ箱は 見ない）。[{ id, at（ドライブの 更新日時 ISO）, mine（この 端末の）, dev, kids, kn, days, from, old }]。
+    //   この 端末の ものを 先に、ほかは 新しい 順。中身は 目印（appProperties）だけで 出し、目印の ない 前の 版の ファイル（old）は
+    //   中身を 読んで 数える（端末の 名前は 分からない ""）。こわれて 読めない ファイルは 出さない（ドライブには 残る）
+    function list() {
+      var q = "appProperties has { key='" + MARK_KEY + "' and value='" + MARK_VALUE + "' } and trashed = false";
+      var url = FILES + "?q=" + encodeURIComponent(q) + "&spaces=drive&orderBy=" + encodeURIComponent("modifiedTime desc") +
+        "&pageSize=100&fields=" + encodeURIComponent("files(id,modifiedTime,appProperties)");
+      return call("GET", url).then(function (r) { return r.json(); }).then(function (j) {
+        var me = mine();
+        return Promise.all(((j && j.files) || []).map(function (f) {
+          var e = { id: f.id, at: f.modifiedTime, mine: !!me && f.id === me, old: false };
+          var s = fromProps(f.appProperties);
+          if (s) return assign(e, s);
+          return read(f.id).then(function (d) {
+            return assign(assign(e, summary(d)), { dev: "", old: true });
+          }, function (err) {
+            if (err && err.code === "broken") return null;
+            throw err;
+          });
+        }));
+      }).then(function (a) {
+        return a.filter(Boolean).sort(function (x, y) {
+          return x.mine !== y.mine ? (x.mine ? -1 : 1) : Date.parse(y.at) - Date.parse(x.at);
+        });
+      });
+    }
+    function assign(a, b) { for (var k in b) if (Object.prototype.hasOwnProperty.call(b, k)) a[k] = b[k]; return a; }
+
+    // 控える。text は 書き出しと 同じ 中身（datafile.js の text）。この ブラウザの ファイル（drive:file）だけを 書きかえる。
+    //   なければ（はじめて・ごみ箱に 入った・消された）新しく 作って おぼえる。ほかの 端末の ファイルは 書きかえない。
+    //   自分の ファイルが 自分の 知らない 時刻に 書きかえられて いた（ドライブの 更新日時 > drive:last）ときは:
+    //     opts.auto（自動）は 止めて { held: "other", file } を かえす（窓も 開かない）。
+    //     手で 控える ときは、書きかえた 内容を 残して 別の ファイルを 作り、そちらを おぼえる。
+    //   opts.apart: 別の ファイルを 作り、おぼえない（「このデータを使う」で この 端末の 控えを 選んだ ときに、いまの 内容を 残す）
     function backup(text, opts) {
       opts = opts || {};
-      var auto = !!opts.auto, fresh = !!opts.fresh || store.get(FRESH_KEY) === "1";
-      return latest(auto).then(function (f) {
-        if (fresh) return null;
-        if (!f || opts.force) return f;
-        var mine = last(), why = !mine ? "ask" : Date.parse(f.at) > Date.parse(mine) ? "other" : "";
-        if (!why) return f;
-        if (auto) return { held: why, file: f };
-        if (typeof opts.replace !== "function") return f;
-        return Promise.resolve(opts.replace(f, why)).then(function (yes) { return yes ? f : false; });
-      }).then(function (f) {
-        if (f === false) return null;
-        if (f && f.held) return f;
-        var put = f
-          ? call("PATCH", UPLOAD + "/" + encodeURIComponent(f.id) + "?uploadType=media&fields=" + encodeURIComponent("id,modifiedTime"), text, "application/json", false, auto)
-          : create(text, auto);
+      var auto = !!opts.auto, id = opts.apart ? "" : mine();
+      var sum = null;
+      try { sum = summary(JSON.parse(text)); } catch (e) { /* 目印なしで 控える */ }
+      var meta = props(sum, dev);
+      var look = !id ? Promise.resolve(null) :
+        call("GET", FILES + "/" + encodeURIComponent(id) + "?fields=" + encodeURIComponent("id,modifiedTime,trashed"), undefined, undefined, false, auto)
+          .then(function (r) { return r.json(); }, function (e) { if (e && e.status === 404) return null; throw e; });
+      return look.then(function (f) {
+        if (f && f.trashed) f = null;
+        if (f) {
+          var me = last();
+          if (me && Date.parse(f.modifiedTime) > Date.parse(me)) {
+            if (auto) return { held: "other", file: { id: f.id, at: f.modifiedTime } };
+            f = null;
+          }
+        }
+        var put = f ? send("PATCH", UPLOAD + "/" + encodeURIComponent(f.id), { appProperties: meta }, text, auto)
+          : send("POST", UPLOAD, { name: NAME, mimeType: "application/json", appProperties: meta }, text, auto);
         return put.then(function (r) { return r.json(); }).then(function (j) {
           var at = (j && j.modifiedTime) || new Date(now()).toISOString();
-          store.set(LAST_KEY, at);
-          if (fresh) store.set(FRESH_KEY, "");
+          if (!opts.apart) {
+            store.set(FILE_KEY, (j && j.id) || "");
+            store.set(LAST_KEY, at);
+            store.set(SUM_KEY, sum ? JSON.stringify({ kn: sum.kn, days: sum.days }) : "");
+          }
           return { id: j && j.id, at: at, created: !f };
         });
       });
     }
-    function create(text, silent) {
+    // 中身と 目印を いっしょに 送る（作る: POST・書きかえる: PATCH。どちらも multipart）
+    function send(method, url, meta, text, silent) {
       var b = "hanamaru-" + now().toString(36) + Math.random().toString(36).slice(2);
-      var meta = { name: NAME, mimeType: "application/json", appProperties: {} };
-      meta.appProperties[MARK_KEY] = MARK_VALUE;
       var body = "--" + b + "\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n" + JSON.stringify(meta) +
         "\r\n--" + b + "\r\nContent-Type: application/json\r\n\r\n" + text + "\r\n--" + b + "--";
-      return call("POST", UPLOAD + "?uploadType=multipart&fields=" + encodeURIComponent("id,modifiedTime"), body, "multipart/related; boundary=" + b, false, silent);
+      return call(method, url + "?uploadType=multipart&fields=" + encodeURIComponent("id,modifiedTime"), body, "multipart/related; boundary=" + b, false, silent);
+    }
+
+    // 一覧で 選んだ 控えの データを 使う（2026-11-22 案 A。どの 操作でも データを 消さない）。
+    //   sel: list() の 1つ。h: { text() → Promise<いまの 書き出しの 中身>, hasRecords: この 端末に 記録が ある, dirty: まだ 控えて いない 変更が ある,
+    //     apply(data) → Promise<読みこんだら true> }
+    //   ① 選んだ 控えを 読む ② この 端末に 記録が あれば、先に この 端末の ファイルに 控える（選んだのが この 端末の 控えで、
+    //   控えて いない 変更が あれば、別の ファイルに 残す）。控えられなければ 読みこまない（code を もった Error、e.kept = false）
+    //   ③ 読みこむ ④ ほかの 端末の 控えを 使ったら、おぼえた id を 外す（外さないと 次の 控えで 置きかえる 前の 控えを 上書きする。
+    //   次の 控えは 新しい ファイル）。この 端末の 控えを 使ったら、その 控えを 最後に 控えた ものに する
+    function useFile(sel, h) {
+      var own = !!sel && sel.id === mine();
+      var data;
+      return read(sel.id).then(function (d) {
+        data = d;
+        if (!h.hasRecords || (own && !h.dirty)) return null;
+        return Promise.resolve().then(h.text).then(function (text) {
+          return backup(text, own ? { apart: true } : {});
+        }).catch(function (e) {
+          var x = e && e.code ? e : fail("http");
+          x.kept = false;
+          throw x;
+        });
+      }).then(function (kept) {
+        return Promise.resolve(h.apply(data)).then(function (ok) {
+          if (!ok) return null;
+          if (own) {
+            store.set(LAST_KEY, sel.at);
+            var s = summary(data);
+            store.set(SUM_KEY, JSON.stringify({ kn: s.kn, days: s.days }));
+          } else detach();
+          return { kept: kept };
+        });
+      });
+    }
+    // この ブラウザの 控えの ファイルを 外す（ファイルは ドライブに 残る。次の 控えは 新しい ファイル）
+    function detach() {
+      store.set(FILE_KEY, "");
+      store.set(LAST_KEY, "");
+      store.set(SUM_KEY, "");
     }
 
     // 控えの 中身（はなまるボードの データ）。戻すのは 画面（datafile.js の apply → /api/parent/import）
@@ -228,13 +363,6 @@
     // つないで いるか（つないで はじめた・控えた・戻した）。トークンが 切れても つないだ まま（「つなぎ直す」を 出す）
     function linked() { return store.get(LINK_KEY) === "1"; }
     function setLinked(v) { store.set(LINK_KEY, v ? "1" : ""); }
-    // ドライブの 控えを 戻した あと: その 控えの 日時を「最後に 控えた」に する（つぎの 自動の 控えが 止まらない ように）
-    function adopt(at) {
-      if (at && !isNaN(Date.parse(at))) store.set(LAST_KEY, at);
-      store.set(FRESH_KEY, "");
-    }
-    // 「新しく 始める」: 前の 控えは 消さず、つぎの 控えを 別の ファイルに
-    function startFresh() { store.set(FRESH_KEY, "1"); }
     // つなぐのを やめる: Google の 許可を 取り消して（できれば）、印を 消す。控えの ファイルは ドライブに 残る
     function unlink() {
       var t = tok && tok.value;
@@ -247,15 +375,17 @@
     // トークンを 忘れる（確かめの 道具で「切れた」形を 作る）
     function forget() { tok = null; }
 
-    return { prepare: prepare, token: token, tokenNow: tokenNow, ready: ready, latest: latest, backup: backup, read: read, last: last, stale: stale,
-      linked: linked, setLinked: setLinked, account: account, adopt: adopt, startFresh: startFresh, unlink: unlink, forget: forget };
+    return { prepare: prepare, token: token, tokenNow: tokenNow, ready: ready, list: list, backup: backup, read: read, useFile: useFile, detach: detach,
+      mine: mine, mineSum: mineSum, device: function () { return dev; }, last: last, stale: stale,
+      linked: linked, setLinked: setLinked, account: account, unlink: unlink, forget: forget };
   }
 
   // ---- 自動で 控える（つないで いる 間。2026-11-21 社長）----
   //   o: { client() → make の 組, text() → Promise<書き出しの 中身>, hasRecords() → bool, storage, now(), timer: { set(fn, ms), clear(id) } }
   //   changed()（保存の たび）→ 最後の 変更から 20秒 静かに なったら 1回。続く ときは 最初の 変更から 2分で 1回（秒数は 推測。実物で 調整）。
   //   窓は 開かない（token silent）。トークンが なければ「expired」で 待つ（設定の「つなぎ直す」）。
-  //   status: "" | "expired" | "held-ask" | "held-other" | "full" | "offline" | "busy"（held と full は 押して もらう まで 止める）
+  //   status: "" | "expired" | "held-other" | "full" | "offline" | "busy"（held と full は 押して もらう まで 止める）。
+  //   held-other は この 端末の ファイルが 自分の 知らない 時刻に 書きかえられた ときだけ（2026-11-22。前の 版の held-ask は 読んだら 外す）
   //   押した ついでの 取りなおし（nudge）は 同じ 窓を 何度も 出さない ように 3分 あける（推測。実物で 調整）
   var QUIET = 20000, MAX_WAIT = 120000, BUSY_WAIT = [60000, 300000, 900000], NUDGE_GAP = 180000;
   var DIRTY_KEY = "drive:dirty", HELD_KEY = "drive:held";
@@ -265,6 +395,8 @@
     var timer = o.timer || { set: function (f, ms) { return setTimeout(f, ms); }, clear: function (id) { clearTimeout(id); } };
     var waiting = null, running = false, again = false, busyN = 0, heldAt = "";
     var status = store.get(HELD_KEY) || "", subs = [];
+    // 前の 版（〜0.1.34）の「まだ 控えて いない 端末で 控えが ある」止め。いまは 端末ごとの ファイルに 作るので 止めない
+    if (status === "held-ask") { status = ""; store.set(HELD_KEY, ""); }
 
     function stopped() { return /^(held-|full)/.test(status); }
     function dirtySince() { var v = Number(store.get(DIRTY_KEY)); return v > 0 ? v : 0; }
@@ -430,17 +562,28 @@
     set: function (k, v) { try { localStorage.setItem(k, v); } catch (e) { /* おぼえられなくても 控えは できて いる */ } },
   };
   var current = null, auto = null;
+  // この ブラウザの 名前（控えの 目印。iPad の Safari は Mac の UA で 来るので 指の 数で 見分ける）
+  function here() {
+    var n = window.navigator || {}, standalone = false;
+    try { standalone = n.standalone === true || (!!window.matchMedia && window.matchMedia("(display-mode: standalone)").matches); } catch (e) { /* 分からなければ ふつうの ブラウザ */ }
+    return deviceName(n.userAgent, { touch: n.maxTouchPoints || 0, standalone: standalone });
+  }
 
   window.Drive = {
     SCOPE: SCOPE,
     NAME: NAME,
     STALE_DAYS: STALE_DAYS,
+    PROP_BYTES: PROP_BYTES,
     make: make,
     makeAuto: makeAuto,
     on: on,
+    deviceName: deviceName,
+    here: here,
+    summary: summary,
+    props: props,
     // 画面が 使う もの（開発の 確かめでは use で 差し替える。tools/dev/drive-on.js）
     client: function () {
-      return current || (current = make({ clientId: clientId(), fetch: function (u, i) { return window.fetch(u, i); }, loadGsi: loadGsi, storage: storage, remember: true }));
+      return current || (current = make({ clientId: clientId(), fetch: function (u, i) { return window.fetch(u, i); }, loadGsi: loadGsi, storage: storage, remember: true, device: here() }));
     },
     use: function (c) { current = c; },
     notice: notice,   // 確かめの 道具から 形を 見る

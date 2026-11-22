@@ -773,7 +773,7 @@
   function driveHeldText(st) {
     if (st === "full") return AW("driveHeldFull");
     var at = window.Drive.auto().heldAt(), d = at ? driveWhen(at) : "";
-    return AW(st === "held-other" ? "driveHeldOther" : "driveHeldAsk").replace(d ? "{d}" : / ?\{d\} ?/, d);
+    return AW("driveHeldOther").replace(d ? "{d}" : / ?\{d\} ?に?/, d);
   }
   // msg: 結果の 文（"" なら 消す。null なら そのまま）
   function renderDrive(msg) {
@@ -787,23 +787,31 @@
     $("s-drive-title").textContent = AW("driveTitle");
     $("s-drive-save").textContent = AW("driveSave");
     $("s-drive-restore").textContent = AW("driveRestore");
-    $("s-drive-note").textContent = AW("driveNote") + AW("driveOneAccount");
-    $("faq-drive-one").textContent = AW("driveOneAccount");
-    $("s-drive-last").textContent = last ? AW("driveLast").replace("{d}", driveWhen(last)) : AW("driveNever");
+    $("s-drive-note").textContent = AW("driveNote") + AW("driveEachDevice");
+    $("faq-drive-each").textContent = AW("driveEachDevice") + AW("driveMove");
+    // この 端末が どの 控えに つながって いるか（アカウント・端末の 名前・最後に 控えた・中身）。控えが まだ なければ「まだ控えていません」
+    var who = c.account ? c.account() : "", mine = !!c.mine() && !!last, sum = mine ? c.mineSum() : null;
+    $("s-drive-who-k").textContent = AW("driveInfoWho");
+    $("s-drive-who").textContent = who;
+    $("s-drive-who-row").hidden = !who;
+    $("s-drive-dev-k").textContent = AW("driveInfoDev");
+    $("s-drive-dev").textContent = c.device() || window.Drive.here();
+    $("s-drive-at-k").textContent = AW("driveInfoAt");
+    $("s-drive-last").textContent = mine ? driveWhen(last) : AW("driveNever");
+    $("s-drive-sum-k").textContent = AW("driveInfoSum");
+    $("s-drive-sum").textContent = sum ? AW("driveInfoSumText").replace("{k}", sum.kn).replace("{n}", sum.days) : "";
+    $("s-drive-sum-row").hidden = !sum;
     // 7日の 一言は つながずに 手で 控える 人だけ（つないで いる 人には 止まった ときの 帯）
     $("s-drive-stale").textContent = AW("driveStale");
     $("s-drive-stale").hidden = linked || !c.stale();
     // つないで いる 間の 状態。止まって いる ときは 先頭に ボタン（つなぎ直す・この内容で上書き）
     $("s-drive-state").hidden = !linked;
-    var who = c.account ? c.account() : "";
-    $("s-drive-state").textContent = (held ? driveHeldText(st) : reconnect ? AW("driveStopped") : AW("driveLinked")) +
-      (who ? AW("driveWho").replace("{who}", who) : "");
+    $("s-drive-state").textContent = held ? driveHeldText(st) : reconnect ? AW("driveStopped") : AW("driveLinked");
     $("s-drive-state").classList.toggle("warn", held || reconnect);
-    $("s-drive-fix").hidden = !(linked && (held || reconnect));
+    // 止まった ときの ボタンは「つなぎ直す」だけ（held-other は「いま控える」で 別の ファイルに 控える）
+    $("s-drive-fix").hidden = !(linked && reconnect);
     $("s-drive-reconnect").textContent = AW("driveReconnect");
     $("s-drive-reconnect").hidden = !reconnect;
-    $("s-drive-overwrite").textContent = AW("driveOverwrite");
-    $("s-drive-overwrite").hidden = !/^held-/.test(st);
     $("s-drive-unlink").textContent = AW("driveUnlink");
     $("s-drive-unlink").hidden = !linked;
     // 設定の タブの 上の 細い 帯（つないで いる・切れた・控えて いない 変更が ある ときだけ）
@@ -811,7 +819,7 @@
     $("s-drive-band-text").textContent = AW("driveStopped");
     $("s-drive-band-btn").textContent = AW("driveReconnect");
     $("s-drive-save").disabled = $("s-drive-restore").disabled = $("s-drive-reconnect").disabled =
-      $("s-drive-overwrite").disabled = $("s-drive-unlink").disabled = $("s-drive-band-btn").disabled = driveBusy;
+      $("s-drive-unlink").disabled = $("s-drive-band-btn").disabled = driveBusy;
     // 止まった ときは 前の「控えました」を 残さない（「止まって います」と 食い違って 見える）
     if (msg === null && (held || reconnect)) msg = "";
     if (msg !== null) $("s-drive-result").textContent = msg || "";
@@ -834,8 +842,9 @@
     var c = window.Drive.client();
     driveRun(AW("driveSaving"), function () {
       // 先に Google の 許可（押した すぐ あとで ないと Safari が 画面を 止める）
+      // この 端末の ファイルだけを 書きかえる（ほかの 端末の 控えは 上書きしない。drive.js の backup）
       return c.token().then(function () { return window.DataFile.text(); }).then(function (f) {
-        return c.backup(f.text, { replace: function (old) { return confirm(AW("driveReplace").replace("{d}", driveWhen(old.at))); } });
+        return c.backup(f.text);
       }).then(function (r) {
         if (!r) return null;
         // 手で 控えたら つないだ ことに する（つぎからは 自動で 控える）
@@ -846,21 +855,17 @@
       });
     });
   });
+  // ほかの 控えから 戻す: 一覧（drive-start.js の pick。見本の ①）→ 選ぶ → この 端末に 記録が あれば 並べて 確かめ（②）→
+  //   先に この 端末の データを 控えて から 読みこむ（drive.js の useFile）
   $("s-drive-restore").addEventListener("click", function () {
     var c = window.Drive.client();
     driveRun(AW("driveFinding"), function () {
-      return c.token().then(function () { c.setLinked(true); return c.latest(); }).then(function (f) {
-        if (!f) return AW("driveNone");
-        return c.read(f.id).then(function (data) {
-          return window.DataFile.apply(data, AW("driveFrom").replace("{d}", driveWhen(f.at)));
-        }).then(function (done) {
-          if (!done) return null;
-          // 戻した 控えを「最後に 控えた」に して、自動の 控えが 止まらない ように
-          c.adopt(f.at);
-          window.Drive.auto().clearHeld();
-          window.Drive.auto().clearDirty();
-          return new Promise(function (resolve) { afterRestore(function () { resolve(AW("driveRestored")); }); });
+      return c.token().then(function () { c.setLinked(true); return c.list(); }).then(function (list) {
+        if (!list.length) return AW("driveNone");
+        window.DriveStart.pick(list, function (text) {
+          afterRestore(function () { renderDrive(text); renderLockHint(); });
         });
+        return "";
       });
     });
   });
@@ -875,20 +880,6 @@
   }
   $("s-drive-reconnect").addEventListener("click", driveReconnect);
   $("s-drive-band-btn").addEventListener("click", driveReconnect);
-  // 止まって いる とき（前の 控え・ほかの 端末の 控えが ある）: この 内容で 上書き
-  $("s-drive-overwrite").addEventListener("click", function () {
-    var c = window.Drive.client();
-    if (!confirm(AW("driveOverwriteAsk"))) return;
-    driveRun(AW("driveSaving"), function () {
-      return c.token().then(function () { return window.DataFile.text(); }).then(function (f) {
-        return c.backup(f.text, { force: true });
-      }).then(function () {
-        window.Drive.auto().clearHeld();
-        window.Drive.auto().clearDirty();
-        return AW("driveSaved");
-      });
-    });
-  });
   // つなぐのを やめる（ドライブの 控えは 残る。7日の 一言に もどる）
   $("s-drive-unlink").addEventListener("click", function () {
     if (driveBusy || !confirm(AW("driveUnlinkAsk"))) return;

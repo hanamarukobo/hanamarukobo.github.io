@@ -40,7 +40,10 @@
       reader.onload = function () {
         var data;
         try { data = JSON.parse(reader.result); } catch (e) { return reject(new Error("ファイルを読めませんでした")); }
-        apply(data, "").then(resolve, reject);
+        apply(data, "").then(function (done) {
+          if (done) detachDrive();
+          resolve(done);
+        }, reject);
       };
       reader.onerror = function () { reject(new Error("ファイルを読めませんでした")); };
       reader.readAsText(file);
@@ -57,6 +60,15 @@
     return window.BoardApi.post("/api/parent/import", { data: data }).then(function () { return true; }, function (err) {
       throw new Error("戻せませんでした: " + (err && err.message || ""));
     });
+  }
+
+  // ブラウザ版で Google ドライブの 控えが ある ときは、ファイルで 置きかえた あと この 端末の 控えの ファイルを 外す
+  //   （前の 内容の 控えを 次の 控えで 上書きしない。次の 控えは 新しい ファイル。2026-11-22 案 A。がんばり管理の iframe からは 親の Drive）
+  function detachDrive() {
+    try {
+      var D = window.Drive || (window.parent && window.parent !== window ? window.parent.Drive : null);
+      if (D && D.on() && D.client().mine()) D.client().detach();
+    } catch (e) { /* 外せなくても 読みこみは できて いる */ }
   }
 
   window.DataFile = { save: save, load: load, text: text, apply: apply };
