@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>はなまるボード</title>
 <meta name="color-scheme" content="light">
-<meta name="description" content="はなまるボード。スマホひとつで試せて、余ったタブレットなら家族みんなで。子どもが自分でできるように。iPhone・iPad はブラウザで、Android はアプリのテストで試せます。">
+<meta name="description" content="はなまるボード。余ったタブレットを、子どもが毎朝見るボードに。子どもが自分でできるように。Android はアプリのテスト版（おすすめ）、iPhone・iPad・PC はブラウザ版で使えます。">
 <link rel="icon" href="img/icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700&display=swap" rel="stylesheet">
@@ -37,7 +37,9 @@ h2.sec{display:inline-block;position:relative;z-index:0}
 .who{margin:0;color:var(--muted);font-size:.9em;font-weight:700}
 .btn{display:inline-block;background:var(--btn);color:#fff;text-decoration:none;font-weight:700;padding:11px 26px;border-radius:999px;margin-top:8px;box-shadow:0 4px 0 var(--btn-s);transition:transform .1s,box-shadow .1s}
 .btn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--btn-s)}
-.start .btn{align-self:flex-start}
+.start .btn,.way .btn{align-self:flex-start}
+.btn.sub{background:#fff;color:var(--btn);border:2px solid var(--btn);box-shadow:none;padding:9px 24px}
+.btn.sub:active{transform:none}
 .tag{display:inline-block;font-family:"Zen Maru Gothic",sans-serif;font-size:.62em;font-weight:700;color:var(--accent-d);background:#fff;border:2px solid var(--accent);border-radius:999px;padding:0 9px;margin-left:8px;vertical-align:3px;line-height:1.6}
 .start details{margin-top:10px;font-size:.92em}
 .start summary{cursor:pointer;color:var(--muted)}
@@ -105,8 +107,8 @@ footer{background:linear-gradient(135deg,#fdf0cf,#fce6d2)}
       <img class="logo" src="img/icon.png" alt="">
       <h1>はなまるボード</h1>
       <p class="copy">今日がわかる。自分でできる。</p>
-      <p class="easy">スマホひとつで、いますぐ試せます</p>
-      <p class="lead">子どもが毎朝見るボードのアプリです。まずはスマホのブラウザで気軽に。気に入ったら、余ったタブレットをリビングに置くと、家族みんなで見られます。時計・天気・予定と、子どもごとのやることを1つの画面に出します。子どもができたやることを自分で押して はなまるにし、おうちの人が「みました」を押すと、カレンダーにもはなまるがつきます。</p>
+      <p class="easy">Android アプリのテスト版、参加者を募集しています</p>
+      <p class="lead">子どもが毎朝見るボードのアプリです。余ったタブレットをリビングに置くと、家族みんなで見られます。時計・天気・予定と、子どもごとのやることを1つの画面に出します。子どもができたやることを自分で押して はなまるにし、おうちの人が「みました」を押すと、カレンダーにもはなまるがつきます。iPhone・iPad・PC の方は、ブラウザ版で試せます。</p>
     </div>
     <div class="hero-art"><img src="img/hero.webp" alt="" width="917" height="849"></div>
   </header>
@@ -114,10 +116,17 @@ footer{background:linear-gradient(135deg,#fdf0cf,#fce6d2)}
   <!-- はじめる: 端末で分ける。製品版の公開時に、Android の欄を Google Play のボタンに差し替える -->
   <div class="start">
     <section class="ask">
-      <p class="who">スマホ・iPad・PC</p>
-      <h2>ブラウザで試す<span class="tag">試験中</span></h2>
-      <p>アプリのインストールは不要です。記録はその端末のブラウザと、お使いの Google ドライブ（つないだときだけ）に保存します。費用はかかりません。ドライブとのつながりは仕組み上1時間ほどで切れるため、設定を開いたときなどに Google の画面が一瞬出ます。</p>
-      <a class="btn" href="board/">ブラウザではじめる</a>
+      <p class="who">Android のタブレット・スマホ</p>
+      <h2>Android アプリ（テスト版）<span class="tag">おすすめ</span></h2>
+      <p>いちばんおすすめの使い方です。Google Play で公開する前のテスト版なので、参加の手続きが少しあります（費用はかかりません）。</p>
+      <p>おうちの人のスマホからつないで「みました」を押す・毎日のお知らせ・Google カレンダーを選ぶだけで予定を出す・決まった時間に画面をつける、はアプリだけの機能です。新しい機能もアプリから入ります。</p>
+      <a class="btn" href="join.html">テスト版に参加する方法</a>
+    </section>
+    <section class="ask">
+      <p class="who">iPhone・iPad・PC</p>
+      <h2>ブラウザ版</h2>
+      <p>インストールせずに、まず見てみたい方へ。記録はその端末のブラウザと、お使いの Google ドライブ（つないだときだけ）に保存します。費用はかかりません。1台で使う形で、アプリだけの機能はありません。ドライブとのつながりは仕組み上1時間ほどで切れるため、設定を開いたときなどに Google の画面が一瞬出ます。</p>
+      <a class="btn sub" href="board/">ブラウザではじめる</a>
       <details>
         <summary>記録を守るため、iPhone・iPad は「ホーム画面に追加」してください</summary>
         <p>Safari のまましばらく開かないと、記録が消えることがあります。ホーム画面に追加して、そこから開いてください。</p>
@@ -128,12 +137,6 @@ footer{background:linear-gradient(135deg,#fdf0cf,#fce6d2)}
         </ol>
       </details>
     </section>
-    <section class="ask">
-      <p class="who">Android のスマホ・タブレット</p>
-      <h2>アプリのテストに参加<span class="tag">テスト中</span></h2>
-      <p>Google Play で公開する前のテストです。決まった時間に画面をつける・毎日のお知らせなど、アプリだけの機能もあります（費用はかかりません）。</p>
-      <a class="btn" href="join.html">テストに参加する方法</a>
-    </section>
   </div>
 
   <h2 class="sec">データの安心</h2>
@@ -143,7 +146,7 @@ footer{background:linear-gradient(135deg,#fdf0cf,#fce6d2)}
       <li><b>アカウント登録はいりません。</b>名前やメールアドレスを運営者に送ることはありません。</li>
       <li><b>アプリ・ブラウザ版とも、記録はその端末の中に保存します。</b>運営者が見たり集めたりすることはできません。</li>
       <li><b>2台で使うときも、家の Wi-Fi の中だけでつながります。</b>つなぐときは番号で確かめます。</li>
-      <li><b>ブラウザ版の Google ドライブへの控え（準備中）は、あなた自身のドライブに置きます。</b>はなまるボードが作ったファイルだけを扱い、ほかのファイルは見ません。運営者には届きません。</li>
+      <li><b>ブラウザ版の Google ドライブへの控えは、あなた自身のドライブに置きます。</b>はなまるボードが作ったファイルだけを扱い、ほかのファイルは見ません。運営者には届きません。</li>
       <li>広告はありません。</li>
     </ul>
     <p class="safe-more"><a href="privacy.html">くわしくはプライバシーポリシー</a></p>
@@ -169,16 +172,6 @@ footer{background:linear-gradient(135deg,#fdf0cf,#fce6d2)}
   <h2 class="sec">はじめ方で、使い方が変わります</h2>
   <div class="ways">
     <section class="way">
-      <h3><span class="who">スマホ・iPad・PC</span>ブラウザではじめた場合</h3>
-      <figure class="way-pic"><img src="img/site-browser.webp" alt="子ども2人が、1台のタブレットを押している" loading="lazy"></figure>
-      <ul>
-        <li><b>1台で使います。</b>記録はその端末のブラウザの中にあります。</li>
-        <li>ほかの端末からは見られません。「みました」もその端末で押します。</li>
-        <li>画面は自分で開きます。お知らせ（通知）はありません。</li>
-        <li>端末を替えるときは、設定の「おうちの人」→「データの書き出し・読み込み」で移せます（Google ドライブに控える機能を準備中です）。</li>
-      </ul>
-    </section>
-    <section class="way">
       <h3><span class="who">Android のタブレット・スマホ</span>Android アプリではじめた場合</h3>
       <figure class="way-pic"><img src="img/site-android.webp" alt="置いたタブレットを子どもが押し、おうちの人はソファのスマホからつないでいる" loading="lazy"></figure>
       <ul>
@@ -187,6 +180,18 @@ footer{background:linear-gradient(135deg,#fdf0cf,#fce6d2)}
         <li>決まった時間に画面をつける・ボードを自動で開く・毎日のお知らせができます。</li>
         <li>端末を替えるときは、設定の「おうちの人」→「データの書き出し・読み込み」で移せます。</li>
       </ul>
+      <a class="btn" href="join.html">テスト版に参加する方法</a>
+    </section>
+    <section class="way">
+      <h3><span class="who">iPhone・iPad・PC</span>ブラウザではじめた場合</h3>
+      <figure class="way-pic"><img src="img/site-browser.webp" alt="子ども2人が、1台のタブレットを押している" loading="lazy"></figure>
+      <ul>
+        <li><b>1台で使います。</b>記録はその端末のブラウザの中にあります。</li>
+        <li>ほかの端末からは見られません。「みました」もその端末で押します。</li>
+        <li>画面は自分で開きます。お知らせ（通知）はありません。</li>
+        <li>端末を替えるときは、設定の「おうちの人」から Google ドライブに控えておくと、ほかの端末で戻せます（「データの書き出し・読み込み」でも移せます）。</li>
+      </ul>
+      <a class="btn sub" href="board/">ブラウザではじめる</a>
     </section>
   </div>
   <p class="note">iOS のアプリは検討中です。</p>
