@@ -43,6 +43,7 @@
     var scale = Math.min(w / bw, h / bh);
     document.documentElement.style.setProperty("--bw", bw + "px");
     document.documentElement.style.setProperty("--bh", bh + "px");
+    document.documentElement.style.setProperty("--fit", String(scale));
     document.body.classList.toggle("portrait", portrait);
     // スマホの 形（2026-11-21。docs/handover/phone-home.md）: 縦に 長い（tall）・横に 長い（wide）ときは ホームの 並びを かえる。
     //   タブレット・.8（960×480 は 2.0）・.9 は 入らない。ブラウザの 帯で 縦横比が かわるので、スマホと わかって いれば それでも 入れる

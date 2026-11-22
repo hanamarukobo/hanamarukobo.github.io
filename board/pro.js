@@ -199,9 +199,9 @@
 
   // テストの 版（ビルドの -Pro）と 招待コードで 開いた 家で 一言を かえる
   function paint(pro) {
-    $("pro-status").innerHTML = !pro ? "<b>Pro は準備中です。</b>いまお使いの機能は、これからも無料のままお使いいただけます。"
-      : Api.proBuild ? "<b>Pro の機能をお使いいただけます。</b>テストにご協力いただいている方は、正式に公開したあとも Pro のままお使いいただけます。"
-      : "<b>Pro の機能をお使いいただけます。</b>";
+    $("pro-status").innerHTML = !pro ? "<b>はなまるプラスは準備中です。</b>いまお使いの機能は、これからも無料のままお使いいただけます。"
+      : Api.proBuild ? "<b>はなまるプラスの機能をお使いいただけます。</b>テストにご協力いただいている方は、正式に公開したあとも、そのままお使いいただけます。"
+      : "<b>はなまるプラスの機能をお使いいただけます。</b>";
     $("pro-status").classList.toggle("on", pro);
     renderFeatures(pro);
     $("pro-report-group").hidden = !pro;

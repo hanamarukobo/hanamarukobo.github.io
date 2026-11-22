@@ -345,8 +345,8 @@
     proCodeEmpty: "招待コードを入れてください",
     proCodeWrong: "招待コードが違うようです。もう一度確かめてください",
     proCodeFail: "開けませんでした",
-    proCodeDone: "Pro が使えるようになりました",
-    proCodeOn: "Pro をお使いいただけます",
+    proCodeDone: "はなまるプラスが使えるようになりました",
+    proCodeOn: "はなまるプラスをお使いいただけます",
     // おさいふ（wallet.js。鍵の あとの 入力は 大人向け）
     wlInTitle: "お金の記録",
     wlModeIn: "おさいふに入れる",

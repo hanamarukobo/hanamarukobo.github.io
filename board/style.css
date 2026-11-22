@@ -1977,7 +1977,8 @@ body.portrait:not(.no-cal) .kids-card { min-height: 120px; }
 .su-warn { background: #fff1e6; color: #b5541c; border-radius: 12px; padding: 6px 12px; font-size: 14px; line-height: 1.45; margin: 0 0 8px; }
 body.night .su-warn { background: #4a3a2e; color: #ffc9a3; }
 /* かんたん設定は 縮めずに 出す（字を 小さく しない）。せまい 画面では 余白こみで 画面の 幅に おさめる（横スクロールが 出ていた） */
-#setup .su-board { box-sizing: border-box; max-width: calc(100vw - 16px); }
+/*   .su-board には app.js の fit が zoom を かけるので、画面の 幅は 倍率（--fit）で 割って もどす（2026-11-22。割らないと スマホの 縦で 6割の 幅に なった） */
+#setup .su-board { box-sizing: border-box; max-width: calc((100vw - 16px) / var(--fit, 1)); }
 
 /* 予定の 見出しと、よみなおす ↻（めだたせない） */
 .sched-head { display: flex; align-items: center; gap: 6px; min-width: 0; }
@@ -2075,6 +2076,7 @@ body:not(.portrait) .tu-hide { grid-column: 4; grid-row: 1; justify-self: end; w
 .settings .pro-status { margin: 0 0 10px; padding: 10px 14px; border-radius: 14px; background: rgba(127, 127, 127, 0.12); font-size: 16px; line-height: 1.6; }
 .settings .pro-status b { display: block; font-size: 18px; }
 .settings .pro-status.on { background: var(--cream); }
+.settings .pro-grow { margin-left: 8px; font-size: 13px; font-weight: 400; color: var(--muted); }   /* 「いまは拡張中」（ふえると 約束は しない。11-22） */
 .settings .pro-features { list-style: none; margin: 0 0 6px; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
 body.portrait .settings .pro-features { grid-template-columns: minmax(0, 1fr); }
 .settings .pro-features li { display: flex; gap: 10px; align-items: flex-start; border: 2px solid #f0dcd4; border-radius: 16px; padding: 8px 12px; }
