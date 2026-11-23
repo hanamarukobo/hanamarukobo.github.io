@@ -135,9 +135,14 @@
     taskAm: { kinder: "{i:sunny} ごぜん", lower: "{i:sunny} ごぜん", upper: "{i:sunny} 午前" },
     taskPm: { kinder: "{i:house} ごご", lower: "{i:house} ごご", upper: "{i:house} 午後" },
     taskAny: { kinder: "{i:point-star} いつでも", lower: "{i:point-star} いつでも", upper: "{i:point-star} いつでも" },
+    // だいじ／できたら（おうちの人が だいじ を 付けた ときだけ 2段に。呼び名なので どの 段階も ひらがな）
+    daijiHead: { kinder: "だいじ", lower: "だいじ", upper: "だいじ" },
+    dekitaraHead: { kinder: "できたら", lower: "できたら", upper: "できたら" },
     todayOnly: { kinder: "きょうだけ", lower: "きょうだけ", upper: "今日だけ" },
-    // 「いまから やる」（自分から はじめる きっかけ。押すと 演出だけ。ポイントは かわらない）
+    // 「いまから やる」（自分から はじめる きっかけ。押すと 演出だけ。ポイントは かわらない）。ボタンは 火の 絵だけで、これは 読み上げ用（aria-label）
     goBtn: { kinder: "いまから やる", lower: "いまから やる", upper: "今から やる" },
+    // 押したときの 吹き出し（本人の セリフ。上に やることの 名前を 小さく）
+    goSay: { kinder: "いまから やるよ！", lower: "いまから やるよ！", upper: "今から やるよ！" },
     // 週に何回の やること（週の どこかで やれば よい）
     weekLeft: { kinder: "こんしゅう あと {n}かい", lower: "こんしゅう あと {n}かい", upper: "今週 あと {n}回" },
     weekDone: { kinder: "こんしゅう できた", lower: "こんしゅう できた", upper: "今週 できた" },
@@ -219,6 +224,10 @@
     gdEvents: { kinder: "きょうは だれが なにを する ひかな？", lower: "きょう {parent}は おしごと？ だれが おくって くれる？", upper: "今日 {parent}は 仕事？ だれが 送って くれる？" },
     gdNameT: { kinder: "じぶんの なまえを おそう", lower: "じぶんの なまえを おそう", upper: "自分の 名前を おそう" },
     gdName: { kinder: "きょうの やることが でてくるよ", lower: "きょうの やることが でてくるよ", upper: "今日の やることが 出てくるよ" },
+    gdDaijiT: { kinder: "だいじ から やってみよう", lower: "だいじ から やってみよう", upper: "だいじ から やってみよう" },
+    gdDaiji: { kinder: "だいじ を さきに やると、あとが らくちん！", lower: "だいじ を さきに やると、あとが らくちん。そのあと「できたら」も やってみよう", upper: "だいじ を 先に やると、後が らくちん。その後「できたら」も やってみよう" },
+    gdGoT: { kinder: "ひの マークを おしてみよう", lower: "ひの マークを おしてみよう", upper: "火の マークを おしてみよう" },
+    gdGo: { kinder: "おすと やるきの ひが つくよ。「いまから やるよ！」って いってみよう", lower: "やる まえに おすと、やるきの ひが つくよ。「いまから やるよ！」と いってから やってみよう", upper: "やる前に おすと、やる気の 火が つくよ。「今から やるよ！」と 言ってから やってみよう" },
     gdTaskT: { kinder: "できたら おそう", lower: "できたら おそう", upper: "できたら おそう" },
     gdTask: { kinder: "まちがえたら もういちど おすと もどるよ", lower: "まちがえたら もういちど おすと もどせるよ", upper: "まちがえたら もう一度 おすと もどせるよ" },
     gdShowT: { kinder: "ねるまえに {parent}に みせよう", lower: "ねるまえに {parent}に みせよう", upper: "ねる前に {parent}に 見せよう" },
@@ -277,10 +286,11 @@
       return KANJI.test(s) && s.charAt(0) !== "{" && s.charAt(0) !== "<" ? "[" + s + "|" + m[++i] + "]" : s;
     }).join("");
   }
+  // ふりがなの 漢字は span.rk で つつむ（小さい ところでは 漢字を かくして 読みを 本文に する。下の fitRuby）
   // ふりがなの ある 文は 1つの span に つつむ（flex の 箱の 中で 漢字と かなが ばらばらに ならんで すきまが できた）
   function wrapRuby(html) { return html.indexOf("<ruby>") >= 0 ? '<span class="rb">' + html + '</span>' : html; }
   function rubyHtml(markup) {
-    return markup.replace(/\[([^|\]]+)\|([^\]]+)\]/g, '<ruby>$1<rt>$2</rt></ruby>');
+    return markup.replace(/\[([^|\]]+)\|([^\]]+)\]/g, '<ruby><span class="rk">$1</span><rt>$2</rt></ruby>');
   }
   var rubyCache = {};
   function rubyEntry(key) {
@@ -293,6 +303,41 @@
     rubyCache[key] = v;
     return v;
   }
+  // 小さい 字には ふりがなを つけず ひらがなで 出す（2026-11-23 社長と 案 A。HANDOVER の 0h）。
+  //   元の 字が ボードの 設計で 20px（.9 で 約3.6mm）より 小さい ふりがなは ruby に .kana を つけ、CSS で 漢字を かくして 読みを 本文の 大きさで 出す。
+  //   ふりがなが 読めない 大きさに なるくらいなら ひらがなの ほうが 読める。日にちの ふりがな（ruby.dr）は 数字＋「日」の 決まりなので そのまま。
+  //   子どもの カード（ホームの がんばりカレンダー）は 人数と 形で 大きさが かわり、kids.js が 字を ちぢめるので、ここでは みずに CSS で きめる（style.css の「ふりがな」）
+  var RUBY_MIN = 20;
+  function rubyScale() {
+    // 古い ブラウザは zoom が かかった 大きさを かえす ことが あるので、ボードの 中に 100px の 字を おいて くらべる
+    var b = document.querySelector(".board");
+    if (!b) return 1;
+    var p = document.createElement("span");
+    p.style.cssText = "position:absolute;visibility:hidden;font-size:100px";
+    b.appendChild(p);
+    var f = parseFloat(getComputedStyle(p).fontSize) / 100;
+    b.removeChild(p);
+    return f > 0 && Math.abs(f - 1) > 0.02 ? f : 1;
+  }
+  function fitRuby(root) {
+    var list = root.tagName === "RUBY" ? [root] : root.querySelectorAll ? root.querySelectorAll("ruby") : [];
+    if (!list.length) return;
+    var f = rubyScale();
+    Array.prototype.forEach.call(list, function (r) {
+      if (r.classList.contains("dr") || r.closest(".kid-btn")) return;
+      r.classList.toggle("kana", parseFloat(getComputedStyle(r).fontSize) / f < RUBY_MIN - 0.5);
+    });
+  }
+  if (typeof document !== "undefined" && window.MutationObserver) {
+    new MutationObserver(function (recs) {
+      recs.forEach(function (rec) {
+        Array.prototype.forEach.call(rec.addedNodes, function (n) { if (n.nodeType === 1) fitRuby(n); });
+      });
+    }).observe(document.documentElement, { childList: true, subtree: true });
+    // 向き・形が かわると 字の 大きさも かわる（app.js の fit が 知らせる）
+    window.addEventListener("board:fit", function () { fitRuby(document); });
+  }
+
   // ふりがなが 入れられない ところ（入力欄の 見本・ボタンの 値）用に タグを はずす
   function plain(s) { return String(s).replace(/<rt>[\s\S]*?<\/rt>/g, "").replace(/<[^>]*>/g, ""); }
 
@@ -529,7 +574,7 @@
       if (!kana || !KANJI.test(name)) return n;
       var m = autoRuby(name, kana);
       if (m !== null && !/[<>&"']/.test(name)) return rubyHtml(m);
-      return '<ruby>' + n + '<rt>' + (esc ? esc(kana) : kana) + '</rt></ruby>';
+      return '<ruby><span class="rk">' + n + '</span><rt>' + (esc ? esc(kana) : kana) + '</rt></ruby>';
     },
     autoRuby: autoRuby,
     icon: icon,

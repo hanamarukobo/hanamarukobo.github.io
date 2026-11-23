@@ -1,7 +1,7 @@
 // 押して 覚える ガイド（2026-11-20、0.1.23）。見て ほしい ところ だけ 明るく して、ほかは 半分 暗く する。
-//   子どもの 部分: 天気 → 家族の 予定（読めて いる ときだけ）→ 名前 → やることを 1つ 押す → みました・ゲージ → おさいふ（使う 子だけ）→ できるようになったこと → ✕
+//   子どもの 部分: 天気 → 家族の 予定（読めて いる ときだけ）→ 名前 → だいじ の 箱（ある ときだけ）→ 火の ボタン（いまから やる）→ やることを 1つ 押す → みました・ゲージ → おさいふ（使う 子だけ）→ できるようになったこと → ✕
 //   おうちの人の 部分: 置いた 端末は 歯車を 指して ひとこと。つないだ スマホ・QR の ブラウザは 設定の タブ（がんばりチェック・鍵・ヘルプ）
-//   はじめかた: かんたん設定の あとに「お子さんと一緒に、使い方を試しますか？」。「あとで」は 次の 日に 1度だけ 聞きなおす。
+//   はじめかた: かんたん設定の あとに「まずはお子さんと一緒に、使い方を試しましょう」（11-23 に 強めた。前は「試しますか？」）。「あとで」は 次の 日に 1度だけ 聞きなおす。
 //   いつでも 設定の「ヘルプ」→「使い方をためす」。「とばす」は いつも 出す（押さないと 進めない 作りなので 逃げ道を 残す）
 //   くわしくは docs/handover/onboarding-walk.md の「説明とガイド」
 (function () {
@@ -25,10 +25,20 @@
 
   // ---- 手順 ----
   function confirmed() { return $("kv-status").classList.contains("ok"); }
+  // やることの 行だけ（ごぜん・ごご の 見出しは のぞく）
   function firstTask() {
-    var lis = document.querySelectorAll("#kv-list > li");
-    for (var i = 0; i < lis.length; i++) if (!lis[i].classList.contains("bundle") && visible(lis[i])) return lis[i];
-    return null;
+    //   まだ できて いない 行を 先に（できた 行を 押すと 取り消しに なる）
+    var lis = document.querySelectorAll("#kv-list li[data-task]"), first = null;
+    for (var i = 0; i < lis.length; i++) {
+      if (lis[i].classList.contains("bundle") || lis[i].classList.contains("weekdone") || !visible(lis[i])) continue;
+      if (!lis[i].classList.contains("done")) return lis[i];
+      first = first || lis[i];
+    }
+    return first;
+  }
+  function firstGo() {
+    var b = document.querySelector("#kv-list button.go");
+    return visible(b) ? b : null;
   }
   function kidSteps() {
     var board2 = Api.usage(B.settings) === "board2";
@@ -38,6 +48,10 @@
       // 予定は 読めて いる ときだけ（つないで いない・読めない 家は おうちの人の 部分で 場所だけ 言う）
       { sel: ".card.schedule", t: "gdEventsT", x: "gdEvents", tap: true, when: function () { return !!(B.calReady && B.calReady()); } },
       { sel: "#kids", hit: ".kid-btn", t: "gdNameT", x: "gdName", tap: true, until: function () { return !$("kid-view").hidden; } },
+      // だいじ の 箱（おうちの人が だいじ を 付けた 家・その日に ある ときだけ）
+      { sel: "#kv-list li.daiji", t: "gdDaijiT", x: "gdDaiji", when: function () { return visible(document.querySelector("#kv-list li.daiji")); } },
+      // 火の ボタン（いまから やる）。押すと 吹き出しの 演出が 出るので、終わるまで 待つ（hold）。「やるきの ひ」「いってから やってみよう」は ここで 言う（演出には 出さない）
+      { sel: firstGo, t: "gdGoT", x: "gdGo", tap: true, hold: 2600, when: function () { return !!firstGo(); } },
       // 「みました」の あとに 押すと「みました」が 取り消しに なるので、その日は 押させない
       { sel: firstTask, t: "gdTaskT", x: "gdTask", tap: function () { return !confirmed(); } },
       { sel: "#kv-status", t: "gdShowT", x: "gdShow" },
@@ -79,6 +93,7 @@
     idx = -1;
     steps = [];
     moving = false;
+    $("guide").classList.remove("moving", "holding");
     $("guide").hidden = true;
     if (done && key) put(key, "1");
   }
@@ -148,10 +163,13 @@
     if (!el || !el.contains(ev.target) || (s.hit && !hit)) return;
     moving = true;
     $("guide").classList.add("moving");
+    // hold の ある 手順（火の ボタン）は、演出が 見えるよう その あいだ 幕を すける（押せないのは そのまま）
+    $("guide").classList.toggle("holding", !!s.hold);
     var t0 = Date.now();
     (function wait() {
       if (idx < 0) return;
-      if (!s.until || s.until() || Date.now() - t0 > 3000) { $("guide").classList.remove("moving"); setTimeout(next, 350); }
+      var dt = Date.now() - t0;
+      if (dt >= (s.hold || 0) && (!s.until || s.until() || dt > 3000 + (s.hold || 0))) { $("guide").classList.remove("moving", "holding"); setTimeout(next, 350); }
       else setTimeout(wait, 150);
     })();
   }, true);

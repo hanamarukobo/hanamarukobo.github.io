@@ -63,6 +63,17 @@
       return list.length ? '<li class="slot-head">' + W(g[1]) + '</li>' + list.map(render).join("") : "";
     }).join("");
   }
+  // だいじ／できたら（2026-11-23）: おうちの人が 設定の「やること」で だいじ を 付けた やることは、子どもの 色の 箱に まとめて いちばん 上
+  //   （ごぜん・ごご に わけて いても 箱は 1つ。社長）。その 下に 見出し「できたら」と のこりを いつもの ならびで。
+  //   その日の やることに だいじ が 1つも なければ いまの まま（2段は 出さない）。ぜんぶ できても 箱は ちぢめない（やった ことを 見たい）
+  function isDaiji(t) { return !!t.important && !t.bundle; }
+  function grouped(tasks, render) {
+    var top = tasks.filter(isDaiji);
+    if (!top.length) return slotted(tasks, render);
+    var rest = tasks.filter(function (t) { return !isDaiji(t); });
+    return '<li class="daiji"><span class="daiji-head">' + W("daijiHead") + '</span><ul class="daiji-list">' + top.map(render).join("") + '</ul></li>' +
+      (rest.length ? '<li class="slot-head dekitara">' + W("dekitaraHead") + '</li>' + slotted(rest, render) : "");
+  }
   // その日の 記録と、そのやることを なんかい やったか（チェックは 0 か 1、かいすうは ＋− の数）。決まりは api.js
   function entry(date, kid) { return window.BoardApi.entry(state, date, kid); }
   function taskCount(t, e) { return window.BoardApi.taskCount(t, e); }
@@ -236,9 +247,10 @@
 
   // カードに くらべて 中身が 小さい ときは、名前・ことば・きょう・もくひょうを まとめて 大きく する（2026-11-22。
   //   子ども1人・予定なし や、横で 3〜4人の ときに カードの 上下が 大きく あいて 中身が 小さく 見えた）。
-  //   入る 大きさ（高さの 8割・幅の 9割）まで、2倍まで。スマホの 形（tall・wide）は 並びを 詰めて あるので かけない。
+  //   入る 大きさ（高さの 8割・幅の 9割）まで、1.3倍まで。スマホの 形（tall・wide）は 並びを 詰めて あるので かけない。
+  //   上限は 2026-11-23 に 2 → 1.3（子ども1人で 名前が 時刻に 近い 大きさに なり、人数で 大きさが 2倍 ちがった。tools/dev/sizer.html で はかった）
   //   大きさは style.css の .kid-btn の --grow（zoom）。カードの 大きさが かわったら（天気・予定を 読んだ あと など）はかりなおす
-  var GROW_MAX = 2;
+  var GROW_MAX = 1.3;
   function growKids(box) {
     box.style.removeProperty("--grow");
     var body = document.body.classList;
@@ -577,7 +589,7 @@
       $("kv-progress").innerHTML = p0.total && !future ? W("progress", { t: p0.total, d: p0.done }) : "";
       $("kv-list").innerHTML = listHtml();
     }
-    function listHtml() { return slotted(tasks, function (t) {
+    function listHtml() { return grouped(tasks, function (t) {
       var n = taskCount(t, e0), cls = (n > 0 ? "done" : "") + lock, yen = yenOf(t, kid);
       var name = taskHtml(t, kid) + (t.repeat.type === "once" ? '<span class="once">' + W("todayOnly") + '</span>' : "");
       if (t.repeat.type === "perweek") {
@@ -606,9 +618,10 @@
           '</span></li>';
       }
       // 「いまから やる」: きょうの まだ できて いない やることに。押したら そのやることに 火の しるし（できたら「じぶんから はじめた」）
+      //   2026-11-23: 字の ボタンが ならぶと うるさいので 火の 絵だけの 丸に（白い 丸＋子どもの 色の ふち。意味は 押して 覚える ガイドと 押したときの 吹き出しで）
       var started = (e0.starts || []).indexOf(t.id) >= 0;
       if (started) cls += " started";
-      var go = isToday && edit && !n && !started ? '<button class="go" data-go="1">' + W("goBtn") + '</button>' : "";
+      var go = isToday && edit && !n && !started ? '<button class="go" data-go="1" aria-label="' + esc(window.Words.plain(W("goBtn"))) + '">' + ICON("streak-fire") + '</button>' : "";
       return '<li class="' + cls + '" data-task="' + t.id + '">' +
         '<span class="box">' + (n > 0 ? ICON("hanamaru") : started ? ICON("streak-fire") : "") + '</span>' +
         '<span class="name">' + name + (n > 0 && started ? '<span class="self">' + ICON("streak-fire") + '</span>' : "") + '</span>' +
@@ -753,17 +766,19 @@
   }
 
   // 「いまから やる」: 演出を 見せて、その やることに 火の しるしを つける（ポイントは かわらない。きょうだけ）
-  //   演出は ことばを 出さず 絵と うごきで（近くの おうちの人に「いまから やるね」と 言う きっかけにも）
+  //   演出は 火の 上に 本人の セリフの 吹き出し（やることの 名前と「いまから やるよ！」）。2026-11-23 に「ことばを 出さない」から かえた:
+  //   押せば 意味が わかり（ガイドを おえた 家も）、声に 出して 言う きっかけに なる。「いってから やってみよう」は ガイドで 言う
   function startTask(id) {
     var kid = openKid, day = ymd(new Date()), e = entry(day, kid);
+    var t = state.tasks.filter(function (x) { return x.id === id; })[0];
     e.starts = (e.starts || []).filter(function (x) { return x !== id; }).concat([id]);
     state.days[day] = state.days[day] || {};
     state.days[day][kid] = e;
     renderKidView();
-    goBurst();
+    goBurst(t ? taskHtml(t, kid) : "");
     window.BoardApi.post("/api/kid/start", { kid: kid, taskId: id }).then(load, load);
   }
-  function goBurst() {
+  function goBurst(name) {
     var box = $("kv-go");
     var low = document.body.classList.contains("lowpower"), html = '<div class="go-flash"></div>';
     if (!low) {
@@ -771,10 +786,12 @@
       for (i = 0; i < 10; i++) html += '<span class="go-star" style="--a:' + (i * 36 + 18) + 'deg;animation-delay:' + (0.15 + (i % 3) * 0.06) + 's">' + ICON("point-star") + '</span>';
     }
     html += '<span class="go-fire">' + ICON("streak-fire") + '</span>';
+    html += '<div class="go-say">' + (name ? '<span class="go-say-name">' + name + '</span>' : "") + '<span class="go-say-main">' + W("goSay") + '</span></div>';
     box.innerHTML = html;
     box.hidden = false;
     clearTimeout(goBurst.t);
-    goBurst.t = setTimeout(function () { box.hidden = true; box.innerHTML = ""; }, 1700);
+    // 吹き出しを 読める 長さ（前は 1.7秒で ことばなし）
+    goBurst.t = setTimeout(function () { box.hidden = true; box.innerHTML = ""; }, 2600);
   }
 
   // ---- 「もう できる」の 中身 ----

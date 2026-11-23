@@ -320,7 +320,8 @@
     var yenText = t.yenByKid ? "子どもごと" : u(t.yen) + (count ? "×回" : "");
     var html = '<div class="t-row' + (t.active ? "" : " off") + '">' +
       '<div class="t-sum" data-open="' + i + '">' +
-      '<span class="t-name">' + (esc(t.name) || '<span class="muted">（名前）</span>') + (t.kana ? '<small>' + esc(t.kana) + '</small>' : "") + gradMark(t) + '</span>' +
+      '<span class="t-name">' + (esc(t.name) || '<span class="muted">（名前）</span>') + (t.important && !t.bundle ? ' <span class="t-imp">だいじ</span>' : "") +
+        (t.kana ? '<small>' + esc(t.kana) + '</small>' : "") + gradMark(t) + '</span>' +
       '<span class="t-when">' + whenText(t) + '</span>' + who + '<span class="t-yen">' + yenText + '</span></div>';
     if (open) html += taskEditor(t, i);
     return html + '</div>';
@@ -370,6 +371,8 @@
         chip("ごぜん", t.slot === "am", 'data-i="' + i + '" data-slot="am"') +
         chip("ごご", t.slot === "pm", 'data-i="' + i + '" data-slot="pm"') +
         chip("いつでも", !t.slot, 'data-i="' + i + '" data-slot=""') + '</span>' : "") +
+      // だいじ（2026-11-23）: 子どもの 画面で 上の 箱に まとめる。説明は 欄の 上に 1か所（admin.html の task-note）
+      '<span>だいじ</span><span><label class="muted"><input type="checkbox" data-i="' + i + '" data-f="important"' + (t.important ? " checked" : "") + '> 子どもの画面で上にまとめる</label></span>' +
       '<span>種類</span><span class="chips">' +
         chip("✓ チェック", !count, 'data-i="' + i + '" data-kind="check"') +
         (r.type === "perweek" ? "" : chip("＋ 回数", count, 'data-i="' + i + '" data-kind="count"')) + '</span>' +
@@ -464,6 +467,9 @@
       if (el.value) t.repeat = { type: "once", date: el.value };
     } else if (d.f === "active") {
       t.active = el.checked;
+      return changed();
+    } else if (d.f === "important") {
+      if (el.checked) t.important = true; else delete t.important;
       return changed();
     } else if (d.f === "byKid") {
       t.yenByKid = el.checked ? {} : undefined;

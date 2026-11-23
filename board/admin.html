@@ -108,6 +108,8 @@
   .t-sum { display: flex; align-items: center; gap: 8px; padding: 10px 0; cursor: pointer; }
   .t-sum .t-name { flex: 1; min-width: 0; }
   .t-sum .t-name small { display: block; color: var(--muted); font-size: 12px; }
+  .t-imp { display: inline-block; padding: 0 7px; border-radius: 999px; background: #ff8a3d; color: #fff; font-size: 12px; font-weight: bold; vertical-align: 2px; }
+  .task-note { margin: 6px 0 0; font-size: 13px; }
   .t-sum .t-when { font-size: 13px; color: var(--muted); white-space: nowrap; }
   .t-sum .t-yen { font-size: 14px; color: var(--muted); white-space: nowrap; }
   .dots { display: inline-flex; gap: 2px; }
@@ -207,6 +209,7 @@
     <h2>やることの設定</h2>
     <div class="tabs" id="task-filter"></div>
     <label class="muted"><input type="checkbox" id="s-slots"> ごぜん・ごごに分けて表示する</label>
+    <p class="muted task-note">「だいじ」を付けたやることは、子どもの画面で上にまとめて出ます。何をだいじにするかは、お子さんと話して決めると続きやすいです。</p>
     <div id="task-list"></div>
     <div class="row save-row">
       <button id="add-task">＋ やることを追加</button>

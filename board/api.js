@@ -437,6 +437,8 @@
       slot: t.slot === "am" || t.slot === "pm" ? t.slot : null,
       active: t.active !== false,
     };
+    // だいじ（2026-11-23）: 付けた ときだけ 持つ。子どもの 画面で 上の 箱に まとめる（kids.js の grouped）。「もう できる」には 付けない
+    if (t.important === true) task.important = true;
     var kana = String(t.kana || "").trim().slice(0, MAX_TASK_NAME);
     if (kana && kana !== name) task.kana = kana;
     var byKid = {};
@@ -719,6 +721,7 @@
         if (bundles[n.id]) {
           Object.assign(n, { bundle: true, kids: bundles[n.id].kids, kind: "check", repeat: { type: "daily" } });
           delete n.yenByKid;
+          delete n.important;
         }
         return n;
       }).filter(Boolean);
