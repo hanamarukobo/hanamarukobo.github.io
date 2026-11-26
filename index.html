@@ -7,6 +7,17 @@
 <meta name="color-scheme" content="light">
 <meta name="description" content="はなまるボード。今日がわかる。自分でできる。「着替えた？」「傘持った？」毎朝の声かけを、少し減らせたら。子どもが自分で今日の予定ややることを確かめられるアプリです。スマホ1台からでも、余ったタブレットをリビングに置いても使えます。">
 <link rel="icon" href="img/icon.png">
+<!-- リンクを貼ったときのカード（2026-11-26。画像は EchoMonitor の docs/store/ogp.html で撮る） -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="はなまるボード">
+<meta property="og:title" content="はなまるボード">
+<meta property="og:description" content="今日がわかる。自分でできる。「着替えた？」「傘持った？」毎朝の声かけを、少し減らせたら。子どもが自分で今日の予定ややることを確かめられるアプリです。">
+<meta property="og:url" content="https://hanamarukobo.github.io/">
+<meta property="og:image" content="https://hanamarukobo.github.io/img/ogp.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="はなまるボード。今日がわかる。自分でできる。リビングのタブレットを女の子が押している絵">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
@@ -24,7 +35,7 @@ h1{font-size:2.3em;line-height:1.25;margin:0}
 .lead{font-size:1.02em;margin:16px 0 0}
 .easy{display:inline-block;margin:14px 0 0;padding:4px 14px;border-radius:999px;background:#fff2cc;color:#855f0a;font-weight:700}
 .hero-art{position:relative;z-index:1}
-.hero-art img{width:100%;height:auto;display:block}
+.hero-art .demo{margin:0}
 h2{font-size:1.45em;margin:44px 0 12px;line-height:1.4}
 h2.sec{display:inline-block;position:relative;z-index:0}
 .start{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:26px 0}
@@ -76,7 +87,7 @@ footer .btn{color:#fff}
 @media (max-width:560px){.news{flex-direction:column;gap:2px;padding:10px 16px}}
 @media(max-width:700px){
  .hero{grid-template-columns:1fr;padding:22px 18px;border-radius:28px}
- .hero-art{order:-1;max-width:300px;margin:0 auto}
+ .hero-art .demo{margin-top:4px}
  .start,.shots{grid-template-columns:1fr}
  h1{font-size:1.75em}
  .diagram svg.wide{display:none}.diagram svg.narrow{display:block}
@@ -92,6 +103,7 @@ body{background:#fbf7ec radial-gradient(circle at 6% 3%,#fdf0c9 0,transparent 26
 h2.sec::after{content:"";position:absolute;left:0;right:0;bottom:-9px;height:10px;background:url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='720'%20height='10'%3E%3Cpath%20d='M0%205%20Q6%201%2012%205%20T24%205%20Q30%201%2036%205%20T48%205%20Q54%201%2060%205%20T72%205%20Q78%201%2084%205%20T96%205%20Q102%201%20108%205%20T120%205%20Q126%201%20132%205%20T144%205%20Q150%201%20156%205%20T168%205%20Q174%201%20180%205%20T192%205%20Q198%201%20204%205%20T216%205%20Q222%201%20228%205%20T240%205%20Q246%201%20252%205%20T264%205%20Q270%201%20276%205%20T288%205%20Q294%201%20300%205%20T312%205%20Q318%201%20324%205%20T336%205%20Q342%201%20348%205%20T360%205%20Q366%201%20372%205%20T384%205%20Q390%201%20396%205%20T408%205%20Q414%201%20420%205%20T432%205%20Q438%201%20444%205%20T456%205%20Q462%201%20468%205%20T480%205%20Q486%201%20492%205%20T504%205%20Q510%201%20516%205%20T528%205%20Q534%201%20540%205%20T552%205%20Q558%201%20564%205%20T576%205%20Q582%201%20588%205%20T600%205%20Q606%201%20612%205%20T624%205%20Q630%201%20636%205%20T648%205%20Q654%201%20660%205%20T672%205%20Q678%201%20684%205%20T696%205%20Q702%201%20708%205%20T720%205'%20fill='none'%20stroke='%23e3a63a'%20stroke-width='2.5'%20stroke-linecap='round'/%3E%3C/svg%3E") 0 0 no-repeat}
 h2.sec{margin-bottom:18px}
 .copy::after{content:" ✿";color:#e8913a;font-size:.8em}
+@media(max-width:400px){.copy::after{content:none}}/* せまいスマホで花だけが1行に落ちるので出さない（11-26） */
 li::marker{color:#d9a521}
 .tag{border-color:#d9a521}
 .shots img:nth-child(odd){box-shadow:0 6px 0 #eecb6a,0 10px 24px rgba(80,60,30,.10)}
@@ -106,7 +118,8 @@ footer{background:linear-gradient(135deg,#fdf0cf,#fce6d2)}
 .safe-lead{margin:0 0 8px}
 .safe ul{margin:0}
 .safe-more{margin:10px 0 0;font-size:.95em}
-/* 2026-11-22 組み直し: つかみ → 動画 → 使ってみる → できること（体験4つ）→ 安心 → ちがい → 作り手 → ご意見 */
+/* 2026-11-22 組み直し（11-26 に動画をつかみの中へ）: つかみ → 動画 → 使ってみる → できること（体験4つ）→ 安心 → ちがい → 作り手 → ご意見 */
+.hook span,.copy span{display:inline-block}
 .hook{font-family:var(--hf);font-weight:700;font-size:1.15em;color:var(--ink);margin:16px 0 0;line-height:1.7}
 .hero .lead{margin-top:8px}
 .hero-cta{margin:16px 0 0;display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center}
@@ -173,38 +186,40 @@ footer{background:linear-gradient(135deg,#fdf0cf,#fce6d2)}
     <div class="hero-text">
       <img class="logo" src="img/icon.png" alt="">
       <h1>はなまるボード</h1>
-      <p class="copy">今日がわかる。自分でできる。</p>
-      <p class="hook">「着替えた？」「傘持った？」<br>毎朝の声かけを、少し減らせたら。</p>
+      <p class="copy">今日がわかる。<span>自分でできる。</span></p>
+      <p class="hook">「着替えた？」<span>「傘持った？」</span><br>毎朝の声かけを、<span>少し減らせたら。</span></p>
       <p class="lead">はなまるボードは、子どもが自分で今日の予定や、やることを確認できるアプリです。余ったタブレットをリビングに置いて、家族で使えます。スマホ1台からでも始められます。</p>
       <p class="hero-cta"><a class="btn to-android" href="join.html">Android テスト版に参加する</a><a class="text-link" href="#start">iPhone・iPad の方は</a></p>
       <p class="recruit">Android アプリは、Google Play で公開する前のテスト版の参加者を募集しています（無料）。</p>
     </div>
-    <div class="hero-art"><img src="img/hero.webp" alt="" width="917" height="849"></div>
+    <div class="hero-art">
+    <!-- 使っているところの動画（音なし・くり返し）。縦長の画面（スマホ）は縦の動画、横長は横の動画（元は EchoMonitor の docs/video/）。
+         2026-11-26 にいちばん上の絵（img/hero.webp）の場所へ移した。PC は右の列、スマホは文字とボタンの下。絵はリンクを貼ったときの画像（img/ogp.png）に使う。
+         動きを減らす設定の人には自動で流さず、再生ボタンを出す -->
+    <figure class="demo">
+      <video id="demo" width="960" height="600" muted loop playsinline preload="metadata" aria-label="使っているところ。子どもが天気と予定を見て、やることを自分で押し、おうちの人が「みました」を押すと はなまる。できることが少しずつ増えていく"></video>
+      <noscript><video src="img/demo.mp4" poster="img/demo-poster.webp" width="960" height="600" controls muted playsinline></video></noscript>
+      <figcaption>使っているところ（約25秒・音なし）</figcaption>
+    </figure>
+    <script>
+    (function () {
+      var v = document.getElementById("demo");
+      var port = window.matchMedia && matchMedia("(max-aspect-ratio: 3/4) and (max-width: 700px)").matches;
+      if (port) { v.className = "port"; v.width = 540; v.height = 960; }
+      v.poster = port ? "img/demo-port-poster.webp" : "img/demo-poster.webp";
+      v.src = port ? "img/demo-port.mp4" : "img/demo.mp4";
+      if (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) { v.controls = true; return; }
+      v.autoplay = true; var p = v.play(); if (p && p.catch) p.catch(function () {});
+      v.addEventListener("click", function () { if (v.paused) v.play(); else v.pause(); });
+    })();
+    </script>
+    </div>
   </header>
   <aside class="news" aria-label="最新のお知らせ"><b>最新のお知らせ</b><ul>
     <li><time datetime="2026-11-26">11/26</time>おさいふの「ほしいもの」で「かえた！」を押したとき、確かめの窓を出して確実に記録されるようにしました（0.1.40）</li>
     <li><time datetime="2026-11-26">11/26</time>もくひょうのごほうびを6つまで用意して、子どもが選べるようにしました（0.1.39）</li>
   </ul></aside>
 
-  <!-- 使っているところの動画（音なし・くり返し）。縦長の画面（スマホ）は縦の動画、横長は横の動画（元は EchoMonitor の docs/video/）。
-       動きを減らす設定の人には自動で流さず、再生ボタンを出す -->
-  <figure class="demo">
-    <video id="demo" width="960" height="600" muted loop playsinline preload="metadata" aria-label="使っているところ。子どもが天気と予定を見て、やることを自分で押し、おうちの人が「みました」を押すと はなまる。できることが少しずつ増えていく"></video>
-    <noscript><video src="img/demo.mp4" poster="img/demo-poster.webp" width="960" height="600" controls muted playsinline></video></noscript>
-    <figcaption>使っているところ（約25秒・音なし）</figcaption>
-  </figure>
-  <script>
-  (function () {
-    var v = document.getElementById("demo");
-    var port = window.matchMedia && matchMedia("(max-aspect-ratio: 3/4) and (max-width: 700px)").matches;
-    if (port) { v.className = "port"; v.width = 540; v.height = 960; }
-    v.poster = port ? "img/demo-port-poster.webp" : "img/demo-poster.webp";
-    v.src = port ? "img/demo-port.mp4" : "img/demo.mp4";
-    if (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) { v.controls = true; return; }
-    v.autoplay = true; var p = v.play(); if (p && p.catch) p.catch(function () {});
-    v.addEventListener("click", function () { if (v.paused) v.play(); else v.pause(); });
-  })();
-  </script>
 
   <h2 class="sec" id="start">使ってみる</h2>
   <div class="start">
