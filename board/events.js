@@ -130,6 +130,7 @@
     window.dispatchEvent(new Event("board:fit"));
   }
 
+  window.addEventListener("board:photo", function () { renderEvents(); }); // 撮影用に かくす（photo.js）
   function renderEvents() {
     B.curSec = "schedule";
     var now = new Date();
@@ -182,12 +183,18 @@
       return '<li>' +
         (showTime && !e.allDay ? '<span class="time">' + timeText(e) + '</span>'
           : '<span class="mark">' + window.Words.icon("event") + '</span>') +
-        '<span class="title">' + escapeHtml(e.title) + '</span>' +
+        '<span class="title">' + escapeHtml(window.Photo.text(e.title)) + '</span>' +
         '</li>';
     }).join("");
   }
 
   B.calSource = calSource;
+  // 撮影用に 見せて よい 予定の 候補（photo.js・設定の「ヘルプ」）。読めて いる 予定の 名前（重ならない）
+  B.calTitles = function () {
+    var out = [];
+    ((calendar || {}).events || []).forEach(function (e) { if (e.title && out.indexOf(e.title) < 0) out.push(e.title); });
+    return out;
+  };
   // 予定を 読めて いるか（guide.js。つないで いても 読めて いなければ「家族の 予定を 見よう」は 出さない）
   B.calReady = function () { return !!calSource() && !!calendar && !calError; };
   B.fetchCalendar = fetchCalendar;

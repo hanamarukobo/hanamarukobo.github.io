@@ -519,12 +519,32 @@
   //   kid.goal = { size, base, count, log }。size は 1回の 大きさ（はじめ 50）。base は 合計から ひく ぶん（こうかんした ぶんの 合計）。
   //   count・log は こうかんの 回数と 記録 [{date, size}]（データに のこす だけ。画面には 出さない。取り消しは ない）。
   //   大きさを かえても base は かえない（たまった ぶんは そのまま。届く前に 50 → 100 に すぐ できる）
-  var GOAL_SIZE = 50, MAX_GOAL = 9999;
-  function goalOf(kid) {
-    var g = (kid && kid.goal) || {};
-    return { size: Math.max(1, Math.min(MAX_GOAL, int(g.size, GOAL_SIZE))), base: Math.max(0, int(g.base, 0)), count: Math.max(0, int(g.count, 0)),
-      log: Array.isArray(g.log) ? g.log : [] };
+  // ごほうびの メニュー（2026-11-24。前の 版で 外した「みんなの目標」「ごほうび交換」を 子どもごとに した もの）:
+  //   おうちの人が 子どもごとに ごほうびを いくつか 作り（menu。6つまで）、どれを めざすかは 子どもが えらぶ（pick。がんばりカレンダーの もくひょうの はこ）。
+  //   item = { id, icon, name, size, yen }。name が 空なら「もくひょう」。yen は こうかんした ときに おさいふに 入れる 金額（0 は お金で ない ごほうび。
+  //   前の「1ポイント＝○円」（kid.walletRate）は 1つめの ごほうびの yen に うつした。お金に する 道を 1本に する）。
+  //   えらびなおしても base は かえない（たまった ぶんは そのまま。小さい ごほうびに かえると その場で たっせい する ことも ある。こうかんは 鍵の あと）。
+  //   size は えらんだ ごほうびの 大きさ（前の 版でも 読めるように のこす）。家族の 合算は まだ 作らない（作るなら 個人の 数を へらさない 別の ゲージ）
+  var GOAL_SIZE = 50, MAX_GOAL = 9999, MAX_MENU = 6, MAX_GOAL_NAME = 16;
+  var GOAL_ICONS = ["goal-flag", "gift", "party", "coins", "allowance", "shop-bag", "house", "boots"];
+  function goalSizeOf(v) { return Math.max(1, Math.min(MAX_GOAL, int(v, GOAL_SIZE))); }
+  function goalItem(m) {
+    m = m || {};
+    return { id: typeof m.id === "string" && /^g[\w-]{1,16}$/.test(m.id) ? m.id : uid("g"),
+      icon: GOAL_ICONS.indexOf(m.icon) >= 0 ? m.icon : GOAL_ICONS[0],
+      name: String(m.name || "").trim().slice(0, MAX_GOAL_NAME), size: goalSizeOf(m.size),
+      yen: Math.max(0, Math.min(MAX_YEN, int(m.yen, 0))) };
   }
+  function goalOf(kid) {
+    var g = (kid && kid.goal) || {}, size = goalSizeOf(g.size);
+    var menu = Array.isArray(g.menu) ? g.menu.slice(0, MAX_MENU).map(goalItem) : [];
+    // メニューの ない 前の データは、いまの 大きさと 1ポイント＝○円 から 1つめを 作る
+    if (!menu.length) menu = [goalItem({ id: "g1", size: size, yen: kid && kid.walletRate > 0 ? size * kid.walletRate : 0 })];
+    var pick = menu.filter(function (m) { return m.id === g.pick; })[0] || menu[0];
+    return { size: pick.size, base: Math.max(0, int(g.base, 0)), count: Math.max(0, int(g.count, 0)),
+      log: Array.isArray(g.log) ? g.log : [], menu: menu, pick: pick.id };
+  }
+  function goalPicked(g) { return g.menu.filter(function (m) { return m.id === g.pick; })[0]; }
   // total: これまでの 合計 / progress: いまの もくひょうに たまった ぶん（size を こえる ことも ある）/ reached: とどいて いる /
   //   reachedToday: date の ぶんで とどいた / waiting: みました まちの ポイント
   function goalInfo(data, kidId, date) {
@@ -535,6 +555,9 @@
     return {
       size: g.size, total: total, progress: n, reached: n >= g.size, reachedToday: day > 0 && n >= g.size && n - day < g.size,
       waiting: waitingPoints(data, kidId, date),
+      // ごほうびの メニュー（えらぶ 画面で、どれに どこまで とどいて いるか を 見せる）と、いま めざして いる もの
+      item: goalPicked(g), pick: g.pick,
+      menu: g.menu.map(function (m) { return Object.assign({ reached: n >= m.size }, m); }),
     };
   }
   // 「みました」を まって いる ポイント（できたけど まだ おうちの人が みて いない 日。2026-11-20 テスターの 声:
@@ -556,8 +579,11 @@
   function migrateGoals(data) {
     var changed = false;
     (data.kids || []).forEach(function (k) {
-      if (k.goal) return;
-      k.goal = { size: GOAL_SIZE, base: 0, count: 0, log: [] };
+      if (!k.goal) k.goal = { size: GOAL_SIZE, base: 0, count: 0, log: [] };
+      else if (Array.isArray(k.goal.menu) && k.goal.menu.length) return;
+      // ごほうびの メニューを まだ もたない 子は、いまの もくひょうを 1つめに する（2026-11-24。1ポイント＝○円 も ここへ うつす）
+      var g = goalOf(k);
+      k.goal = Object.assign(k.goal, { size: g.size, menu: g.menu, pick: g.pick });
       changed = true;
     });
     return changed;
@@ -654,6 +680,12 @@
         });
         // もくひょうは /api/parent/goal で かえる。ここでは 前の 値を のこす
         if (known[k.id] && known[k.id].goal) kids[kids.length - 1].goal = known[k.id].goal;
+        // かんたん設定の「もくひょうに とどいたら おさいふに ○円」は、いま えらんで いる ごほうびの 金額（2026-11-24）
+        if ("goalYen" in k) {
+          var gy = goalOf(known[k.id] ? Object.assign({}, known[k.id], { goal: kids[kids.length - 1].goal }) : null);
+          goalPicked(gy).yen = Math.max(0, Math.min(MAX_YEN, int(k.goalYen, 0)));
+          kids[kids.length - 1].goal = gy;
+        }
       });
       Object.keys(known).forEach(function (id) {
         if (!kids.some(function (k) { return k.id === id; })) kids.push(Object.assign({}, known[id], { active: false }));
@@ -733,13 +765,43 @@
       data.tasks = next;
     },
     // もくひょうの 大きさ（子どもごと。1〜9999 ポイント）
+    //   menu: ごほうびの メニューを まるごと かえる（1〜6つ。えらんで いた ものが なくなったら 1つめ）。
+    //   size・yen: いま えらんで いる ごほうびの 大きさ・金額だけ かえる（前の 版の 設定画面・かんたん設定から）
     "/api/parent/goal": function (data, req) {
       var k = data.kids.filter(function (x) { return x.id === req.kid; })[0];
       if (!k) throw httpError(400, "unknown kid");
-      var size = int(req.size, 0);
-      if (size < 1 || size > MAX_GOAL) throw httpError(400, "もくひょうは 1〜" + MAX_GOAL + " の数字で入れてください");
       var g = goalOf(k);
-      g.size = size;
+      function sizeOk(v) {
+        var size = int(v, 0);
+        if (size < 1 || size > MAX_GOAL) throw httpError(400, "もくひょうは 1〜" + MAX_GOAL + " の数字で入れてください");
+        return size;
+      }
+      if (req.menu != null) {
+        if (!Array.isArray(req.menu) || !req.menu.length || req.menu.length > MAX_MENU) throw httpError(400, "ごほうびは 1〜" + MAX_MENU + " つで入れてください");
+        var seen = {};
+        g.menu = req.menu.map(function (m) {
+          sizeOk(m && m.size);
+          var it = goalItem(m);
+          if (seen[it.id]) it.id = uid("g");
+          seen[it.id] = true;
+          return it;
+        });
+        if (!g.menu.some(function (m) { return m.id === g.pick; })) g.pick = g.menu[0].id;
+      }
+      var cur = goalPicked(g);
+      if (req.size != null) cur.size = sizeOk(req.size);
+      if (req.yen != null) cur.yen = Math.max(0, Math.min(MAX_YEN, int(req.yen, 0)));
+      g.size = cur.size;
+      k.goal = g;
+    },
+    // どの ごほうびを めざすか（子ども。たまった ぶんは かわらない）
+    "/api/kid/goal-pick": function (data, req) {
+      var k = data.kids.filter(function (x) { return x.id === req.kid; })[0];
+      if (!k) throw httpError(400, "unknown kid");
+      var g = goalOf(k);
+      if (!g.menu.some(function (m) { return m.id === req.pick; })) throw httpError(400, "unknown goal");
+      g.pick = req.pick;
+      g.size = goalPicked(g).size;
       k.goal = g;
     },
     // こうかんした（おうちの人）: とどいて いれば 1回分 へらす。取り消しは ない（2026-11-18。まぎらわしいので なくした。
@@ -751,7 +813,7 @@
       if (!k) throw httpError(400, "unknown kid");
       var g = goalOf(k);
       if (!goalInfo(data, k.id, today()).reached) throw httpError(409, "まだ もくひょうに とどいて いません");
-      var entry = { date: today(), size: g.size };
+      var entry = { date: today(), size: g.size, item: g.pick };
       if (req.toWallet != null) {
         if (!k.wallet) throw httpError(400, "おさいふを使っていません");
         entry.walletRow = addLog(walletOf(data, k.id), { amount: yenAmount(req.toWallet), pocket: "wallet", what: "ポイントの交換", by: "parent", goal: true }).id;
@@ -1285,8 +1347,9 @@
     // 子どもの もくひょうの すすみ（state は /api/state の 中身。date は きょう）
     goalInfo: goalInfo,
     goalSize: GOAL_SIZE,
+    goalIcons: GOAL_ICONS,
     // 数の 上限（画面の 入力欄・FAQ の 数字と あうかを test-api.mjs で 確かめる）
-    limits: { kids: MAX_KIDS, name: MAX_NAME, taskName: MAX_TASK_NAME, goalSize: GOAL_SIZE, goal: MAX_GOAL, rate: MAX_RATE, yen: MAX_YEN, what: MAX_WHAT },
+    limits: { kids: MAX_KIDS, name: MAX_NAME, taskName: MAX_TASK_NAME, goalSize: GOAL_SIZE, goal: MAX_GOAL, menu: MAX_MENU, goalName: MAX_GOAL_NAME, rate: MAX_RATE, yen: MAX_YEN, what: MAX_WHAT },
     // おさいふの のこりと 記録（state は /api/state の 中身）
     walletInfo: walletInfo,
 

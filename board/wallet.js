@@ -1,6 +1,6 @@
 // おさいふ（2026-11-18）。がんばりカレンダー（子どもの 画面）の 中の もう1つの ページ。
 //   設定の「使う機能」で おさいふに 印を つけた 子だけ（kid.wallet）。入口は 子どもの 画面の 上（2026-11-18 に 決めた。無料）。
-//   もくひょうの「こうかんした」の あとに「おさいふに 入れますか？」（1ポイント＝○円 を 決めた 子だけ。kid.walletRate）。
+//   もくひょうの「こうかんした」の あとに「おさいふに 入れますか？」（金額の ある ごほうびだけ。kid.goal.menu の yen。2026-11-24 までは kid.walletRate）。
 //   左: ほしいもの（いまの お金で どこまで とどいたか）と のこり（おさいふ・ちょきん）。右: お金の きろく（あたらしい 順）。
 //   使った・ちょきんする・ほしいもの は 本人。入れる（おさいふ／ちょきん）・ちょきんから おさいふへ・行を けす は おうちの人（鍵の あと。大人向けの ことば）。
 //   ちょきん（2026-11-18 に「あずけてる」から かえた）は とっておく お金。いつも 出す（ためる ことを 知る きっかけ）
@@ -145,7 +145,7 @@
   }
   // ほしいもの（本人）。直す ときは けす・買えた も
   function openWant(id) {
-    var x = id && info().wants.filter(function (y) { return y.id === id; })[0];
+    var x = id && api.walletInfo(KV.raw(), KV.kid()).wants.filter(function (y) { return y.id === id; })[0]; // なおす 欄は 本物（撮影用に かくして いても）
     openPop({ type: "want", id: x ? x.id : null }, W("wlWantTitle"),
       row(W("wlWantName"), '<input type="text" class="wl-text" id="wl-want-name" maxlength="20" placeholder="' + esc(T("wlWantHint")) + '" value="' + esc(x ? x.name : "") + '">') +
       row(W("wlPrice"), numInput("wl-amount", x ? x.price : "") + '<span class="wl-unit">' + W("wlYen", { x: "" }).trim() + '</span>') +
@@ -178,10 +178,11 @@
   }
 
   // もくひょうの「こうかんした」の あと（おうちの人。鍵の あと。kids.js から）。1ポイント＝○円で 出した 金額を 入れて おき、直せる
-  function openExchange(size, rate) {
+  // it: いま めざして いる ごほうび（api.js の goalInfo().item。金額は ごほうびの yen から。2026-11-24 に 1ポイント＝○円 から かえた）
+  function openExchange(it) {
     openPop({ type: "exchange" }, A("wlExTitle"),
-      '<p class="wl-hint">' + A("wlExNote").replace("{p}", size).replace("{r}", rate) + '</p>' +
-      row(A("wlAmount"), numInput("wl-amount", size * rate) + '<span class="wl-unit">円</span>'),
+      '<p class="wl-hint">' + esc(A("wlExNote").replace("{n}", it.name || "もくひょう").replace("{p}", it.size)) + '</p>' +
+      row(A("wlAmount"), numInput("wl-amount", it.yen) + '<span class="wl-unit">円</span>'),
       btn("wl-ex-no", A("wlExNo"), "ghost") + btn("wl-ok", A("wlExYes"), "qk-ok"), true);
   }
   function exchange(body) {

@@ -203,8 +203,10 @@
       kidColors = kids.map(function (k) { return k.color; });
       walletChecks = kids.map(function (k) { return !!k.wallet; });
       walletPick = walletChecks.some(Boolean) ? "on" : "off";
-      var rated = kids.filter(function (k) { return k.wallet && k.walletRate > 0; })[0];
-      walletRate = walletRate0 = rated ? String(rated.walletRate) : "";
+      // おさいふに 入れる 金額は、いま めざして いる ごほうびの yen（2026-11-24 に 1ポイント＝○円 から かえた。api.js の goalInfo）
+      var yens = kids.filter(function (k) { return k.wallet; }).map(function (k) { return Api.goalInfo(s, k.id, "").item.yen; });
+      var rated = yens.filter(function (y) { return y > 0; })[0];
+      walletRate = walletRate0 = rated ? String(rated) : "";
       lockNow = st.parentLock || { type: "none" };
       lockPick = lockNow.type === "pin" || lockNow.type === "easy" ? lockNow.type : "none";
       $("su-pin").value = "";
@@ -478,11 +480,11 @@
   function save() {
     var rate = walletRate.trim() === "" ? 0 : parseInt(walletRate, 10) || 0;
     var kids = names.map(function (n, i) {
-      // おさいふ: 使わない 子は 印を はずす（1ポイント＝○円は のこす）。使う 子は 円も 送る
+      // おさいふ: 使わない 子は 印を はずす（ごほうびの 金額は のこす）。使う 子は いま めざして いる ごほうびの 金額も 送る（goalYen）
       //   やり直しで 金額の 欄を さわらなければ、前から 金額の ある 子は その子の 金額の まま（設定で 子どもごとに 変えた 分を そろえない。2026-11-18）
       var w = { wallet: walletKid(i), ruby: !!rubys[i] };
       var had = (cur.kids || []).filter(function (k) { return k.id && k.id === kidIds[i]; })[0];
-      if (w.wallet && !(walletRate === walletRate0 && had && had.walletRate > 0)) w.walletRate = rate;
+      if (w.wallet && !(walletRate === walletRate0 && had && Api.goalInfo(cur, had.id, "").item.yen > 0)) w.goalYen = rate;
       return Object.assign({ name: n.trim(), level: levels[i], id: kidIds[i] }, w);
     });
     if (saving) return;   // つづけて おしても 2回 とうろく しない
@@ -493,7 +495,7 @@
     var colors = Object.keys(window.KID_PALETTE);
     var sendKids = kids.filter(function (k) { return k.name; }).map(function (k) {
       var w = { wallet: k.wallet, ruby: k.ruby };
-      if ("walletRate" in k) w.walletRate = k.walletRate;
+      if ("goalYen" in k) w.goalYen = k.goalYen;
       if (k.id && old[k.id]) return Object.assign({}, old[k.id], { name: k.name, level: k.level, active: true }, w);
       var c = colors.filter(function (x) { return !used[x]; })[0] || colors[0];
       used[c] = true;
@@ -551,7 +553,7 @@
     }
     if (name === "wallet" && walletPick === "on") {
       if (!names.some(function (n, i) { return n.trim() && walletKid(i); })) { $("su-error").textContent = "おさいふを使う子を選んでください"; return; }
-      if (walletRate.trim() !== "" && !/^\d{1,5}$/.test(walletRate.trim())) { $("su-error").textContent = "1ポイントの金額は数字で入れてください"; return; }
+      if (walletRate.trim() !== "" && !/^\d{1,6}$/.test(walletRate.trim())) { $("su-error").textContent = "金額は数字で入れてください"; return; }
     }
     if (name === "lock" && !readLock()) { $("su-error").textContent = "鍵の4桁の番号を入れてください"; $("su-pin").focus(); return; }
     if (name === "calendar" && calPick === "device") {

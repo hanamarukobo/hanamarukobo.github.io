@@ -56,6 +56,9 @@ body.night {
 html, body {
   margin: 0;
   height: 100%;
+  /* iPhone の Safari は 横に すると 一部の 文字を 勝手に 大きく する（枠が ふくらむ）。拡大は 自分で 決める（11-26） */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
   color: var(--text);
   background-color: var(--bg1);
   background-image:
@@ -431,6 +434,44 @@ body.night .advice .tile.need { background: #4a2f44; }
 .kv-goal { background: #fff8de; border-radius: 16px; padding: 6px 12px 8px; }
 .kv-goal-head { display: flex; justify-content: space-between; gap: 8px; font-size: 16px; color: #b07a00; white-space: nowrap; }
 body.night .kv-goal { background: #3e3826; }
+/* ごほうびの 名前と 絵（kids.js。ごほうびが 2つ 以上 あれば はこ ごと 押せて、下に 点と「かえる」。2026-11-24） */
+.kv-goal-name { display: flex; align-items: center; gap: 6px; min-width: 0; font-weight: 700; color: #7a4a00; font-size: 17px; }
+.kv-goal-name > span { overflow: hidden; text-overflow: ellipsis; }
+.kv-goal-name .ico { width: 28px; height: 28px; flex: none; }
+.kv-goal-num { flex: none; }
+.kv-goal-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 4px; font-size: 15px; color: #a07a30; white-space: nowrap; }
+.kv-goal-foot.one { justify-content: flex-end; }
+.kv-goal-dots { display: flex; gap: 5px; }
+.kv-goal-dots i { width: 9px; height: 9px; border-radius: 50%; background: #e8d3a0; }
+.kv-goal-dots i.on { background: var(--kid); }
+.kv-goal.pick { cursor: pointer; }
+.kv-goal-chg { border: 2px solid var(--kid); color: var(--kid); background: #fff; border-radius: 999px; padding: 0 10px; font-weight: 700; }
+body.night .kv-goal-name { color: #ffd76a; }
+body.night .kv-goal-foot { color: #e8c977; }
+body.night .kv-goal-chg { background: transparent; }
+/* どの ごほうびを めざす？（子どもが えらぶ。たまった ぶんは へらない） */
+.gp-veil { position: fixed; inset: 0; z-index: 60; background: rgba(40, 30, 20, 0.45); display: flex; align-items: center; justify-content: center; padding: 12px; }
+.gp-sheet { background: #fffdf6; border-radius: 24px; padding: 16px 16px 12px; width: min(560px, 100%); max-height: 100%; overflow-y: auto; box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25); }
+.gp-sheet h3 { margin: 0 0 2px; font-size: 24px; text-align: center; color: #5a4030; }
+.gp-sub { margin: 0 0 10px; text-align: center; font-size: 15px; color: #a07a30; }
+.gp-sub .ico { width: 1.2em; height: 1.2em; vertical-align: -0.2em; }
+.gp-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.gp-item { display: flex; align-items: center; gap: 12px; width: 100%; padding: 8px 12px; border-radius: 18px; background: #fff; border: 3px solid #eee2c8; font: inherit; text-align: left; color: inherit; }
+.gp-item.cur { border-color: var(--kid); background: var(--kid-soft, #fff); }
+.gp-item > .ico { width: 48px; height: 48px; flex: none; }
+.gp-mid { flex: 1; min-width: 0; }
+.gp-name { display: flex; justify-content: space-between; gap: 8px; font-size: 19px; font-weight: 700; color: #5a4030; white-space: nowrap; }
+.gp-name > span { overflow: hidden; text-overflow: ellipsis; }
+.gp-name small { flex: none; font-size: 15px; color: #b07a00; }
+.gp-name small .ico { width: 1.1em; height: 1.1em; vertical-align: -0.15em; }
+.gp-item .kv-gauge { margin-top: 4px; }
+.gp-item .kg-track { background: #f3e8cc; }
+.gp-item.gold .kg-fill { background: #f5a623; }
+.gp-now { flex: none; font-size: 13px; font-weight: 700; color: #fff; background: var(--kid); border-radius: 999px; padding: 2px 8px; }
+.gp-close { display: block; margin: 10px auto 0; border: none; background: #eee2c8; color: #5a4030; border-radius: 999px; padding: 8px 28px; font: inherit; font-size: 18px; font-weight: 700; }
+body.night .gp-sheet { background: #2f2a24; }
+body.night .gp-sheet h3, body.night .gp-name { color: #f3e6d3; }
+body.night .gp-item { background: #3a332b; border-color: #5a4c3a; }
 /* 「みました」まちの ポイント（kids.js。ゲージの うすい しまと 一言） */
 .kv-wait { display: flex; align-items: center; gap: 4px; margin-top: 4px; font-size: 14px; color: #a07a30; white-space: nowrap; overflow: hidden; }
 .kv-wait b { font-weight: 700; flex: none; }
@@ -450,6 +491,20 @@ body.night .kv-wait { color: #e8c977; }
   .kv-goal-head > span:last-child { order: 2; }
   .kv-goal .kv-gauge { order: 1; flex: 1; margin-top: 0; }
   .kv-goal .kv-gauge .kg-star { display: none; }
+  .kv-goal-foot { display: contents; }
+  .kv-goal-head > .kv-goal-num { order: 2; }
+  .kv-goal-left { order: 3; }
+  .kv-goal-chg { order: 4; }
+  .kv-goal-dots { display: none; }
+  /* 1行の はこでは ごほうびの 名前も 絵も 出さない（ゲージの 右の 旗が ごほうびの 絵。左にも 出すと 旗が 2本 ならぶ。えらぶ 画面で 名前が 見える。11-26） */
+  .kv-goal-name { display: none; }
+  .gp-sheet { padding: 10px 14px 8px; }
+  .gp-sheet h3 { font-size: 20px; }
+  .gp-sub { margin-bottom: 6px; }
+  .gp-list { gap: 6px; }
+  .gp-item { padding: 4px 10px; }
+  .gp-item > .ico { width: 36px; height: 36px; }
+  .gp-close { margin-top: 6px; padding: 4px 24px; }
   /* 1行の はこでは ゲージが ちぢむので、一言は 出さない（ゲージの しまは 出る） */
   .kv-wait { display: none; }
   .kv-total { gap: 4px; }
@@ -494,9 +549,26 @@ body.night .kv-gauge .kg-track { background: rgba(255, 255, 255, 0.15); }
 
 /* 設定の もくひょう（子どもごと） */
 .settings .s-goals { list-style: none; margin: 4px 0 8px; padding: 0; }
-.settings .s-goals li { display: flex; align-items: center; gap: 10px; padding: 6px 0; border-bottom: 2px dashed #f0dcd4; }
-.settings .s-goals .g-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.settings .s-goals input[type=number] { width: 6em; }
+/* もくひょう: 子どもごとに ごほうびの メニュー（settings.js の renderGoals。2026-11-24） */
+.settings .s-goals .g-kid { padding: 8px 0; border-bottom: 2px dashed #f0dcd4; }
+.settings .s-goals .g-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 4px; }
+.settings .s-goals .g-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 700; }
+.settings .s-goals .g-menu { list-style: none; margin: 0 0 6px; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.settings .s-goals .g-menu li { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
+.settings .s-goals .g-icon { flex: none; width: 44px; height: 44px; padding: 4px; border-radius: 12px; border: 2px solid #f0dcd4; background: #fff; display: flex; align-items: center; justify-content: center; }
+.settings .s-goals .g-icon .ico { width: 30px; height: 30px; }
+.settings .s-goals .g-text { flex: 1 1 8em; min-width: 6em; }
+.settings .s-goals .g-pt, .settings .s-goals .g-yen { white-space: nowrap; }
+.settings .s-goals input[type=number] { width: 5.5em; }
+.settings .s-goals .g-yen input { width: 6.5em; margin: 0 4px; }
+.settings .s-goals .g-del { flex: none; }
+/* せまい 画面（スマホの 縦）: 1段目 絵・名前・×、2段目 ポイント・おさいふ */
+body.adult-narrow .settings .s-goals .g-menu li { padding: 6px; border-radius: 12px; background: #fff7f2; }
+body.adult-narrow .settings .s-goals .g-text { flex: 1 1 calc(100% - 120px); min-width: 0; order: 1; }
+body.adult-narrow .settings .s-goals .g-del { order: 2; }
+body.adult-narrow .settings .s-goals .g-pt { order: 3; }
+body.adult-narrow .settings .s-goals .g-yen { order: 4; }
+body.adult-narrow .settings .s-goals .g-pt::before { content: ""; display: inline-block; width: 44px; }
 
 .kv-tasks { padding: 12px 14px; }
 .kv-tasks-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
@@ -669,7 +741,8 @@ body.night .kv-gauge .kg-track { background: rgba(255, 255, 255, 0.15); }
 .slot.wx-day .rain { font-size: 18px; }
 .advice .tile.wx-note { grid-column: 1 / -1; }
 /* 予定が 多くて 入りきらない ときは、たてに スクロール できる（2026-11-21 .9 で 4つ目が 切れて 見られなかった） */
-.events { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-direction: column; gap: 8px; flex: 1 1 auto; min-height: 0; overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; }
+.events { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-direction: column; gap: 8px; flex: 1 1 auto; min-height: 0; overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; touch-action: pan-y; }
+/* ↑ touch-action: スクロールする箱は 親の pan-y を 引きつがない。ないと 予定の 上の 横スワイプを ブラウザが とって、日が かわらない */
 .events li { flex: none; }
 /* スワイプで 日を かえたとき、すべって 入ってくる */
 .events.slide-next { animation: ev-in-next 0.22s ease-out; }
@@ -1285,6 +1358,7 @@ body.portrait .bdv-go { min-width: 0; width: 100%; }
   position: relative;
   width: 860px;
   max-height: calc(100vh - 20px);
+  max-height: calc(100dvh - 20px);   /* iPhone の Safari は 100vh が 下の 帯の 裏まで ある（ボタンが 隠れる）。見えて いる 高さで */
   overflow-y: auto;
   background: var(--card);
   color: var(--text);
@@ -1385,6 +1459,16 @@ body.portrait .qk-body { flex-direction: column; }
 .settings .s-pages { flex: 1; min-width: 0; overflow-y: auto; padding-right: 4px; }
 .settings .s-page[hidden], .settings .s-group[hidden] { display: none; }
 .settings h3 { display: flex; align-items: center; gap: 8px; margin: 2px 0 6px; font-size: 18px; color: var(--orange); }
+/* 撮影用に 一部の 文字を 隠す（ヘルプの いちばん 下。photo.js） */
+.settings .s-photo { margin-top: 14px; border: 1px solid #f0dcd4; border-radius: 14px; background: var(--card); padding: 0 14px; }
+.settings .s-photo > summary { cursor: pointer; list-style: none; position: relative; padding: 10px 0 10px 18px; font-size: 18px; font-weight: 700; color: var(--orange); }
+.settings .s-photo > summary::-webkit-details-marker { display: none; }
+.settings .s-photo > summary::before { content: "▸"; position: absolute; left: 0; transition: transform 0.15s; }
+.settings .s-photo[open] > summary::before { transform: rotate(90deg); }
+.settings .s-photo[open] { padding-bottom: 10px; }
+.s-photo-allow h4 { margin: 10px 0 4px; font-size: 15px; }
+.s-photo-list { display: flex; flex-wrap: wrap; gap: 4px 16px; }
+.s-photo-list label { display: inline-flex; align-items: center; gap: 4px; }
 .settings .s-page h3 ~ h3, .settings .s-group h3, .settings .s-page .row + h3 { margin-top: 16px; }
 .settings .label { width: 210px; }
 .settings .s-choices { display: flex; flex-direction: column; gap: 8px; margin-bottom: 6px; }

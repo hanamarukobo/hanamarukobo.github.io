@@ -164,6 +164,12 @@
     goalNear: { kinder: "もうすこし！", lower: "もうすこし！", upper: "もう少し！" },
     goalReached: { kinder: "たっせい！", lower: "たっせい！", upper: "達成！" },
     goalBox: { kinder: "もくひょう", lower: "もくひょう", upper: "目標" },
+    // ごほうびを えらぶ（がんばりカレンダーの もくひょうの はこ。kids.js の openGoalPick。2026-11-24）
+    goalChange: { kinder: "かえる", lower: "かえる", upper: "かえる" },
+    goalPickTitle: { kinder: "どれを めざす？", lower: "どれを めざす？", upper: "どれを 目指す？" },
+    goalPickSub: { kinder: "{x} たまってるよ。かえても へらないよ", lower: "{x} たまってるよ。かえても へらないよ", upper: "{x} たまってるよ。かえても へらないよ" },
+    goalNow: { kinder: "いま", lower: "いま", upper: "いま" },
+    goalPickClose: { kinder: "とじる", lower: "とじる", upper: "とじる" },
     // おさいふ（wallet.js。2026-11-18）。お金は ようちえん・小1〜2 は「えん」、小3〜 は「円」
     wlOpen: { kinder: "{i:wallet} おさいふ", lower: "{i:wallet} おさいふ", upper: "{i:wallet} おさいふ" },
     wlYen: { kinder: "{x}えん", lower: "{x}えん", upper: "{x}円" },
@@ -411,7 +417,7 @@
     wlKeptNow: "いまの貯金：{x}円",
     // もくひょうの「こうかんした」の あと（wallet.js の openExchange。2026-11-18）
     wlExTitle: "おさいふに入れますか？",
-    wlExNote: "{p}ポイント × {r}円です。金額は変えられます。",
+    wlExNote: "「{n}」（{p}ポイント）のごほうびです。金額は変えられます。",
     wlExYes: "入れる",
     wlExNo: "入れない",
     wlExFail: "交換できませんでした",

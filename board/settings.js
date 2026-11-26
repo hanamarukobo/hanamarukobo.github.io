@@ -372,37 +372,67 @@
       if (!k.name.trim() || k.active === false) return "";
       return '<li data-i="' + i + '"><span class="g-name">' + escapeHtml(k.name) + '</span>' +
         '<label class="off"><input type="checkbox" checked disabled> がんばりカレンダー</label>' +
-        '<label><input type="checkbox" data-act="wallet"' + (k.wallet ? " checked" : "") + '> おさいふ</label>' +
-        // 1ポイント＝○円（こうかんした ときに おさいふに 入れるかを 聞く。空は 聞かない。2026-11-18）
-        '<label class="s-rate"' + (k.wallet ? "" : " hidden") + '>1ポイント＝<input type="number" min="0" max="10000" inputmode="numeric" data-act="rate" value="' +
-          (k.walletRate > 0 ? k.walletRate : "") + '">円</label></li>';
+        '<label><input type="checkbox" data-act="wallet"' + (k.wallet ? " checked" : "") + '> おさいふ</label></li>';
     }).join("");
   }
   $("s-features").addEventListener("change", function (ev) {
     var li = ev.target.closest("li"), k = li && kidsEdit[+li.dataset.i];
     if (!k) return;
-    if (ev.target.dataset.act === "wallet") {
-      k.wallet = ev.target.checked;
-      li.querySelector(".s-rate").hidden = !k.wallet;
-    }
-  });
-  $("s-features").addEventListener("input", function (ev) {
-    var li = ev.target.closest("li");
-    if (li && ev.target.dataset.act === "rate") kidsEdit[+li.dataset.i].walletRate = Math.max(0, parseInt(ev.target.value, 10) || 0);
+    // おさいふを 使う 子だけ、もくひょうの ごほうびに「おさいふに ○円」の 欄を 出す
+    if (ev.target.dataset.act === "wallet") { k.wallet = ev.target.checked; renderGoals(); }
   });
   // もくひょう（子どもごと。保存して ある 子だけ。新しい 子は はじめ 50 で、保存の あとに かえられる）
+  //   ごほうびの メニュー（2026-11-24。api.js の goalOf）: 1つの 子に 6つまで。絵・名前・ポイント・（おさいふを 使う 子は）おさいふに 入れる 金額。
+  //   どれを めざすかは 子どもが がんばりカレンダーで えらぶ。goalsEdit = { 子の id: さわった メニュー }
   var goalsEdit = {};
   function goalSize(k) { return (k.goal && k.goal.size) || window.BoardApi.goalSize; }
+  function menuOf(k) {
+    if (goalsEdit[k.id]) return goalsEdit[k.id];
+    var m = k.goal && Array.isArray(k.goal.menu) && k.goal.menu.length ? k.goal.menu
+      : [{ id: "g1", icon: "goal-flag", name: "", size: goalSize(k), yen: k.walletRate > 0 ? goalSize(k) * k.walletRate : 0 }];
+    return JSON.parse(JSON.stringify(m));
+  }
+  function goalKids() { return kidsEdit.filter(function (k) { return k.id && k.name.trim() && k.active !== false; }); }
   function renderGoals() {
-    var ks = kidsEdit.filter(function (k) { return k.id && k.name.trim() && k.active !== false; });
+    var ks = goalKids(), L = window.BoardApi.limits;
     $("s-goals").innerHTML = ks.map(function (k) {
-      var v = goalsEdit.hasOwnProperty(k.id) ? goalsEdit[k.id] : goalSize(k);
-      return '<li><span class="g-name">' + escapeHtml(k.name) + '</span>' +
-        '<label><input type="number" min="1" max="9999" inputmode="numeric" data-goal="' + k.id + '" value="' + escapeHtml(String(v)) + '"> ポイント</label></li>';
+      var menu = menuOf(k);
+      return '<li class="g-kid" data-kid="' + k.id + '"><div class="g-head"><span class="g-name">' + escapeHtml(k.name) + '</span>' +
+        (ks.length > 1 ? '<button class="ghost small" data-act="gcopy">ほかの子にも同じにする</button>' : "") + '</div>' +
+        '<ul class="g-menu">' + menu.map(function (m, j) {
+          return '<li data-j="' + j + '"><button type="button" class="g-icon" data-act="gicon" aria-label="絵を変える">' + window.Words.icon(m.icon || "goal-flag") + '</button>' +
+            '<input type="text" class="g-text" maxlength="' + L.goalName + '" data-act="gname" placeholder="もくひょう" aria-label="ごほうびの名前" value="' + escapeHtml(m.name || "") + '">' +
+            '<label class="g-pt"><input type="number" min="1" max="9999" inputmode="numeric" data-act="gsize" data-goal="' + k.id + '" value="' + escapeHtml(String(m.size)) + '"> ポイント</label>' +
+            (k.wallet ? '<label class="g-yen">おさいふに<input type="number" min="0" max="' + L.yen + '" inputmode="numeric" data-act="gyen" value="' + (m.yen > 0 ? m.yen : "") + '">円</label>' : "") +
+            '<button type="button" class="ghost small g-del" data-act="gdel" aria-label="消す"' + (menu.length > 1 ? "" : " disabled") + '>×</button></li>';
+        }).join("") + '</ul>' +
+        '<button class="ghost small" data-act="gadd"' + (menu.length < L.menu ? "" : " disabled") + '>＋ ごほうびを足す</button></li>';
     }).join("");
   }
+  function goalTouch(el) {
+    var li = el.closest(".g-kid"), k = li && goalKids().filter(function (x) { return x.id === li.dataset.kid; })[0];
+    if (!k) return null;
+    goalsEdit[k.id] = menuOf(k);
+    return { kid: k, menu: goalsEdit[k.id], row: el.closest("[data-j]") ? +el.closest("[data-j]").dataset.j : -1 };
+  }
   $("s-goals").addEventListener("input", function (ev) {
-    if (ev.target.dataset.goal) goalsEdit[ev.target.dataset.goal] = ev.target.value;
+    var t = goalTouch(ev.target), a = ev.target.dataset.act;
+    if (!t || t.row < 0) return;
+    var m = t.menu[t.row];
+    if (a === "gname") m.name = ev.target.value;
+    if (a === "gsize") m.size = ev.target.value;
+    if (a === "gyen") m.yen = ev.target.value;
+  });
+  $("s-goals").addEventListener("click", function (ev) {
+    var b = ev.target.closest("button[data-act]"), t = b && goalTouch(b);
+    if (!t) return;
+    var icons = window.BoardApi.goalIcons, a = b.dataset.act;
+    if (a === "gicon") { var m = t.menu[t.row]; m.icon = icons[(icons.indexOf(m.icon) + 1) % icons.length]; }
+    if (a === "gdel" && t.menu.length > 1) t.menu.splice(t.row, 1);
+    if (a === "gadd" && t.menu.length < window.BoardApi.limits.menu) t.menu.push({ id: "g" + Date.now().toString(36), icon: "gift", name: "", size: goalSize(t.kid) * 2, yen: 0 });
+    // ほかの 子にも 同じ メニュー（えらんで いた ものが なくなった 子は 1つめを めざす）
+    if (a === "gcopy") goalKids().forEach(function (o) { if (o.id !== t.kid.id) goalsEdit[o.id] = JSON.parse(JSON.stringify(t.menu)); });
+    renderGoals();
   });
   // 表示できる 子どもの 数（4人。無料も Pro も おなじ。2026-11-19 に 無料の 2人の 上限を なくした）まで いたら「＋ 子どもを追加」を 押せなく する
   function maxKidsNote() {
@@ -526,6 +556,7 @@
     if (driveOn() && window.Drive.client().linked()) window.Drive.client().prepare();
     setText("s-procode-msg", "");
     renderPro();
+    renderPhoto();
     fitTabs();
     resetDirty();
   }
@@ -680,13 +711,21 @@
       showTab("kids");
       return setText("s-error", "表示する子どもを1人以上入れてください");
     }
-    // もくひょうは 変えた 子だけ 送る（大きさを かえると、たっせいの 回数と とちゅうまでの ぶんを のこして かぞえなおす）
+    // もくひょう（ごほうびの メニュー）は 変えた 子だけ 送る（たまった ぶんは そのまま）
     var goals = [];
     for (var gid in goalsEdit) {
-      var gk = kidsEdit.filter(function (k) { return k.id === gid; })[0], gv = parseInt(goalsEdit[gid], 10);
-      if (!gk || String(gv) === String(goalSize(gk))) continue;
-      if (!(gv >= 1 && gv <= 9999)) { showTab("kids"); return setText("s-error", "もくひょうは 1〜9999 の数字で入れてください"); }
-      goals.push({ kid: gid, size: gv });
+      var gk = kidsEdit.filter(function (k) { return k.id === gid; })[0];
+      if (!gk) continue;
+      var menu = [];
+      for (var j = 0; j < goalsEdit[gid].length; j++) {
+        var m = goalsEdit[gid][j], gv = parseInt(m.size, 10), yv = String(m.yen == null ? "" : m.yen).trim();
+        if (!(String(gv) === String(m.size).trim() && gv >= 1 && gv <= 9999)) { showTab("kids"); return setText("s-error", "もくひょうは 1〜9999 の数字で入れてください"); }
+        if (yv !== "" && !/^\d{1,6}$/.test(yv)) { showTab("kids"); return setText("s-error", "おさいふに入れる金額は数字で入れてください"); }
+        menu.push({ id: m.id, icon: m.icon, name: String(m.name || "").trim(), size: gv, yen: parseInt(yv, 10) || 0 });
+      }
+      var was = JSON.parse(JSON.stringify(menuOf(Object.assign({}, gk, { id: "" }))));
+      if (JSON.stringify(menu) === JSON.stringify(was.map(function (x) { return { id: x.id, icon: x.icon, name: x.name || "", size: x.size, yen: x.yen || 0 }; }))) continue;
+      goals.push({ kid: gid, menu: menu });
     }
     // 設定 → 子ども → もくひょう を まとめて 保存（どれか だめなら なにも かえない。古い 置いた端末には 1つずつ）
     window.BoardApi.postAll([{ path: "/api/board/settings", body: next }, { path: "/api/board/kids", body: { kids: named } }]
@@ -953,6 +992,37 @@
     });
   });
   renderPro();
+  // ---- 撮影用に 一部の 文字を 隠す（2026-11-26。photo.js）----
+  //   見せて よいものは いま ある 項目から えらぶだけ（あとから 足した ものは 隠れる。注意書きに 時刻）
+  function renderPhoto() {
+    var on = window.Photo.on(), box = $("s-photo-allow");
+    $("s-photo").checked = on;
+    if (on) $("s-photo-box").open = true;   // ふだんは 閉じて おく（あまり 使わない）。オンの 間は 開いて 見せる
+    box.hidden = !on;
+    if (!on) { box.innerHTML = ""; return; }
+    var s = (window.KidView && window.KidView.raw()) || { kids: B.kids }, g = window.Photo.candidates(s, B.calTitles ? B.calTitles() : []);
+    var allow = window.Photo.allowList(), now = new Date();
+    var at = (now.getMonth() + 1) + "/" + now.getDate() + " " + now.getHours() + ":" + B.pad(now.getMinutes());
+    var groups = [["tasks", "やること"], ["goals", "ごほうび"], ["wallet", "おさいふ（ほしいもの・記録）"], ["events", "予定"]];
+    box.innerHTML = '<p class="note">気温は少しずらして表示します。見せてもよいものに印を付けてください（' + at + ' 時点の項目です。あとから足したものは隠れます）。</p>' +
+      groups.map(function (gr) {
+        var list = g[gr[0]];
+        if (!list.length) return "";
+        return '<h4>' + gr[1] + '</h4><div class="s-photo-list">' + list.map(function (v) {
+          return '<label><input type="checkbox" data-photo="' + B.escapeHtml(v) + '"' + (allow.indexOf(v) >= 0 ? " checked" : "") + '> ' + B.escapeHtml(v) + '</label>';
+        }).join("") + '</div>';
+      }).join("");
+  }
+  // ヘルプの いちばん 下なので、開いたら 中身が 見える ところまで 送る
+  $("s-photo-box").addEventListener("toggle", function () { if ($("s-photo-box").open) $("s-photo-box").scrollIntoView({ block: "nearest", behavior: "smooth" }); });
+  $("s-photo").addEventListener("change", function () {
+    window.Photo.set($("s-photo").checked);
+    renderPhoto();
+  });
+  $("s-photo-allow").addEventListener("change", function (ev) {
+    var i = ev.target.closest("[data-photo]");
+    if (i) window.Photo.allow(i.dataset.photo, i.checked);
+  });
   // 押して 覚える ガイド（guide.js）。置いた 端末は 設定を 閉じて ホームから、つないだ スマホ・ブラウザは 設定の まま
   $("s-guide").addEventListener("click", function () {
     if (window.BoardApi.remote || window.BoardApi.paired) return window.Guide.open();

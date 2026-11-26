@@ -42,6 +42,7 @@
   function placeLabel() {
     var p = place(), c = p && p.city;
     if (!c) return "";
+    if (window.Photo.on()) return window.Photo.mask;
     if (levelFor("weather") === "ruby") return window.Words.rubyName(c.name, c.kana, escapeHtml);
     return escapeHtml(levelFor("weather") !== "upper" && c.kana ? c.kana : c.name);
   }
@@ -244,8 +245,9 @@
     return "";
   }
 
-  // hour 時の気温。3時間ごとの値の あいだは まっすぐ つなぐ
-  function tempAt(day, hour) {
+  // hour 時の気温。3時間ごとの値の あいだは まっすぐ つなぐ（撮影用に かくす ときは 日ごとに ずらす。photo.js）
+  function tempAt(day, hour) { return window.Photo.temp(day, tempRaw(day, hour)); }
+  function tempRaw(day, hour) {
     var t = (wx.days[day] || {}).t;
     if (!t) return null;
     var h0 = Math.floor(hour / 3) * 3, a = t[pad(h0)], b = t[pad(h0 + 3)];
@@ -273,8 +275,8 @@
     var cool = [tempAt(day, 7), tempAt(day, 17)].filter(function (t) { return t !== null; });
     s.cool = cool.length ? Math.min.apply(null, cool) : s.min;
     var j = wx.days[day];
-    if (j.max !== undefined) s.max = j.max;
-    if (j.min !== undefined) s.min = j.min;
+    if (j.max !== undefined) s.max = window.Photo.temp(day, j.max);
+    if (j.min !== undefined) s.min = window.Photo.temp(day, j.min);
     var pops = ["06", "12"].map(function (h) { return j.pops[h]; })
       .filter(function (p) { return p !== undefined; });
     if (pops.length) s.rainMax = Math.max.apply(null, pops);
@@ -315,6 +317,7 @@
     return o >= 0 && o <= wxMax();
   });
 
+  window.addEventListener("board:photo", function () { renderWeather(); }); // 撮影用に かくす（photo.js）
   function renderWeather() {
     B.curSec = "weather";
     var p = place(), now = new Date(), offset = wxShown();
@@ -328,7 +331,7 @@
     for (var i = 0; i <= max; i++) dots += i === offset ? '<i class="on"></i>' : "<i></i>";
     if ($("wx-dots").innerHTML !== dots) $("wx-dots").innerHTML = dots;
     var sum = p && offset < 2 ? daySummary(day) : null;
-    if (!sum && p && (wx.week || {})[day]) { renderWeekDay(wx.week[day]); return; }
+    if (!sum && p && (wx.week || {})[day]) { renderWeekDay(wx.week[day], day); return; }
     if (!sum) {
       // つないだ スマホで 置いた 端末に つながらない ときは 地域も わからない。理由は がんばりカレンダーに 出るので、ここは 空ける（2026-11-19）
       var cut = !p && (window.BoardApi.remote || window.BoardApi.paired) && !B.gotState;
@@ -359,7 +362,7 @@
   }
 
   // あさって から さきの 日（週間予報）。服・かさの 目安は 出さず、同じ 高さの 枠に ひとこと（カードの 高さを かえない）
-  function renderWeekDay(w) {
+  function renderWeekDay(w, day) {
     var ic = weatherIcon(codeText(w.code));
     // きょう・あしたの 3つの 枠と 同じ 高さに する（ほかの カードが うごかない ように）
     if (slotsHeight) $("slots").style.minHeight = slotsHeight + "px";
@@ -368,8 +371,8 @@
       '<div><div class="label">' + ic[1] + '</div>' +
       '<div class="rain">' + (w.pop === undefined ? "" : "☂ " + w.pop + "%") + '</div></div>' +
       '</div>';
-    $("summary").innerHTML = (w.max === undefined ? "" : '<span class="pill hi">' + W("hiShort", { t: Math.round(w.max) }) + '</span>') +
-      (w.min === undefined ? "" : '<span class="pill lo">' + W("loShort", { t: Math.round(w.min) }) + '</span>');
+    $("summary").innerHTML = (w.max === undefined ? "" : '<span class="pill hi">' + W("hiShort", { t: Math.round(window.Photo.temp(day, w.max)) }) + '</span>') +
+      (w.min === undefined ? "" : '<span class="pill lo">' + W("loShort", { t: Math.round(window.Photo.temp(day, w.min)) }) + '</span>');
     $("advice").innerHTML = B.settings.showAdvice === false ? "" :
       '<div class="tile wx-note"><span class="icon">' + ic[0] + '</span>' +
       '<div><div class="main">' + W("wxLater") + '</div><div class="sub">' + W("wxLaterSub") + '</div></div></div>';

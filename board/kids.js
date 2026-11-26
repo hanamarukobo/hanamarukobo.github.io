@@ -9,7 +9,8 @@
   var PALETTE = window.KID_PALETTE;
   var IDLE_CLOSE_MS = 2 * 60 * 1000;
 
-  var state = null;      // /api/state のレスポンス
+  var state = null;      // /api/state のレスポンス（撮影用に 文字を かくす ときは その 写し。photo.js）
+  var raw = null;        // かくす 前の 本物（なおす 欄に 出す）
   var viewDate = null;     // カレンダーで えらんだ すぎた日（null なら きょう）
   var openKid = null;    // ひらいている子の id
   // カレンダーで 見ている 月（null なら こんげつ）。さかのぼれるのは FIRST_MONTH まで
@@ -28,7 +29,8 @@
   function load() {
     return window.BoardApi.state()
       .then(function (s) {
-        state = s;
+        raw = s;
+        state = window.Photo.state(s);
         render();
         // board.js（表示時間・低消費電力モード）にも設定を知らせる
         window.dispatchEvent(new CustomEvent("board:state", { detail: s }));
@@ -66,12 +68,15 @@
   // だいじ／できたら（2026-11-23）: おうちの人が 設定の「やること」で だいじ を 付けた やることは、子どもの 色の 箱に まとめて いちばん 上
   //   （ごぜん・ごご に わけて いても 箱は 1つ。社長）。その 下に 見出し「できたら」と のこりを いつもの ならびで。
   //   その日の やることに だいじ が 1つも なければ いまの まま（2段は 出さない）。ぜんぶ できても 箱は ちぢめない（やった ことを 見たい）
+  //   「もう できる」は 箱の 上（11-26 社長: 「できたら」の 中だと だいじ でない ように 見える）
   function isDaiji(t) { return !!t.important && !t.bundle; }
   function grouped(tasks, render) {
     var top = tasks.filter(isDaiji);
     if (!top.length) return slotted(tasks, render);
-    var rest = tasks.filter(function (t) { return !isDaiji(t); });
-    return '<li class="daiji"><span class="daiji-head">' + W("daijiHead") + '</span><ul class="daiji-list">' + top.map(render).join("") + '</ul></li>' +
+    var bundles = tasks.filter(function (t) { return t.bundle; });
+    var rest = tasks.filter(function (t) { return !isDaiji(t) && !t.bundle; });
+    return bundles.map(render).join("") +
+      '<li class="daiji"><span class="daiji-head">' + W("daijiHead") + '</span><ul class="daiji-list">' + top.map(render).join("") + '</ul></li>' +
       (rest.length ? '<li class="slot-head dekitara">' + W("dekitaraHead") + '</li>' + slotted(rest, render) : "");
   }
   // その日の 記録と、そのやることを なんかい やったか（チェックは 0 か 1、かいすうは ＋− の数）。決まりは api.js
@@ -155,8 +160,10 @@
     return '<span class="' + cls + '"><span class="kg-star">' + ICON("point-star") + '</span>' +
       '<span class="kg-track">' + (wait > pct ? '<span class="kg-wait" style="width:' + wait + '%"></span>' : "") +
       '<span class="kg-fill" style="width:' + pct + '%"></span>' + (word ? '<span class="kg-word">' + word + '</span>' : "") + '</span>' +
-      '<span class="kg-flag">' + ICON("goal-flag") + '</span></span>';
+      '<span class="kg-flag">' + ICON(g.item ? g.item.icon : "goal-flag") + '</span></span>';
   }
+  // ごほうびの 名前（おうちの人が 入れる。空なら「もくひょう」）
+  function goalName(it) { return it && it.name ? esc(it.name) : W("goalBox"); }
 
   // 子どもが チェックを なおせる 日: きょうと、先月1日 からの すぎた日（決まりは api.js の kidEditable）。
   //   みました の あとに 直したら、みました は 取り消し（api.js の unapprove）
@@ -554,13 +561,19 @@
     $("kv-grid").innerHTML = html;
     // 左の 下: もくひょうの はこ（数字は ここだけ）と、これまでの 合計・その月の はなまる（こうかんの 回数は 出さない。ふりかえりは Pro の レポート）
     var m = monthStats(kid, new Date(y, mo, 1)), g = goalOf(kid);
+    // ごほうびが 2つ 以上 ある ときは はこ ごと 押せて、どれを めざすか えらべる（goalPick。2026-11-24）。下の 点の 数で ほかにも ある と わかる
+    var many = g.menu.length > 1;
     $("kv-total").innerHTML =
-      '<div class="kv-goal"><div class="kv-goal-head"><span>' + W("goalBox") + ' ' + ICON("point-star") + ' ' + g.progress + ' / ' + g.size + '</span>' +
-      '<span>' + (g.reached
+      '<div class="kv-goal' + (many ? " pick" : "") + '"' + (many ? ' role="button" tabindex="0" aria-label="' + esc(window.Words.plain(W("goalPickTitle"))) + '"' : "") + '>' +
+      '<div class="kv-goal-head"><span class="kv-goal-name">' + ICON(g.item.icon) + '<span>' + goalName(g.item) + '</span></span>' +
+      '<span class="kv-goal-num">' + ICON("point-star") + ' ' + g.progress + ' / ' + g.size + '</span></div>' + goalGauge(g, "kv-gauge") +
+      '<div class="kv-goal-foot' + (many ? "" : " one") + '">' +
+      (many ? '<span class="kv-goal-dots">' + g.menu.map(function (it) { return '<i' + (it.id === g.pick ? ' class="on"' : "") + '></i>'; }).join("") + '</span>' : "") +
+      '<span class="kv-goal-left">' + (g.reached
         // とどいたら おうちの人が「こうかんした」（鍵を たしかめてから）。取り消しは ない（2026-11-18。ずれたら おうちで おさいふの 記録などで 合わせる）
         ? '<button class="kv-exchange" id="kv-exchange">' + W("goalExchange") + '</button>'
-        : W("goalLeft", { x: g.size - g.progress })) +
-      '</span></div>' + goalGauge(g, "kv-gauge") +
+        : W("goalLeft", { x: g.size - g.progress })) + '</span>' +
+      (many ? '<span class="kv-goal-chg">' + W("goalChange") + ' ▸</span>' : "") + '</div>' +
       // できたけど まだ みて もらって いない ポイント（ふえる しくみを 子どもにも わかるように）
       (g.waiting ? '<div class="kv-wait"><b>' + W("goalWaitNum", { x: g.waiting }) + '</b><span>' + W("goalWaitText") + '</span></div>' : "") +
       '</div>' +
@@ -680,21 +693,50 @@
     });
   }
 
-  // もくひょうの「こうかんした」（おうちの人。鍵を たしかめてから）
+  // もくひょうの「こうかんした」（おうちの人。鍵を たしかめてから）。ほかの ところを 押すと ごほうびを えらぶ
   $("kv-total").addEventListener("click", function (ev) {
-    if (!ev.target.closest("#kv-exchange")) return;
+    if (!ev.target.closest("#kv-exchange")) {
+      if (ev.target.closest(".kv-goal.pick")) openGoalPick();
+      return;
+    }
     var kid = openKid;
     window.ParentLock.ask(function () {
-      // おさいふを 使い、1ポイント＝○円を 決めて いる 子は「おさいふに 入れますか？」を 聞く（入れない・金額を 直すも できる。wallet.js）
-      var k = state.kids.filter(function (x) { return x.id === kid; })[0];
-      if (k && k.wallet && k.walletRate > 0 && window.Wallet) {
-        return window.Wallet.askExchange(window.BoardApi.goalInfo(state, kid, ymd(new Date())).size, k.walletRate);
-      }
+      // おさいふを 使う 子で、お金の ごほうび（金額の ある もの）は「おさいふに 入れますか？」を 聞く（入れない・金額を 直すも できる。wallet.js）
+      var k = state.kids.filter(function (x) { return x.id === kid; })[0], it = goalOf(kid).item;
+      if (k && k.wallet && it.yen > 0 && window.Wallet) return window.Wallet.askExchange(it);
       window.BoardApi.post("/api/parent/goal-exchange", { kid: kid })
         .then(function () { confetti(); return load(); })
         .catch(function (err) { console.error(err); });
     });
   });
+
+  $("kv-total").addEventListener("keydown", function (ev) {
+    if ((ev.key === "Enter" || ev.key === " ") && ev.target.classList.contains("pick")) { ev.preventDefault(); openGoalPick(); }
+  });
+  // どの ごほうびを めざす？（子ども。鍵は いらない。かえても たまった ぶんは へらない。2026-11-24）
+  //   どれも おなじ ポイントで、どこまで とどいて いるかを ならべて 見せる（とどいて いる ものは 金色）
+  function openGoalPick() {
+    var g = goalOf(openKid), pop = document.createElement("div");
+    pop.className = "gp-veil";
+    pop.innerHTML = '<div class="gp-sheet" role="dialog" aria-label="' + esc(window.Words.plain(W("goalPickTitle"))) + '">' +
+      '<h3>' + W("goalPickTitle") + '</h3><p class="gp-sub">' + ICON("point-star") + ' ' + W("goalPickSub", { x: g.progress }) + '</p>' +
+      '<ul class="gp-list">' + g.menu.map(function (it) {
+        var one = Object.assign({}, g, { size: it.size, reached: it.reached, waiting: 0, item: { icon: "goal-flag" } });
+        return '<li><button class="gp-item' + (it.id === g.pick ? " cur" : "") + (it.reached ? " gold" : "") + '" data-pick="' + it.id + '">' + ICON(it.icon) +
+          '<span class="gp-mid"><span class="gp-name"><span>' + goalName(it) + '</span><small>' + ICON("point-star") + ' ' + it.size + '</small></span>' +
+          goalGauge(one, "kv-gauge") + '</span>' + (it.id === g.pick ? '<span class="gp-now">' + W("goalNow") + '</span>' : "") + '</button></li>';
+      }).join("") + '</ul><button class="gp-close">' + W("goalPickClose") + '</button></div>';
+    $("kid-view").appendChild(pop);
+    pop.addEventListener("click", function (ev) {
+      var b = ev.target.closest("[data-pick]");
+      if (!b && ev.target !== pop && !ev.target.closest(".gp-close")) return;
+      pop.remove();
+      if (!b || b.dataset.pick === g.pick) return;
+      window.BoardApi.post("/api/kid/goal-pick", { kid: openKid, pick: b.dataset.pick })
+        .then(function () { return load(); })
+        .catch(function (err) { console.error(err); });
+    });
+  }
 
   $("kv-grid").addEventListener("click", function (ev) {
     var cell = ev.target.closest("[data-date]");
@@ -932,7 +974,7 @@
       window.BoardApi.post("/api/board/task", { remove: id }).then(load).then(renderQuick);
       return;
     }
-    var t = state.tasks.filter(function (x) { return x.id === el.dataset.edit; })[0];
+    var t = raw.tasks.filter(function (x) { return x.id === el.dataset.edit; })[0];
     if (!t) return;
     $("qk-name").value = t.name;
     $("qk-yen").value = t.yen;
@@ -1000,6 +1042,8 @@
 
   // 設定画面で保存したら すぐ読み直す
   window.addEventListener("board:reload", load);
+  // 撮影用に かくす（photo.js）: 読みなおさずに 写しを 作りなおす
+  window.addEventListener("board:photo", function () { if (!raw) return; state = window.Photo.state(raw); lastHtml = ""; render(); });
   // 画面の向き・大きさが かわったら ボタンの かたちを えらびなおす
   window.addEventListener("board:fit", function () { lastHtml = ""; render(); });
   // 画面の 向き・大きさが かわったら 段の 地図を かきなおす（のぼる うごきは もう 見せない）
@@ -1025,6 +1069,7 @@
   window.KidView = {
     kid: function () { return openKid; },
     state: function () { return state; },
+    raw: function () { return raw; },
     reload: load,
     // その子の だんかいの ことば
     W: function (key, vars) { if (openKid) L = levelOf(openKid); return W(key, vars); },
