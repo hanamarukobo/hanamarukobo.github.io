@@ -92,8 +92,30 @@
   $("kv-tab-cal").addEventListener("click", function () { if (on) { set(false); KV.reload(); } });
 
   // ---- 入力（使った・ほしいもの・入れる・行） ----
-  function closePop() { pop = null; $("wl-pop").hidden = true; }
+  function closeAsk() { $("wl-ask").hidden = true; }
+  function closePop() { pop = null; $("wl-pop").hidden = true; closeAsk(); }
   $("wl-pop-close").addEventListener("click", closePop);
+
+  // ほしいもの「かえた！」の たしかめ（ほしいものの 窓の 上に 出す）
+  function openAsk(x) {
+    var k = kidOf(KV.kid());
+    $("wl-ask").style.setProperty("--kid", (window.KID_PALETTE[k.color] || window.KID_PALETTE.purple).main);
+    $("wl-ask-q").innerHTML = W("wlBoughtQ", { n: esc(x.name) });
+    $("wl-ask-note").innerHTML = W("wlBoughtAsk", { x: yen(x.price) });
+    $("wl-ask-no").innerHTML = W("wlBoughtNo");
+    $("wl-ask-yes").innerHTML = W("wlBought");
+    $("wl-ask").dataset.want = x.id;
+    $("wl-ask").hidden = false;
+    $("wl-ask-yes").focus();
+  }
+  $("wl-ask-no").addEventListener("click", closeAsk);
+  $("wl-ask").addEventListener("click", function (ev) { if (ev.target === $("wl-ask")) closeAsk(); });
+  $("wl-ask-yes").addEventListener("click", function () {
+    var id = $("wl-ask").dataset.want;
+    closeAsk();
+    if (!pop || pop.id !== id) return;
+    send("/api/kid/wallet", { bought: id }, W("wlFail")).then(function () { KV.confetti(); });
+  });
   $("wl-pop").addEventListener("click", function (ev) { if (ev.target === $("wl-pop")) closePop(); });
 
   function numInput(id, value) {
@@ -148,8 +170,7 @@
     var x = id && api.walletInfo(KV.raw(), KV.kid()).wants.filter(function (y) { return y.id === id; })[0]; // なおす 欄は 本物（撮影用に かくして いても）
     openPop({ type: "want", id: x ? x.id : null }, W("wlWantTitle"),
       row(W("wlWantName"), '<input type="text" class="wl-text" id="wl-want-name" maxlength="20" placeholder="' + esc(T("wlWantHint")) + '" value="' + esc(x ? x.name : "") + '">') +
-      row(W("wlPrice"), numInput("wl-amount", x ? x.price : "") + '<span class="wl-unit">' + W("wlYen", { x: "" }).trim() + '</span>') +
-      (x ? '<p class="wl-hint" id="wl-bought-ask" hidden></p>' : ""),
+      row(W("wlPrice"), numInput("wl-amount", x ? x.price : "") + '<span class="wl-unit">' + W("wlYen", { x: "" }).trim() + '</span>'),
       (x ? btn("wl-remove", W("wlRemove"), "ghost") + btn("wl-bought", W("wlBought"), "ghost") : "") + btn("wl-ok", W("wlSave"), "qk-ok"));
   }
   // 入れる（おうちの人。鍵の あと）
@@ -251,17 +272,11 @@
     } else if (b.id === "wl-ex-no") {
       exchange({});
     } else if (b.id === "wl-bought") {
-      // 1回目は どう なるかを 見せて、もう1回 押したら 買えた に する
+      // 別の 小さな 窓で「○○ かえた？」と 聞き、そこの「かえた！」で 買えた に する（2026-11-26。前は 同じ 窓の 中で
+      //   もう1回 押す 形で、変わった ことに 気づかず「かく」を 押すと 精算 されなかった）
       var x = info().wants.filter(function (y) { return y.id === p.id; })[0];
       if (!x) return;
-      if (!p.ask) {
-        p.ask = true;
-        $("wl-bought-ask").hidden = false;
-        $("wl-bought-ask").innerHTML = W("wlBoughtAsk", { x: yen(x.price) });
-        b.classList.remove("ghost");
-        return;
-      }
-      send("/api/kid/wallet", { bought: p.id }, W("wlFail")).then(function () { KV.confetti(); });
+      openAsk(x);
     } else if (b.id === "wl-remove") {
       if (p.type === "want") send("/api/kid/wallet", { removeWant: p.id }, W("wlFail"));
       else if (p.type === "row") window.ParentLock.ask(function () { send("/api/parent/wallet", { remove: p.id }, W("wlFail")); });

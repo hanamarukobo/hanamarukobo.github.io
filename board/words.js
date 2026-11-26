@@ -205,7 +205,10 @@
     wlWantHint: { kinder: "れい：ゲームソフト", lower: "れい：ゲームソフト", upper: "れい：ゲームソフト" },
     wlPrice: { kinder: "ねだん", lower: "ねだん", upper: "ねだん" },
     wlBought: { kinder: "かえた！", lower: "かえた！", upper: "買えた！" },
+    // 「かえた！」を 押したら 別の 小さな 窓で 聞く（2026-11-26）
+    wlBoughtQ: { kinder: "{n} かえた？", lower: "{n} かえた？", upper: "{n} 買えた？" },
     wlBoughtAsk: { kinder: "おさいふから {x} つかった ことに するよ", lower: "おさいふから {x} つかった ことに するよ", upper: "おさいふから {x} 使った ことに するよ" },
+    wlBoughtNo: { kinder: "やめる", lower: "やめる", upper: "やめる" },
     wlRemove: { kinder: "けす", lower: "けす", upper: "消す" },
     wlNeedYen: { kinder: "いくらか まだ はいっていません", lower: "いくらか まだ はいっていません", upper: "いくらか まだ 入っていません" },
     wlNeedWant: { kinder: "ほしいものが まだ はいっていません", lower: "ほしいものが まだ はいっていません", upper: "ほしいものが まだ 入っていません" },

@@ -1429,7 +1429,9 @@ body.night .qk-list li.editing { background: #4a3a2e; }
 .qk-new[hidden] { display: none; }
 body.portrait .qk-title { font-size: 19px; }
 .qk-list button { flex: none; border: none; background: rgba(0, 0, 0, 0.06); color: var(--text); border-radius: 50%; width: 32px; height: 32px; font: inherit; }
-body.portrait .qk-board { width: 560px; }
+/* スマホの 縦でも 画面の 端まで 埋めず、左右に 20px ずつ あける（2026-11-26 社長。前は 560px が 画面の 幅まで 縮んで 端に ついて いた） */
+body.portrait .qk-board { width: min(560px, calc(100vw - 40px)); }
+body.portrait .qk-board.wl-ask-board { width: min(440px, calc(100vw - 56px)); }
 body.portrait .qk-body { flex-direction: column; }
 .qk-side .qk-label { width: auto; }
 
@@ -2331,7 +2333,7 @@ body.night .wl-log .tag { background: transparent; color: #ffd76a; box-shadow: i
 body.night .wl-log .tag.kept { background: transparent; color: #9cc0ff; box-shadow: inset 0 0 0 1.5px rgba(156, 192, 255, 0.6); }
 body.night .wl-in { background: transparent; color: #6fd39b; box-shadow: inset 0 0 0 2px #6fd39b; }
 /* おさいふの 入力 */
-.wl-board { width: min(600px, calc(100vw - 24px)); }
+.wl-board { width: min(600px, calc(100vw - 40px)); }
 .wl-pop-body { display: flex; flex-direction: column; gap: 10px; margin-top: 8px; }
 .wl-pop .wl-num { width: 150px; font-size: 26px; font-weight: 700; }
 .wl-pop .wl-text { flex: 1; width: 100%; }
@@ -2339,8 +2341,24 @@ body.night .wl-in { background: transparent; color: #6fd39b; box-shadow: inset 0
 .wl-hint { margin: 0; font-size: 16px; color: var(--muted); font-weight: 700; }
 .wl-hint[hidden] { display: none; }
 .wl-modes button { font-size: 16px; }
-.wl-pop-btns { display: flex; gap: 10px; justify-content: flex-end; align-items: center; }
+/* ボタンの 字は わらない（せまい スマホで「け／す」「か／く」と 1字ずつ 折れて いた。2026-11-26）。入らない ときは ボタンごと 2段に */
+.wl-pop-btns { display: flex; flex-wrap: wrap; gap: 10px; justify-content: flex-end; align-items: center; }
+.wl-pop-btns button { white-space: nowrap; }
 .wl-pop-btns .qk-ok { align-self: auto; }
+@media (max-width: 420px) {
+  .wl-board, .wl-ask-board { padding-left: 16px; padding-right: 16px; }
+  .wl-pop-btns { gap: 8px; }
+  .wl-pop-btns .qk-ok { padding: 8px 22px; }
+  .wl-pop-btns .ghost { padding: 6px 14px !important; }
+}
+/* ほしいもの「かえた！」の たしかめ。ほしいものの 窓の 上に 重ねる */
+.quick.wl-ask { z-index: 27; }
+.wl-ask-board { width: min(440px, calc(100vw - 32px)); text-align: center; padding: 22px 22px 18px; }
+/* 文は ことばの 切れ目（分かち書きの すきま）で 折る。「買え／た？」と 割れない ように */
+.wl-ask-q { margin: 0 0 6px; font-size: 24px; font-weight: 800; color: var(--text); word-break: keep-all; overflow-wrap: anywhere; }
+.wl-ask-note { margin: 0 0 16px; word-break: keep-all; overflow-wrap: anywhere; }
+.wl-ask-btns { justify-content: center; }
+.wl-ask-btns #wl-ask-yes { background: #2e8b57; color: #fff; }
 .wl-pop-btns .ghost { font: inherit; font-size: 18px; font-weight: 700; padding: 6px 18px; border-radius: 999px; border: 2px solid var(--kid); background: transparent; color: var(--kid); }
 .wl-pop-btns #wl-bought:not(.ghost) { font: inherit; font-size: 18px; font-weight: 700; padding: 6px 18px; border-radius: 999px; border: 2px solid #2e8b57; background: #2e8b57; color: #fff; }
 .wl-row-view { margin: 4px 0; font-size: 20px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }

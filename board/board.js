@@ -187,6 +187,7 @@
       if (shown("su-close")) return press("su-close");
       return askExit(home);   // はじめての かんたん設定の 1つめ
     }
+    if (shown("wl-ask")) return press("wl-ask-no");
     if (shown("wl-pop")) return press("wl-pop-close");
     if (shown("quick")) return press("qk-close");
     if (shown("tutorial")) return press("tu-skip");
