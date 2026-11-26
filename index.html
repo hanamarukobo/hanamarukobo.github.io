@@ -146,7 +146,12 @@ footer{background:linear-gradient(135deg,#fdf0cf,#fce6d2)}
 .about p{margin:0 0 8px}
 .about p:last-child{margin-bottom:0}
 .contact p{margin:6px 0}
-.sns a{margin-right:16px;font-weight:700}
+.follow{margin:14px 0 0;padding:14px 18px;border-radius:22px;background:var(--c1);border:2px solid var(--c1b);text-align:center}
+.follow p{margin:0 0 8px;font-weight:700;color:var(--ink)}
+.follow-links{display:flex;flex-wrap:wrap;justify-content:center;gap:8px}
+.follow p span{display:inline-block}
+.follow-links a{display:inline-block;padding:8px 18px;border-radius:999px;background:var(--btn);color:#fff;font-weight:700;text-decoration:none;box-shadow:0 3px 0 var(--btn-s)}
+.follow-links a:active{transform:translateY(2px);box-shadow:0 1px 0 var(--btn-s)}
 @media(max-width:700px){
  .feat{grid-template-columns:1fr;gap:12px}
  .feat:nth-child(even) figure{order:0}
@@ -313,6 +318,10 @@ footer{background:linear-gradient(135deg,#fdf0cf,#fce6d2)}
       <p>家族で1か月以上使いながら、少しずつ改良してきました。知人にも使ってもらい、感想を聞きながら直しています。同じような毎日の困りごとを持つご家庭で、少しでも役に立てたらうれしいです。</p>
     </div>
   </section>
+  <section class="follow">
+    <p><span>作っている様子や</span><span>更新のお知らせは SNS で</span></p>
+    <div class="follow-links"><a href="https://www.instagram.com/hanamaru.kobo/">Instagram</a><a href="https://www.threads.com/@hanamaru.kobo">Threads</a><a href="https://x.com/hanamarukobo">X</a></div>
+  </section>
 
   <h2 class="sec">ご意見・お問い合わせ</h2>
   <section class="contact">
@@ -322,7 +331,6 @@ footer{background:linear-gradient(135deg,#fdf0cf,#fce6d2)}
   </section>
 
   <footer>
-    <p class="sns"><a href="https://x.com/hanamarukobo">X</a><a href="https://www.instagram.com/hanamaru.kobo/">Instagram</a></p>
     <p>運営: はなまる工房（メール: <a href="mailto:hanamaru.board.app@gmail.com">hanamaru.board.app@gmail.com</a>）</p>
     <p><a href="privacy.html">プライバシーポリシー</a></p>
   </footer>
