@@ -143,9 +143,18 @@ footer{background:linear-gradient(135deg,#fdf0cf,#fce6d2)}
 .safe details,.ways-notes details{margin-top:10px}
 .safe summary,.ways-notes summary{cursor:pointer;color:var(--muted);font-weight:700}
 .safe details ul{margin-top:8px}
-.ways-pics{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:6px 0 12px}
-.ways-pics figure{margin:0;text-align:center;font-size:.9em;color:var(--muted)}
-.ways-pics img{width:100%;max-width:260px;height:150px;object-fit:contain;display:block;margin:0 auto 4px}
+/* 使い方（11-27）: 3枚のカード。絵は同じクリームの枠に（use-phone は背景つき、ほかは透明） */
+.uses{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:8px 0 0}
+.use{background:var(--card);border:3px solid var(--line);border-radius:28px;padding:14px 16px 18px;display:flex;flex-direction:column}
+.use figure{margin:0 0 10px;background:#fdf0e0;border-radius:18px;height:200px;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.use img{max-width:100%;max-height:100%;width:auto;height:auto;display:block}
+.use-step{margin:0;font-family:var(--hf);font-weight:700;color:var(--accent-d);display:flex;align-items:center;gap:8px}
+.use-step .tag{margin:0;font-size:.8em}
+.use h3{margin:2px 0 6px;font-size:1.15em;line-height:1.45}
+.use p{margin:0}
+.use .nw{white-space:nowrap}
+.use-step b{display:inline-flex;align-items:center;justify-content:center;width:1.7em;height:1.7em;border-radius:50%;background:var(--c1);border:2px solid var(--c1b);font-size:.95em}
+@media(max-width:700px){.uses{grid-template-columns:1fr;gap:14px}.use figure{height:220px}}
 .cmp{width:100%;border-collapse:collapse;font-size:.93em;background:var(--card);border-radius:18px;overflow:hidden}
 .cmp th,.cmp td{padding:9px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top;line-height:1.6}
 .cmp thead th{background:#fdf0cf;color:var(--ink);font-family:var(--hf)}
@@ -194,7 +203,7 @@ footer{background:linear-gradient(135deg,#fdf0cf,#fce6d2)}
     </div>
     <div class="hero-art">
     <!-- 使っているところの動画（音なし・くり返し）。縦長の画面（スマホ）は縦の動画、横長は横の動画（元は EchoMonitor の docs/video/）。
-         2026-11-26 にいちばん上の絵（img/hero.webp）の場所へ移した。PC は右の列、スマホは文字とボタンの下。絵はリンクを貼ったときの画像（img/ogp.png）に使う。
+         2026-11-26 にいちばん上の絵（img/hero.webp）の場所へ移した。PC は右の列、スマホは文字とボタンの下。絵はリンクを貼ったときの画像（img/ogp.png）と、下の「使い方」の2に使う。
          動きを減らす設定の人には自動で流さず、再生ボタンを出す -->
     <figure class="demo">
       <video id="demo" width="960" height="600" muted loop playsinline preload="metadata" aria-label="使っているところ。子どもが天気と予定を見て、やることを自分で押し、おうちの人が「みました」を押すと はなまる。できることが少しずつ増えていく"></video>
@@ -273,6 +282,29 @@ footer{background:linear-gradient(135deg,#fdf0cf,#fce6d2)}
     </section>
   </div>
 
+  <!-- 使い方（2026-11-27）: 暮らしの切り口で3つ。手軽なほうから順に。3つめだけ Android アプリ。絵はこの欄にまとめ、下の「ちがい」は表だけ -->
+  <h2 class="sec" id="use">使い方</h2>
+  <div class="uses">
+    <section class="use">
+      <figure><img src="img/use-phone.webp" alt="朝の食卓で、スタンドに立てたスマホを女の子が自分で指さして見ている" loading="lazy"></figure>
+      <p class="use-step"><b>1</b></p>
+      <h3>まずはスマホで手軽に</h3>
+      <p>iPhone・Android のスマホ1台から。食卓に立てておけば、朝、子どもが自分で今日のことを確かめられます。</p>
+    </section>
+    <section class="use">
+      <figure><img src="img/hero.webp" alt="リビングの棚に置いたタブレットを、女の子が押している" loading="lazy"></figure>
+      <p class="use-step"><b>2</b></p>
+      <h3>リビングに置く</h3>
+      <p>余ったタブレットや iPad を、リビングのカウンターなどに。家族みんなのボードになります。</p>
+    </section>
+    <section class="use">
+      <figure><img src="img/site-android.webp" alt="置いたタブレットを子どもが押し、おうちの人はソファのスマホからつないでいる" loading="lazy"></figure>
+      <p class="use-step"><b>3</b><span class="tag">Android アプリ</span></p>
+      <h3>置いて、スマホからもつなぐ</h3>
+      <p>置いたタブレットはそのままに、同じ <span class="nw">Wi-Fi</span> のおうちの人のスマホ（iPhone も）から「みました」や設定ができます。</p>
+    </section>
+  </div>
+
   <h2 class="sec">データの安心</h2>
   <section class="safe">
     <ul class="badges"><li>広告なし</li><li>アカウント登録なし</li><li>家族の記録は端末の中に保存</li></ul>
@@ -291,17 +323,13 @@ footer{background:linear-gradient(135deg,#fdf0cf,#fce6d2)}
   </section>
 
   <h2 class="sec" id="ways">Android アプリとブラウザ版のちがい</h2>
-  <div class="ways-pics">
-    <figure><img src="img/site-android.webp" alt="置いたタブレットを子どもが押し、おうちの人はソファのスマホからつないでいる" loading="lazy">Android アプリ: 置いて、スマホからも</figure>
-    <figure><img src="img/site-browser.webp" alt="子ども2人が、1台のタブレットを押している" loading="lazy">ブラウザ版: 1台で</figure>
-  </div>
   <table class="cmp">
     <thead><tr><th></th><th>Android アプリ</th><th>ブラウザ版</th></tr></thead>
     <tbody>
       <tr><th>使える端末</th><td>Android のスマホ・タブレット</td><td>iPhone・iPad・PC など</td></tr>
       <tr><th>はじめ方</th><td>テスト版に参加して Google Play から入れる</td><td>インストール不要</td></tr>
       <tr><th>使い方</th><td>スマホ1台でも。タブレットを置いて家族のボードにも</td><td>基本は1台で</td></tr>
-      <tr><th>スマホから</th><td>同じ Wi-Fi のスマホから「みました」や設定</td><td>なし（その端末で押します）</td></tr>
+      <tr><th>スマホから</th><td>同じ Wi-Fi のスマホから「みました」や設定（<a href="#use">使い方の3</a>）</td><td>なし（その端末で押します）</td></tr>
       <tr><th>お知らせ</th><td>毎日のお知らせ（通知）</td><td>なし</td></tr>
       <tr><th>予定</th><td>端末の Google カレンダーを選ぶだけで出せる</td><td>なし</td></tr>
       <tr><th>画面</th><td>決まった時間に画面をつける・ボードを自動で開く</td><td>自分で開く</td></tr>
