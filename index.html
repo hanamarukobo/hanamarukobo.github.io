@@ -36,6 +36,12 @@ h1{font-size:2.3em;line-height:1.25;margin:0}
 .easy{display:inline-block;margin:14px 0 0;padding:4px 14px;border-radius:999px;background:#fff2cc;color:#855f0a;font-weight:700}
 .hero-art{position:relative;z-index:1}
 .hero-art .demo{margin:0}
+.hero-girl,.demo-cue{display:none}
+/* 札（11-28）: ボタンに見えない文字だけの ✓。基本無料だけ太いオレンジ。「無料」を消した募集の文の代わり */
+.free{list-style:none;padding:0;margin:10px 0 0;display:flex;flex-wrap:wrap;gap:2px 14px}
+.free li{margin:0;padding:0;color:#6b5d3e;font-weight:500;font-size:.92em;line-height:1.7;white-space:nowrap}
+.free li::before{content:"✓";margin-right:.3em;color:#d9a521;font-weight:700}
+.free li.main{color:var(--btn);font-weight:700}
 h2{font-size:1.45em;margin:44px 0 12px;line-height:1.4}
 h2.sec{display:inline-block;position:relative;z-index:0}
 .start{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:26px 0}
@@ -88,6 +94,12 @@ footer .btn{color:#fff}
 @media(max-width:700px){
  .hero{grid-template-columns:1fr;padding:22px 18px;border-radius:28px}
  .hero-art .demo{margin-top:4px}
+ /* スマホ（11-28）: タイトルとキャッチの右に女の子の絵を、右上の白い円に合わせて置く。動画の上に「下に動画がある」と分かる一言 */
+ .hero-text{--g:min(140px,calc((100vw - 271px)*.88))}
+ .hero-girl{display:block;position:absolute;right:-6px;top:-4px;width:var(--g);height:auto;pointer-events:none}
+ .hero-text .copy{max-width:calc(100% - var(--g) + 4px);line-height:1.45;margin-top:10px}
+ .hero h1{margin-bottom:2px}
+ .demo-cue{display:block;margin:20px 0 8px;text-align:center;font-family:var(--hf);font-weight:700;color:var(--accent-d);font-size:1.02em;line-height:1.5;white-space:nowrap}
  .start,.shots{grid-template-columns:1fr}
  h1{font-size:1.75em}
  .diagram svg.wide{display:none}.diagram svg.narrow{display:block}
@@ -103,7 +115,8 @@ body{background:#fbf7ec radial-gradient(circle at 6% 3%,#fdf0c9 0,transparent 26
 h2.sec::after{content:"";position:absolute;left:0;right:0;bottom:-9px;height:10px;background:url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='720'%20height='10'%3E%3Cpath%20d='M0%205%20Q6%201%2012%205%20T24%205%20Q30%201%2036%205%20T48%205%20Q54%201%2060%205%20T72%205%20Q78%201%2084%205%20T96%205%20Q102%201%20108%205%20T120%205%20Q126%201%20132%205%20T144%205%20Q150%201%20156%205%20T168%205%20Q174%201%20180%205%20T192%205%20Q198%201%20204%205%20T216%205%20Q222%201%20228%205%20T240%205%20Q246%201%20252%205%20T264%205%20Q270%201%20276%205%20T288%205%20Q294%201%20300%205%20T312%205%20Q318%201%20324%205%20T336%205%20Q342%201%20348%205%20T360%205%20Q366%201%20372%205%20T384%205%20Q390%201%20396%205%20T408%205%20Q414%201%20420%205%20T432%205%20Q438%201%20444%205%20T456%205%20Q462%201%20468%205%20T480%205%20Q486%201%20492%205%20T504%205%20Q510%201%20516%205%20T528%205%20Q534%201%20540%205%20T552%205%20Q558%201%20564%205%20T576%205%20Q582%201%20588%205%20T600%205%20Q606%201%20612%205%20T624%205%20Q630%201%20636%205%20T648%205%20Q654%201%20660%205%20T672%205%20Q678%201%20684%205%20T696%205%20Q702%201%20708%205%20T720%205'%20fill='none'%20stroke='%23e3a63a'%20stroke-width='2.5'%20stroke-linecap='round'/%3E%3C/svg%3E") 0 0 no-repeat}
 h2.sec{margin-bottom:18px}
 .copy::after{content:" ✿";color:#e8913a;font-size:.8em}
-@media(max-width:400px){.copy::after{content:none}}/* せまいスマホで花だけが1行に落ちるので出さない（11-26） */
+@media(max-width:700px){.copy::after{content:none}}
+@media(max-width:400px){.hero-text{--g:min(140px,calc((100vw - 243px)*.88))}.hero h1{font-size:1.5em}}/* 絵を出すスマホ（700以下）では花を出さない（11-26・11-28） */
 li::marker{color:#d9a521}
 .tag{border-color:#d9a521}
 .shots img:nth-child(odd){box-shadow:0 6px 0 #eecb6a,0 10px 24px rgba(80,60,30,.10)}
@@ -119,13 +132,21 @@ footer{background:linear-gradient(135deg,#fdf0cf,#fce6d2)}
 .safe ul{margin:0}
 .safe-more{margin:10px 0 0;font-size:.95em}
 /* 2026-11-22 組み直し（11-26 に動画をつかみの中へ）: つかみ → 動画 → 使ってみる → できること（体験4つ）→ 安心 → ちがい → 作り手 → ご意見 */
-.hook span,.copy span{display:inline-block}
+.hook span,.copy span,.lead span{display:inline-block}
 .hook{font-family:var(--hf);font-weight:700;font-size:1.15em;color:var(--ink);margin:16px 0 0;line-height:1.7}
 .hero .lead{margin-top:8px}
+@media(max-width:380px){.hook{font-size:1.04em}}
 .hero-cta{margin:16px 0 0;display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center}
 .hero-cta .btn{margin-top:0}
+/* 入口は同じ大きさの2つ（11-28）。スマホでも横に並べる。340px より狭いときだけ縦に積む */
+.hero-cta{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;max-width:420px}
+.hero-cta .btn{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:9px 6px;line-height:1.35;white-space:nowrap}
+.hero-cta .btn.sub{padding:7px 4px;border-color:#e0a070;color:var(--btn)}
+.hero-cta .btn b{font-size:1.02em;letter-spacing:-.02em}
+@media(max-width:400px){.hero-cta .btn b{font-size:.9em}}
+.hero-cta .btn small{font-size:.76em;font-weight:700;opacity:.92}
+@media(max-width:339px){.hero-cta{grid-template-columns:1fr}}
 .text-link{font-weight:700;color:var(--btn)}
-.recruit{margin:10px 0 0;font-size:.88em;color:var(--muted)}
 .start-note{margin:12px 0 0;font-size:.9em;color:var(--muted)}
 .feats{display:grid;gap:30px;margin:8px 0}
 .feat{display:grid;grid-template-columns:1fr 1fr;gap:26px;align-items:center}
@@ -194,14 +215,16 @@ footer{background:linear-gradient(135deg,#fdf0cf,#fce6d2)}
   <header class="hero">
     <div class="hero-text">
       <img class="logo" src="img/icon.png" alt="">
+      <img class="hero-girl" src="img/hero.webp" alt="" width="917" height="849">
       <h1>はなまるボード</h1>
       <p class="copy">今日がわかる。<span>自分でできる。</span></p>
+      <ul class="free" aria-label="料金など"><li class="main">基本無料</li><li>広告なし</li><li>登録なし</li></ul>
       <p class="hook">「着替えた？」<span>「傘持った？」</span><br>毎朝の声かけを、<span>少し減らせたら。</span></p>
-      <p class="lead">はなまるボードは、子どもが自分で今日の予定や、やることを確認できるアプリです。余ったタブレットをリビングに置いて、家族で使えます。スマホ1台からでも始められます。</p>
-      <p class="hero-cta"><a class="btn to-android" href="join.html">Android テスト版に参加する</a><a class="text-link" href="#start">iPhone・iPad の方は</a></p>
-      <p class="recruit">Android アプリは、Google Play で公開する前のテスト版の参加者を募集しています（無料）。</p>
+      <p class="lead"><span>はなまるボードは、</span><span>子どもが</span><span>自分で</span><span>今日の予定や、</span><span>やることを</span><span>確認できる</span><span>アプリです。</span><span>余ったタブレットを</span><span>リビングに</span><span>置いて、</span><span>家族で使えます。</span><span>スマホ1台からでも</span><span>始められます。</span></p>
+      <p class="hero-cta"><a class="btn to-android" href="join.html"><b>Android</b><small>テスト版に参加</small></a><a class="btn sub" href="#start"><b>iPhone・iPad・PC</b><small>ブラウザで使う</small></a></p>
     </div>
     <div class="hero-art">
+    <p class="demo-cue" aria-hidden="true">▼ 使っているところを動画で</p>
     <!-- 使っているところの動画（音なし・くり返し）。縦長の画面（スマホ）は縦の動画、横長は横の動画（元は EchoMonitor の docs/video/）。
          2026-11-26 にいちばん上の絵（img/hero.webp）の場所へ移した。PC は右の列、スマホは文字とボタンの下。絵はリンクを貼ったときの画像（img/ogp.png）と、下の「使い方」の2に使う。
          動きを減らす設定の人には自動で流さず、再生ボタンを出す -->
