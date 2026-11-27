@@ -5,13 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>はなまるボード</title>
 <meta name="color-scheme" content="light">
-<meta name="description" content="はなまるボード。今日がわかる。自分でできる。「着替えた？」「傘持った？」毎朝の声かけを、少し減らしたくて作りました。子どもが自分で今日を見て動けるボードです。余ったタブレットでも、スマホ1台からでも。">
+<meta name="description" content="はなまるボード。今日がわかる。自分でできる。「着替えた？」「傘持った？」毎朝の声かけを、少しでも減らしたくて作っています。子どもが自分で今日を見て動けるボードです。余ったタブレットでも、スマホ1台からでも。">
 <link rel="icon" href="img/icon.png">
 <!-- リンクを貼ったときのカード（2026-11-26。画像は EchoMonitor の docs/store/ogp.html で撮る） -->
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="はなまるボード">
 <meta property="og:title" content="はなまるボード">
-<meta property="og:description" content="今日がわかる。自分でできる。「着替えた？」「傘持った？」毎朝の声かけを、少し減らしたくて作りました。子どもが自分で今日を見て動けるボードです。">
+<meta property="og:description" content="今日がわかる。自分でできる。「着替えた？」「傘持った？」毎朝の声かけを、少しでも減らしたくて作っています。子どもが自分で今日を見て動けるボードです。">
 <meta property="og:url" content="https://hanamarukobo.github.io/">
 <meta property="og:image" content="https://hanamarukobo.github.io/img/ogp.png">
 <meta property="og:image:width" content="1200">
@@ -204,6 +204,32 @@ footer{background:linear-gradient(135deg,#fdf0cf,#fce6d2)}
  .about{padding:16px;gap:12px}
  .about img{width:44px;height:44px}
 }
+/* 頭のメリハリ（11-28）: タイトルをいちばん大きく、副題は1行で真下に。札は緑のチェックと灰色の文字（ボタンやタイトルの色と分ける）。
+   毎朝の声（1行目）→ 文章（ねらい・誘い）→ 入口 */
+.brand{display:flex;align-items:flex-start;justify-content:space-between}
+.hero h1{font-size:min(2.7em,calc((100vw - 112px)*.55/8.6));line-height:1.15;letter-spacing:.04em}
+.hero .copy{white-space:nowrap;font-size:min(1.3em,calc((100vw - 112px)*.55/16));line-height:1.5;margin-top:6px}
+.free{margin-top:12px;gap:2px 16px}
+.free li,.free li.main{color:#4a4a48;font-size:.9em;font-weight:400}
+.free li.main{font-weight:700;color:#2f2f2d}
+.free li::before{color:#4f9a5a}
+.hero .lead{font-size:.95em;line-height:1.75;margin-top:16px;color:#5a4d36}
+/* 親の声は白い吹き出し（紹介動画と同じ、薄いオレンジの縁と下のしっぽ）。その下はふつうの文章（11-28 案 A） */
+.voices{display:flex;align-items:flex-start;gap:14px;margin:20px 0 0;padding:0 0 10px 2px}
+.bubble{position:relative;margin:0;background:#fff;border:2.5px solid #f4b58b;border-radius:18px;padding:4px 16px;font-family:var(--hf);font-weight:700;font-size:1.05em;line-height:1.55;color:var(--ink);letter-spacing:.06em;white-space:nowrap;box-shadow:0 4px 12px rgba(90,60,50,.10)}
+.bubble::after{content:"";position:absolute;bottom:-8px;width:12px;height:12px;background:#fff;border-right:2.5px solid #f4b58b;border-bottom:2.5px solid #f4b58b;transform:rotate(45deg) skew(12deg,12deg)}
+.bubble.b1::after{left:20px}
+.bubble.b2{margin-top:18px}
+.bubble.b2::after{right:20px}
+.voices+.lead{margin-top:8px}
+@media(max-width:700px){
+ .hero-text{--g:clamp(100px,30vw,128px)}
+ .brand{margin-right:-6px}
+ .logo{width:56px;height:56px;border-radius:15px;margin:4px 0 0}
+ .hero-girl{position:static;width:var(--g);margin-top:-6px}
+ .hero h1{font-size:min(2.35em,calc((100vw - 72px)/8.6));margin:2px 0 0}
+ .hero-text .copy{max-width:none;font-size:min(1.2em,calc((100vw - 72px)/15));margin-top:4px}
+}
 </style>
 <!-- アクセスの数（GoatCounter。cookie なし。つなぐための番号 pair= がアドレスにあるときは送らない） -->
 <script>window.goatcounter = { path: function () { return /[?&]pair=/.test(location.search) ? null : location.pathname || "/"; } };</script>
@@ -214,13 +240,12 @@ footer{background:linear-gradient(135deg,#fdf0cf,#fce6d2)}
 <main>
   <header class="hero">
     <div class="hero-text">
-      <img class="logo" src="img/icon.png" alt="">
-      <img class="hero-girl" src="img/hero.webp" alt="" width="917" height="849">
+      <div class="brand"><img class="logo" src="img/icon.png" alt=""><img class="hero-girl" src="img/hero.webp" alt="" width="917" height="849"></div>
       <h1>はなまるボード</h1>
-      <p class="copy">今日がわかる。<span>自分でできる。</span></p>
+      <p class="copy"><span>今日がわかる。</span><span>自分でできる。</span></p>
       <ul class="free" aria-label="料金など"><li class="main">基本無料</li><li>広告なし</li><li>登録なし</li></ul>
-      <p class="hook">「着替えた？」<span>「傘持った？」</span><br>毎朝の声かけを、<span>少し減らしたくて</span><span>作りました。</span></p>
-      <p class="lead"><span>言うほうも、</span><span>言われるほうも、</span><span>朝から</span><span>疲れてしまう。</span><span>子どもが</span><span>自分で</span><span>今日を見て</span><span>動けるボードを、</span><span>わが家では</span><span>毎日</span><span>使っています。</span><span>余ったタブレットでも、</span><span>スマホ1台からでも。</span><span>一緒に、</span><span>朝を</span><span>少し</span><span>ほっこり</span><span>させませんか。</span></p>
+      <div class="voices" aria-label="おうちの人の毎朝の声"><p class="bubble b1">着替えた？</p><p class="bubble b2">傘持った？</p></div>
+      <p class="lead"><span>毎朝の声かけを、</span><span>少しでも減らしたくて</span><span>作っています。</span><span>子どもが</span><span>自分で</span><span>今日を見て</span><span>動けるボードです。</span><span>余ったタブレットでも、</span><span>スマホ1台からでも。</span><span>よかったら試して、</span><span>感想を聞かせてください。</span></p>
       <p class="hero-cta"><a class="btn to-android" href="join.html"><b>Android</b><small>テスト版に参加</small></a><a class="btn sub" href="#start"><b>iPhone・iPad・PC</b><small>ブラウザで使う</small></a></p>
     </div>
     <div class="hero-art">
