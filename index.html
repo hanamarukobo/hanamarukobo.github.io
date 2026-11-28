@@ -27,21 +27,6 @@ body{margin:0;background:var(--bg);color:var(--fg);font-family:"Zen Maru Gothic"
 h1,h2,h3{font-family:var(--hf);font-weight:var(--hw);color:var(--ink);letter-spacing:.02em}
 a{color:inherit}
 main{max-width:980px;margin:0 auto;padding:28px 18px 56px}
-.hero{display:grid;grid-template-columns:1.1fr .9fr;gap:20px;align-items:center;padding:28px;border-radius:36px;background:var(--hero);position:relative;overflow:hidden}
-.hero-text{position:relative;z-index:1}
-.logo{width:68px;height:68px;border-radius:18px;box-shadow:0 4px 0 rgba(240,138,60,.25);display:block;margin-bottom:10px}
-h1{font-size:2.3em;line-height:1.25;margin:0}
-.copy{margin:4px 0 0;color:var(--accent-d);font-weight:700;font-family:var(--hf);font-size:1.2em}
-.lead{font-size:1.02em;margin:16px 0 0}
-.easy{display:inline-block;margin:14px 0 0;padding:4px 14px;border-radius:999px;background:#fff2cc;color:#855f0a;font-weight:700}
-.hero-art{position:relative;z-index:1}
-.hero-art .demo{margin:0}
-.hero-girl,.demo-cue{display:none}
-/* 札（11-28）: ボタンに見えない文字だけの ✓。基本無料だけ太いオレンジ。「無料」を消した募集の文の代わり */
-.free{list-style:none;padding:0;margin:10px 0 0;display:flex;flex-wrap:wrap;gap:2px 14px}
-.free li{margin:0;padding:0;color:#6b5d3e;font-weight:500;font-size:.92em;line-height:1.7;white-space:nowrap}
-.free li::before{content:"✓";margin-right:.3em;color:#d9a521;font-weight:700}
-.free li.main{color:var(--btn);font-weight:700}
 h2{font-size:1.45em;margin:44px 0 12px;line-height:1.4}
 h2.sec{display:inline-block;position:relative;z-index:0}
 .start{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:26px 0}
@@ -92,60 +77,30 @@ footer .btn{color:#fff}
 .news time{color:var(--muted);margin-right:.7em;font-variant-numeric:tabular-nums}
 @media (max-width:560px){.news{flex-direction:column;gap:2px;padding:10px 16px}}
 @media(max-width:700px){
- .hero{grid-template-columns:1fr;padding:22px 18px;border-radius:28px}
- .hero-art .demo{margin-top:4px}
- /* スマホ（11-28）: タイトルとキャッチの右に女の子の絵を、右上の白い円に合わせて置く。動画の上に「下に動画がある」と分かる一言 */
- .hero-text{--g:min(140px,calc((100vw - 271px)*.88))}
- .hero-girl{display:block;position:absolute;right:-6px;top:-4px;width:var(--g);height:auto;pointer-events:none}
- .hero-text .copy{max-width:calc(100% - var(--g) + 4px);line-height:1.45;margin-top:10px}
- .hero h1{margin-bottom:2px}
- .demo-cue{display:block;margin:20px 0 8px;text-align:center;font-family:var(--hf);font-weight:700;color:var(--accent-d);font-size:1.02em;line-height:1.5;white-space:nowrap}
  .start,.shots{grid-template-columns:1fr}
- h1{font-size:1.75em}
  .diagram svg.wide{display:none}.diagram svg.narrow{display:block}
  .ask,.way{padding:18px 16px}
 }
 
 :root{--bg:#fbf7ec;--fg:#3f3626;--ink:#4a3a1c;--muted:#716346;--accent:#d9a521;--accent-d:#855f0a;--btn:#c4561a;--btn-s:#8f3d10;--card:#fff;--line:#ece1c3;
 --hf:"Zen Maru Gothic",sans-serif;--hw:700;--hero:linear-gradient(135deg,#fdf0c9 0%,#fbf7ec 55%,#fde6cf 100%);
---c1:#fff2cc;--c1b:#eecb6a;--c2:#fce9d6;--c2b:#f0bd8d;--shadow:#eecb6a;--foot:#fdf0cf}
+--c1:#fff2cc;--c1b:#eecb6a;--c2:#fce9d6;--c2b:#f0bd8d;--shadow:#eecb6a;--foot:#fdf0cf;
+/* 余白の段（2026-11-28）: 要素の中 s1・s2 ／ 関係の近いもの s2・s3 ／ まとまりの間 s4・s5 ／ 欄の間 s6・s7。決まりは EchoMonitor の docs/handover/site-design.md */
+--s1:4px;--s2:8px;--s3:12px;--s4:16px;--s5:24px;--s6:32px;--s7:48px}
 body{background:#fbf7ec radial-gradient(circle at 6% 3%,#fdf0c9 0,transparent 26%),radial-gradient(circle at 96% 32%,#fce9d6 0,transparent 24%),radial-gradient(circle at 4% 72%,#fff2cc 0,transparent 20%)}
-.logo{box-shadow:0 4px 0 rgba(240,138,60,.3)}
-.hero::before{content:"";position:absolute;right:-60px;top:-60px;width:220px;height:220px;border-radius:50%;background:rgba(255,255,255,.55)}
 h2.sec::after{content:"";position:absolute;left:0;right:0;bottom:-9px;height:10px;background:url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='720'%20height='10'%3E%3Cpath%20d='M0%205%20Q6%201%2012%205%20T24%205%20Q30%201%2036%205%20T48%205%20Q54%201%2060%205%20T72%205%20Q78%201%2084%205%20T96%205%20Q102%201%20108%205%20T120%205%20Q126%201%20132%205%20T144%205%20Q150%201%20156%205%20T168%205%20Q174%201%20180%205%20T192%205%20Q198%201%20204%205%20T216%205%20Q222%201%20228%205%20T240%205%20Q246%201%20252%205%20T264%205%20Q270%201%20276%205%20T288%205%20Q294%201%20300%205%20T312%205%20Q318%201%20324%205%20T336%205%20Q342%201%20348%205%20T360%205%20Q366%201%20372%205%20T384%205%20Q390%201%20396%205%20T408%205%20Q414%201%20420%205%20T432%205%20Q438%201%20444%205%20T456%205%20Q462%201%20468%205%20T480%205%20Q486%201%20492%205%20T504%205%20Q510%201%20516%205%20T528%205%20Q534%201%20540%205%20T552%205%20Q558%201%20564%205%20T576%205%20Q582%201%20588%205%20T600%205%20Q606%201%20612%205%20T624%205%20Q630%201%20636%205%20T648%205%20Q654%201%20660%205%20T672%205%20Q678%201%20684%205%20T696%205%20Q702%201%20708%205%20T720%205'%20fill='none'%20stroke='%23e3a63a'%20stroke-width='2.5'%20stroke-linecap='round'/%3E%3C/svg%3E") 0 0 no-repeat}
 h2.sec{margin-bottom:18px}
-.copy::after{content:" ✿";color:#e8913a;font-size:.8em}
-@media(max-width:700px){.copy::after{content:none}}
-@media(max-width:400px){.hero-text{--g:min(140px,calc((100vw - 243px)*.88))}.hero h1{font-size:1.5em}}/* 絵を出すスマホ（700以下）では花を出さない（11-26・11-28） */
 li::marker{color:#d9a521}
 .tag{border-color:#d9a521}
 .shots img:nth-child(odd){box-shadow:0 6px 0 #eecb6a,0 10px 24px rgba(80,60,30,.10)}
 .shots img:nth-child(even){box-shadow:0 6px 0 #f0bd8d,0 10px 24px rgba(80,60,30,.10)}
 footer{background:linear-gradient(135deg,#fdf0cf,#fce6d2)}
   .way-pic { margin: 8px 0 12px; } .way-pic img { display: block; width: 100%; max-width: 520px; height: auto; margin: 0 auto; } .way-pic img[src*="site-browser"] { max-width: 400px; }
-.demo{margin:24px 0 0}
-.demo video{display:block;width:100%;max-width:760px;height:auto;aspect-ratio:16/10;margin:0 auto;border-radius:20px;border:4px solid #fff;background:#fff;box-shadow:0 6px 0 #eecb6a,0 10px 24px rgba(80,60,30,.10);cursor:pointer}
-.demo video.port{aspect-ratio:9/16;width:auto;max-width:100%;height:min(76vh,640px)}
-.demo figcaption{text-align:center;color:var(--muted);font-size:.9em;margin-top:10px}
 .safe{background:var(--card);border:3px solid var(--line);border-radius:28px;padding:18px 22px;margin:0 0 8px}
 .safe-lead{margin:0 0 8px}
 .safe ul{margin:0}
 .safe-more{margin:10px 0 0;font-size:.95em}
 /* 2026-11-22 組み直し（11-26 に動画をつかみの中へ）: つかみ → 動画 → 使ってみる → できること（体験4つ）→ 安心 → ちがい → 作り手 → ご意見 */
-.hook span,.copy span,.lead span{display:inline-block}
-.hook{font-family:var(--hf);font-weight:700;font-size:1.15em;color:var(--ink);margin:16px 0 0;line-height:1.7}
-.hero .lead{margin-top:8px}
-@media(max-width:380px){.hook{font-size:1.04em}}
-.hero-cta{margin:16px 0 0;display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center}
-.hero-cta .btn{margin-top:0}
-/* 入口は同じ大きさの2つ（11-28）。スマホでも横に並べる。340px より狭いときだけ縦に積む */
-.hero-cta{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;max-width:420px}
-.hero-cta .btn{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:9px 6px;line-height:1.35;white-space:nowrap}
-.hero-cta .btn.sub{padding:7px 4px;border-color:#e0a070;color:var(--btn)}
-.hero-cta .btn b{font-size:1.02em;letter-spacing:-.02em}
-@media(max-width:400px){.hero-cta .btn b{font-size:.9em}}
-.hero-cta .btn small{font-size:.76em;font-weight:700;opacity:.92}
-@media(max-width:339px){.hero-cta{grid-template-columns:1fr}}
 .text-link{font-weight:700;color:var(--btn)}
 .start-note{margin:12px 0 0;font-size:.9em;color:var(--muted)}
 .feats{display:grid;gap:30px;margin:8px 0}
@@ -204,32 +159,74 @@ footer{background:linear-gradient(135deg,#fdf0cf,#fce6d2)}
  .about{padding:16px;gap:12px}
  .about img{width:44px;height:44px}
 }
-/* 頭のメリハリ（11-28）: タイトルをいちばん大きく、副題は1行で真下に。札は緑のチェックと灰色の文字（ボタンやタイトルの色と分ける）。
-   毎朝の声（1行目）→ 文章（ねらい・誘い）→ 入口 */
+/* ===== 頭（ファーストビュー）。2026-11-28 に散らばっていた上書きを1か所にまとめた =====
+   見る順: アプリの名前と副題（主役）→ 札（基本無料・広告なし・登録なし）→ 親の声と文 → 入口の2つ → 動画。
+   余白は段のトークンだけ: 近いもの（名前と副題、文の段落どうし）は s1〜s2、まとまりの間（札・声・入口・動画の前）は s4〜s5。
+   決まりは EchoMonitor の docs/handover/site-design.md */
+.hero{display:grid;grid-template-columns:1.1fr .9fr;gap:var(--s5);align-items:center;padding:var(--s6) var(--s6) var(--s5);border-radius:36px;background:var(--hero);position:relative;overflow:hidden}
+.hero::before{content:"";position:absolute;right:-60px;top:-60px;width:220px;height:220px;border-radius:50%;background:rgba(255,255,255,.55)}
+.hero-text,.hero-art{position:relative;z-index:1}
 .brand{display:flex;align-items:flex-start;justify-content:space-between}
-.hero h1{font-size:min(2.7em,calc((100vw - 112px)*.55/8.6));line-height:1.15;letter-spacing:.04em}
-.hero .copy{white-space:nowrap;font-size:min(1.3em,calc((100vw - 112px)*.55/16));line-height:1.5;margin-top:6px}
-.free{margin-top:12px;gap:2px 16px}
-.free li,.free li.main{color:#4a4a48;font-size:.9em;font-weight:400}
+.logo{width:68px;height:68px;border-radius:18px;box-shadow:0 4px 0 rgba(240,138,60,.3);display:block;margin-bottom:var(--s3)}
+.hero-girl,.demo-cue{display:none}
+.hero h1{font-size:min(2.7em,calc((100vw - 112px)*.55/8.6));line-height:1.15;letter-spacing:.04em;margin:0}
+.hero .copy{margin:var(--s1) 0 0;color:var(--accent-d);font-weight:700;font-family:var(--hf);white-space:nowrap;font-size:min(1.3em,calc((100vw - 112px)*.55/16));line-height:1.5}
+.copy::after{content:" ✿";color:#e8913a;font-size:.8em}
+.copy span,.lead span{display:inline-block}
+/* 札（11-28）: ボタンに見えない、緑のチェックと灰色の文字。基本無料だけ太く */
+.free{list-style:none;padding:0;margin:var(--s3) 0 0;display:flex;flex-wrap:wrap;gap:0 var(--s4)}
+.free li{margin:0;padding:0;color:#4a4a48;font-weight:400;font-size:.9em;line-height:1.7;white-space:nowrap}
+.free li::before{content:"✓";margin-right:.3em;color:#4f9a5a;font-weight:700}
 .free li.main{font-weight:700;color:#2f2f2d}
-.free li::before{color:#4f9a5a}
-.hero .lead{font-size:.95em;line-height:1.75;margin-top:16px;color:#5a4d36}
-/* 親の声は白い吹き出し（紹介動画と同じ、薄いオレンジの縁と下のしっぽ）。その下はふつうの文章（11-28 案 A） */
-.voices{display:flex;align-items:flex-start;gap:14px;margin:20px 0 0;padding:0 0 10px 2px}
-.bubble{position:relative;margin:0;background:#fff;border:2.5px solid #f4b58b;border-radius:18px;padding:4px 16px;font-family:var(--hf);font-weight:700;font-size:1.05em;line-height:1.55;color:var(--ink);letter-spacing:.06em;white-space:nowrap;box-shadow:0 4px 12px rgba(90,60,50,.10)}
-.bubble::after{content:"";position:absolute;bottom:-8px;width:12px;height:12px;background:#fff;border-right:2.5px solid #f4b58b;border-bottom:2.5px solid #f4b58b;transform:rotate(45deg) skew(12deg,12deg)}
+/* 親の声は白い吹き出し（紹介動画と同じ、薄いオレンジの縁と下のしっぽ）。下の padding はしっぽの分 */
+.voices{display:flex;align-items:flex-start;gap:14px;margin:var(--s5) 0 0;padding:0 0 10px 2px}
+.bubble{position:relative;z-index:0;margin:0;background:#fff;border:2.5px solid #f4b58b;border-radius:18px;padding:4px 16px;font-family:var(--hf);font-weight:700;font-size:1.05em;line-height:1.55;color:var(--ink);letter-spacing:.06em;white-space:nowrap;box-shadow:0 4px 12px rgba(90,60,50,.10)}
+/* しっぽは z-index:-1 で文字の後ろへ（吹き出しの縁よりは上なので、つなぎ目の縁は白で隠れる。11-28 社長: 「着」に白い形がかぶる） */
+.bubble::after{content:"";position:absolute;z-index:-1;bottom:-8px;width:12px;height:12px;background:#fff;border-right:2.5px solid #f4b58b;border-bottom:2.5px solid #f4b58b;transform:rotate(45deg) skew(12deg,12deg)}
 .bubble.b1::after{left:20px}
-.bubble.b2{margin-top:18px}
+.bubble.b2{margin-top:var(--s3)}
 .bubble.b2::after{right:20px}
-.voices+.lead{margin-top:8px}
+/* 文: 行の間は詰め（1.45。前の 1.75 から約17%）、段落の間（s2）で区切る。強制の改行は入れず、span（意味のかたまり）で折る */
+.hero .lead{margin:var(--s2) 0 0;font-size:.95em;line-height:1.45;color:#5a4d36;text-wrap:balance}
+/* 入口は同じ大きさの2つ（11-28）。スマホでも横に並べる。340px より狭いときだけ縦に積む。
+   製品版では .to-android の行き先と文字（「Google Play で入手」など）だけを差し替える */
+.hero-cta{margin:var(--s5) 0 0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--s3);max-width:420px}
+.hero-cta .btn{margin-top:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:9px 6px;line-height:1.35;white-space:nowrap}
+.hero-cta .btn.sub{padding:7px 4px;border-color:#e0a070;color:var(--btn)}
+.hero-cta .btn b{font-size:1.02em;letter-spacing:-.02em}
+.hero-cta .btn small{font-size:.76em;font-weight:700;opacity:.92}
+/* PC・タブレットの右の列（11-28 案 B）: 女の子の絵を右上の白い円に重ね、動画はその下に。絵と動画の枠の間は s3 */
+.hero{align-items:end}
+.hero-art{--ag:170px;padding-top:calc(var(--ag)*849/917 - 6px + var(--s3))}
+.art-girl{position:absolute;right:6px;top:-6px;width:var(--ag);height:auto;pointer-events:none}
+/* 動画 */
+.demo{margin:0}
+.demo video{display:block;width:100%;max-width:760px;height:auto;aspect-ratio:16/10;margin:0 auto;border-radius:20px;border:4px solid #fff;background:#fff;box-shadow:0 6px 0 #eecb6a,0 10px 24px rgba(80,60,30,.10);cursor:pointer}
+.demo video.port{aspect-ratio:9/16;width:auto;max-width:100%;height:min(76vh,640px)}
+.demo figcaption{text-align:center;color:var(--muted);font-size:.9em;margin-top:10px}
 @media(max-width:700px){
- .hero-text{--g:clamp(100px,30vw,128px)}
+ /* スマホ: 縦は貴重。上の空き・絵・アイコンを小さくして、最初の画面に入口と動画の見出しまで入れる。
+    動画は上が少し見えて、下に続くと分かる位置に */
+ main{padding-top:var(--s2)}
+ .hero{grid-template-columns:1fr;gap:0;padding:var(--s3) 18px var(--s5);border-radius:28px}
+ .hero-art{padding-top:0}
+ .art-girl{display:none}
+ .hero-text{--g:clamp(86px,25.5vw,109px)}
  .brand{margin-right:-6px}
- .logo{width:56px;height:56px;border-radius:15px;margin:4px 0 0}
- .hero-girl{position:static;width:var(--g);margin-top:-6px}
- .hero h1{font-size:min(2.35em,calc((100vw - 72px)/8.6));margin:2px 0 0}
- .hero-text .copy{max-width:none;font-size:min(1.2em,calc((100vw - 72px)/15));margin-top:4px}
+ .logo{width:48px;height:48px;border-radius:13px;margin:var(--s1) 0 0}
+ .hero-girl{display:block;width:var(--g);height:auto;margin:-6px 0 -4px;pointer-events:none}
+ .hero h1{font-size:min(2.35em,calc((100vw - 72px)/8.6));margin:0}
+ .hero .copy{font-size:min(1.2em,calc((100vw - 72px)/15))}
+ .copy::after{content:none}/* 絵を出すスマホでは花を出さない（11-26・11-28） */
+ .free{margin-top:var(--s2)}
+ .voices{margin-top:var(--s4)}
+ .bubble.b2{margin-top:var(--s2)}
+ .demo-cue{display:block;margin:var(--s5) 0 var(--s2);text-align:center;font-family:var(--hf);font-weight:700;color:var(--accent-d);font-size:1.02em;line-height:1.4;white-space:nowrap}
+ .demo-cue small{display:block;font-size:.78em;font-weight:500;color:var(--muted)}
+ .demo figcaption{display:none}/* 長さと音のことは上の見出しの下に出す */
 }
+@media(max-width:400px){.hero-cta .btn b{font-size:.9em}}
+@media(max-width:339px){.hero-cta{grid-template-columns:1fr}}
 </style>
 <!-- アクセスの数（GoatCounter。cookie なし。つなぐための番号 pair= がアドレスにあるときは送らない） -->
 <script>window.goatcounter = { path: function () { return /[?&]pair=/.test(location.search) ? null : location.pathname || "/"; } };</script>
@@ -245,18 +242,22 @@ footer{background:linear-gradient(135deg,#fdf0cf,#fce6d2)}
       <p class="copy"><span>今日がわかる。</span><span>自分でできる。</span></p>
       <ul class="free" aria-label="料金など"><li class="main">基本無料</li><li>広告なし</li><li>登録なし</li></ul>
       <div class="voices" aria-label="おうちの人の毎朝の声"><p class="bubble b1">着替えた？</p><p class="bubble b2">傘持った？</p></div>
-      <p class="lead"><span>毎朝の声かけを、</span><span>少しでも減らしたくて</span><span>作っています。</span><span>子どもが</span><span>自分で</span><span>今日を見て</span><span>動けるボードです。</span><span>余ったタブレットでも、</span><span>スマホ1台からでも。</span><span>よかったら試して、</span><span>感想を聞かせてください。</span></p>
-      <p class="hero-cta"><a class="btn to-android" href="join.html"><b>Android</b><small>テスト版に参加</small></a><a class="btn sub" href="#start"><b>iPhone・iPad・PC</b><small>ブラウザで使う</small></a></p>
+      <p class="lead"><span>毎朝の声かけを、</span><span>少しでも減らしたくて</span><span>作りました。</span></p>
+      <p class="lead"><span>天気・予定・やることが</span><span>ひと目でわかり、</span><span>子どもが</span><span>自分で動ける</span><span>ボードです。</span></p>
+      <p class="lead"><span>余ったタブレットでも、</span><span>スマホ1台でも。</span></p>
+      <p class="hero-cta"><a class="btn to-android" href="join.html"><b>Android</b><small>テスト版に参加</small></a><a class="btn sub" href="#start"><b>iPhone・iPad・PC</b><small>すぐに試す</small></a></p>
     </div>
     <div class="hero-art">
-    <p class="demo-cue" aria-hidden="true">▼ 使っているところを動画で</p>
+    <!-- PC・タブレット（701px〜）だけ: 右上の白い円に女の子の絵（スマホは上のタイトルの横の絵）。loading=lazy でスマホは読まない -->
+    <img class="art-girl" src="img/hero.webp" alt="" width="917" height="849" loading="lazy">
+    <p class="demo-cue" aria-hidden="true">▼ 使っているところを動画で<small>約30秒・音なし</small></p>
     <!-- 使っているところの動画（音なし・くり返し）。縦長の画面（スマホ）は縦の動画、横長は横の動画（元は EchoMonitor の docs/video/）。
          2026-11-26 にいちばん上の絵（img/hero.webp）の場所へ移した。PC は右の列、スマホは文字とボタンの下。絵はリンクを貼ったときの画像（img/ogp.png）と、下の「使い方」の2に使う。
          動きを減らす設定の人には自動で流さず、再生ボタンを出す -->
     <figure class="demo">
       <video id="demo" width="960" height="600" muted loop playsinline preload="metadata" aria-label="使っているところ。子どもが天気と予定を見て、やることを自分で押し、おうちの人が「みました」を押すと はなまる。できることが少しずつ増えていく"></video>
       <noscript><video src="img/demo.mp4" poster="img/demo-poster.webp" width="960" height="600" controls muted playsinline></video></noscript>
-      <figcaption>使っているところ（約25秒・音なし）</figcaption>
+      <figcaption>使っているところ（約30秒・音なし）</figcaption>
     </figure>
     <script>
     (function () {
@@ -407,6 +408,7 @@ footer{background:linear-gradient(135deg,#fdf0cf,#fce6d2)}
       <p>小学生と幼稚園の娘が2人いる父親です。</p>
       <p>はじまりは、妻がホワイトボードとマグネットで工夫していた毎日の準備でした。でも、毎日続けるのはなかなか難しくて。「だったらアプリにしてみよう」と作り始めたのが、はなまるボードです。</p>
       <p>家族で1か月以上使いながら、少しずつ改良してきました。知人にも使ってもらい、感想を聞きながら直しています。同じような毎日の困りごとを持つご家庭で、少しでも役に立てたらうれしいです。</p>
+      <p>よかったら試して、感想を聞かせてください。</p>
     </div>
   </section>
   <section class="follow">
